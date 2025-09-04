@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>The Cluckington Family</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #f8f5ee;
+      color: #333;
+    }
+    .container {
+      display: flex;
+      flex-direction: row;
+      min-height: 100vh;
+    }
+    .left {
+      flex: 1;
+      background: #fffbe7;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-right: 2px solid #e6d1a3;
+    }
+    .left img {
+      max-width: 80%;
+      max-height: 80vh;
+      border-radius: 20px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+    }
+    .right {
+      flex: 1;
+      padding: 48px 32px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .family-title {
+      font-size: 2.5em;
+      color: #d97428;
+      margin-bottom: 24px;
+      font-family: 'Georgia', serif;
+    }
+    .story {
+      font-size: 1.2em;
+      line-height: 1.7;
+      background: #fffbe7;
+      padding: 22px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+    }
+    @media (max-width: 800px) {
+      .container {
+        flex-direction: column;
+      }
+      .left, .right {
+        border-right: none;
+        border-bottom: 2px solid #e6d1a3;
+        min-height: 300px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="left">
+      <img src="images/medieval_chicken_village.png" alt="Chicken Family Village">
+    </div>
+    <div class="right">
+      <div class="family-title">The Cluckington Family</div>
+      <div class="story">
+        Once upon a time in the bustling streets of Chickenopolis, lived the Cluckington family—a quirky bunch of chickens with a knack for adventure. <br><br>
+        Mother Henrietta Cluckington was famous for her delicious corn muffins, while Father Roostwell Cluckington always woke up the city with his proud crowing at dawn. Their three chicks—Peep, Cheepers, and Nugget—were known for their mischievous games and endless curiosity.
+        <br><br>
+        One spring morning, the Cluckingtons decided to host the annual "Egg-stravaganza," a festival where chickens from all corners of Chickenopolis gathered to race, dance, and hunt for the legendary golden egg. Peep, the youngest, dreamed of finding the egg and becoming the hero of the day.
+        <br><br>
+        With teamwork, laughter, and a sprinkle of luck, the Cluckington family faced muddy puddles, tricky mazes, and even a surprise visit from the wise old Professor Featherbeak. In the end, Peep discovered the golden egg hidden beneath the oldest oak tree, bringing joy and pride to the family.
+        <br><br>
+        From that day on, the Cluckingtons became legends in Chickenopolis, proving that with family, friendship, and a little bit of cluck, anything is possible!
+      </div>
+    </div>
+  </div>
+</body>
+</html>
