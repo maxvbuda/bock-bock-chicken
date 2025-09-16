@@ -136,6 +136,40 @@
       <!-- Cluckington family section moved to left column -->
     </div>
   </div>
+  <!-- Audio Play Button -->
+  <div style="text-align:center; margin: 32px 0;">
+    <button id="play-audio-btn" style="font-size:1.2em; padding: 12px 28px; background: #ffe4b3; color: #7a4a13; border: none; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.07); cursor: pointer; font-family: 'Georgia', serif;">Play Theme Audio</button>
+  </div>
+  <!-- Hidden YouTube iframe for audio -->
+  <div style="position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden;">
+    <div id="yt-audio"></div>
+  </div>
+  <script>
+    let ytPlayer;
+    let ytReady = false;
+    function onYouTubeIframeAPIReady() {
+      ytPlayer = new YT.Player('yt-audio', {
+        height: '1',
+        width: '1',
+        videoId: '5j1y_aZORZs',
+        events: {
+          'onReady': function() { ytReady = true; }
+        }
+      });
+    }
+    // Load YouTube IFrame API
+    var tag = document.createElement('script');
+    tag.src = "https://www.youtube.com/iframe_api";
+    var firstScriptTag = document.getElementsByTagName('script')[0];
+    firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+    // Button click handler
+    document.addEventListener('DOMContentLoaded', function() {
+      document.getElementById('play-audio-btn').addEventListener('click', function() {
+        if (ytPlayer && ytReady && ytPlayer.playVideo) {
+          ytPlayer.playVideo();
+        }
+      });
+    });
+  </script>
 </body>
-
 </html>
