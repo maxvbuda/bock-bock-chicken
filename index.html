@@ -137,6 +137,10 @@
     </div>
   </div>
   <!-- Audio Play Button -->
+  <div id="audio-fallback-btn-container" style="text-align:center; margin: 32px 0; display:none;">
+    <button id="audio-fallback-btn" style="font-size:1.2em; padding: 12px 28px; background: #ffe4b3; color: #7a4a13; border: none; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.07); cursor: pointer; font-family: 'Georgia', serif;">Play Theme Audio</button>
+    <div style="color:#a00; font-size:0.95em; margin-top:8px;">If you don't hear music, click the button above.</div>
+  </div>
   <!-- Hidden YouTube iframe for audio -->
   <div style="position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden;">
     <div id="yt-audio"></div>
@@ -145,11 +149,28 @@
     let ytPlayer;
     let ytApiReady = false;
     let audioPlayed = false;
+    let fallbackShown = false;
     // Load YouTube IFrame API
     var tag = document.createElement('script');
     tag.src = "https://www.youtube.com/iframe_api";
     var firstScriptTag = document.getElementsByTagName('script')[0];
     firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+    function showFallbackButton() {
+      if (!fallbackShown) {
+        document.getElementById('audio-fallback-btn-container').style.display = '';
+        fallbackShown = true;
+      }
+    }
+
+    function tryPlayAudio(player) {
+      try {
+        player.unMute();
+        player.playVideo();
+      } catch (e) {
+        showFallbackButton();
+      }
+    }
 
     function createAndPlayYTPlayer() {
       if (audioPlayed || !ytApiReady) return;
@@ -160,8 +181,14 @@
         videoId: '5j1y_aZORZs',
         events: {
           'onReady': function(event) {
-            event.target.unMute();
+            event.target.mute();
             event.target.playVideo();
+            setTimeout(function() {
+              tryPlayAudio(event.target);
+            }, 1200);
+          },
+          'onError': function() {
+            showFallbackButton();
           }
         }
       });
@@ -177,6 +204,22 @@
       window.addEventListener('keydown', createAndPlayYTPlayer);
       window.addEventListener('scroll', createAndPlayYTPlayer);
     };
+
+    // Fallback button handler
+    document.addEventListener('DOMContentLoaded', function() {
+      var btn = document.getElementById('audio-fallback-btn');
+      if (btn) {
+        btn.addEventListener('click', function() {
+          if (ytPlayer && ytPlayer.playVideo) {
+            ytPlayer.unMute();
+            ytPlayer.playVideo();
+          } else {
+            // If player not created, create and play
+            createAndPlayYTPlayer();
+          }
+        });
+      }
+    });
   </script>
 </body>
 </html>
