@@ -143,6 +143,18 @@
   </div>
   <script>
     let ytPlayer;
+    let ytReady = false;
+    let audioPlayed = false;
+    function playAudio() {
+      if (ytPlayer && ytReady && !audioPlayed) {
+        ytPlayer.unMute();
+        ytPlayer.playVideo();
+        audioPlayed = true;
+        window.removeEventListener('click', playAudio);
+        window.removeEventListener('keydown', playAudio);
+        window.removeEventListener('scroll', playAudio);
+      }
+    }
     function onYouTubeIframeAPIReady() {
       ytPlayer = new YT.Player('yt-audio', {
         height: '1',
@@ -150,13 +162,11 @@
         videoId: '5j1y_aZORZs',
         events: {
           'onReady': function(event) {
-            // Start muted to allow autoplay
-            event.target.mute();
-            event.target.playVideo();
-            // After a short delay, try to unmute
-            setTimeout(function() {
-              event.target.unMute();
-            }, 1500);
+            ytReady = true;
+            // Listen for first user interaction
+            window.addEventListener('click', playAudio);
+            window.addEventListener('keydown', playAudio);
+            window.addEventListener('scroll', playAudio);
           }
         }
       });
