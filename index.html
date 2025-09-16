@@ -143,39 +143,40 @@
   </div>
   <script>
     let ytPlayer;
-    let ytReady = false;
+    let ytApiReady = false;
     let audioPlayed = false;
-    function playAudio() {
-      if (ytPlayer && ytReady && !audioPlayed) {
-        ytPlayer.unMute();
-        ytPlayer.playVideo();
-        audioPlayed = true;
-        window.removeEventListener('click', playAudio);
-        window.removeEventListener('keydown', playAudio);
-        window.removeEventListener('scroll', playAudio);
-      }
-    }
-    function onYouTubeIframeAPIReady() {
+    // Load YouTube IFrame API
+    var tag = document.createElement('script');
+    tag.src = "https://www.youtube.com/iframe_api";
+    var firstScriptTag = document.getElementsByTagName('script')[0];
+    firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+    function createAndPlayYTPlayer() {
+      if (audioPlayed || !ytApiReady) return;
+      audioPlayed = true;
       ytPlayer = new YT.Player('yt-audio', {
         height: '1',
         width: '1',
         videoId: '5j1y_aZORZs',
         events: {
           'onReady': function(event) {
-            ytReady = true;
-            // Listen for first user interaction
-            window.addEventListener('click', playAudio);
-            window.addEventListener('keydown', playAudio);
-            window.addEventListener('scroll', playAudio);
+            event.target.unMute();
+            event.target.playVideo();
           }
         }
       });
+      window.removeEventListener('click', createAndPlayYTPlayer);
+      window.removeEventListener('keydown', createAndPlayYTPlayer);
+      window.removeEventListener('scroll', createAndPlayYTPlayer);
     }
-    // Load YouTube IFrame API
-    var tag = document.createElement('script');
-    tag.src = "https://www.youtube.com/iframe_api";
-    var firstScriptTag = document.getElementsByTagName('script')[0];
-    firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+    window.onYouTubeIframeAPIReady = function() {
+      ytApiReady = true;
+      // Listen for first user interaction
+      window.addEventListener('click', createAndPlayYTPlayer);
+      window.addEventListener('keydown', createAndPlayYTPlayer);
+      window.addEventListener('scroll', createAndPlayYTPlayer);
+    };
   </script>
 </body>
 </html>
