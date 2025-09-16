@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <title>The Cluckington Family</title>
@@ -7,14 +8,16 @@
     body {
       margin: 0;
       font-family: 'Segoe UI', Arial, sans-serif;
-      background: #f8f5ee;
+      background: #c2c2c2;
       color: #333;
     }
+
     .container {
       display: flex;
       flex-direction: row;
       min-height: 100vh;
     }
+
     .left {
       flex: 1;
       background: #fffbe7;
@@ -23,38 +26,46 @@
       justify-content: center;
       border-right: 2px solid #e6d1a3;
     }
+
     .left img {
       max-width: 80%;
       max-height: 80vh;
       border-radius: 20px;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
     }
-    .right {
+
+    .right { 
       flex: 1;
+      background: #fffbe7;
       padding: 48px 32px;
       display: flex;
       flex-direction: column;
       justify-content: center;
     }
+
     .family-title {
       font-size: 2.5em;
       color: #d97428;
       margin-bottom: 24px;
       font-family: 'Georgia', serif;
     }
+
     .story {
       font-size: 1.2em;
       line-height: 1.7;
       background: #fffbe7;
       padding: 22px;
       border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
     }
+
     @media (max-width: 800px) {
       .container {
         flex-direction: column;
       }
-      .left, .right {
+
+      .left,
+      .right {
         border-right: none;
         border-bottom: 2px solid #e6d1a3;
         min-height: 300px;
@@ -62,24 +73,69 @@
     }
   </style>
 </head>
+
 <body>
   <div class="container">
-    <div class="left">
+    <div class="left"
+      style="flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 48px;">
       <img src="images/medieval_chicken_village.png" alt="Chicken Family Village">
+      <div class="family-title"
+        style="margin-top: 32px; font-size: 2em; font-weight: bold; color: #d97428; font-family: 'Georgia', serif; margin-bottom: 12px; text-align: center;">
+        The Cluckington Family</div>
+      <div class="story" style="margin-bottom: 32px;">
+        Once upon a time in the bustling streets of Chickenopolis, lived the Cluckington family—a heroic bunch of
+        chickens with a knack for adventure. <br><br>
+        Mother Henrietta Cluckington was famous for her delicious and long lasting corn muffins, while Father Roostwell
+        Cluckington always woke up the city with his proud crowing at dawn and was known for stopping all of those pesky
+        animals that try to eat them. Their three chicks—Peep, Cheepers, and Nugget—wanted to be as heroic as their
+        father.
+        <br><br>
+        One spring morning, the Cluckingtons decided to host the annual "Egg-stravaganza," a festival where chickens
+        from all corners of Chickenopolis gathered to race, dance, and hunt for the legendary golden egg. Peep, the
+        youngest, dreamed of finding the egg and becoming the hero of the day.
+        <br><br>
+        With teamwork, laughter, and a sprinkle of luck, the Cluckington family faced muddy puddles, tricky mazes, and
+        even a surprise visit from the wise old Professor Featherbeak. In the end, Peep discovered the golden egg hidden
+        beneath the oldest oak tree, bringing joy and pride to the family.
+        <br><br>
+        From that day on, the Cluckingtons became legends in Chickenopolis, proving that with family, friendship, and a
+        little bit of cluck, anything is possible!
+      </div>
     </div>
     <div class="right">
-      <div class="family-title">The Cluckington Family</div>
-      <div class="story">
-        Once upon a time in the bustling streets of Chickenopolis, lived the Cluckington family—a heroic bunch of chickens with a knack for adventure. <br><br>
-        Mother Henrietta Cluckington was famous for her delicious and long lasting corn muffins, while Father Roostwell Cluckington always woke up the city with his proud crowing at dawn and was known for stopping all of those pesky animals that try to eat them. Their three chicks—Peep, Cheepers, and Nugget—wanted to be as heroic as their father.
-        <br><br>
-        One spring morning, the Cluckingtons decided to host the annual "Egg-stravaganza," a festival where chickens from all corners of Chickenopolis gathered to race, dance, and hunt for the legendary golden egg. Peep, the youngest, dreamed of finding the egg and becoming the hero of the day.
-        <br><br>
-        With teamwork, laughter, and a sprinkle of luck, the Cluckington family faced muddy puddles, tricky mazes, and even a surprise visit from the wise old Professor Featherbeak. In the end, Peep discovered the golden egg hidden beneath the oldest oak tree, bringing joy and pride to the family.
-        <br><br>
-        From that day on, the Cluckingtons became legends in Chickenopolis, proving that with family, friendship, and a little bit of cluck, anything is possible!
+      <img src="images/Hero_Peep.png" alt="Sir Peepius Aurelius"
+        style="display: block; margin: 0 auto 24px auto; max-width: 80%; max-height: 80vh; border-radius: 20px; box-shadow: 0 4px 16px rgba(0,0,0,0.1); background: #fff;">
+      <div class="family-title"
+        style="font-size: 2em; font-weight: bold; color: #d97428; font-family: 'Georgia', serif; margin-bottom: 12px; text-align: center;">
+        The Golden Knight of Chickenopolis</div>
+
+      <div class="story" style="margin-bottom: 32px;">
+        <div>
+          Long before his name was etched in golden letters on the walls of Chickenopolis, Sir Peepius Aurelius was
+          simply Peep — the littlest chick of the Cluckington brood. While his father Roostwell defended the coop and
+          his mother Henrietta baked muffins that could outlast a winter, Peep dreamed not of chores or festivals but of
+          glory.<br><br>
+          That glory arrived one spring morning, when the Cluckingtons hosted the legendary Egg-stravaganza Festival.
+          Between muddy puddles, feather-fluffing races, and a wise riddle from Professor Featherbeak, young Peep
+          stumbled upon the Golden Egg, hidden beneath the oldest oak tree in all of Chickenopolis. Lifting it high, he
+          was crowned the hero of the day, his name cheered across the city.<br><br>
+          But Peep hungered for more than a single triumph. He trained in the ways of discipline, inspired by the
+          scrolls of the old Rooster Republic. He donned armor forged in the Roman style, carried the gladius of his
+          forefathers, and bore a shield etched with the Golden Egg and laurel wreath — the eternal symbol of
+          Cluckington victory.<br><br>
+          When fox marauders swept into Chickenopolis years later, it was Sir Peepius Aurelius who led the defense.
+          Standing at the city gates, he raised his shield high and cried:<br>
+          <em>“As I once found the egg, I shall now guard the nest!”</em><br><br>
+          With a cheer from the townsfolk, he drove the invaders back, proving himself not just the hero of a festival,
+          but the champion of a city.<br><br>
+          To this day, children of Chickenopolis race beneath the old oak tree, chanting his name, and knights of the
+          city touch their shields to the Golden Egg before battle, whispering his vow:<br>
+          <em>“In every egg lies a legacy — and in every Cluckington, a hero.”</em>
+        </div>
       </div>
+      <!-- Cluckington family section moved to left column -->
     </div>
   </div>
 </body>
+
 </html>
