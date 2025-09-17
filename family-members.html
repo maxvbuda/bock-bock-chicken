@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Cluckington Family Members</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #c2c2c2;
+      color: #333;
+    }
+    .top-menu {
+      width: 100%;
+      background: #fffbe7;
+      border-bottom: 2px solid #e6d1a3;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 0;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .top-menu ul {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      gap: 24px;
+    }
+    .top-menu li {
+      display: inline;
+    }
+    .top-menu a {
+      display: inline-block;
+      padding: 12px 28px;
+      font-size: 1.1em;
+      color: #fff;
+      background: #d97428;
+      border: none;
+      border-radius: 8px;
+      font-family: 'Georgia', serif;
+      font-weight: bold;
+      text-decoration: none;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+      transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+      cursor: pointer;
+    }
+    .top-menu a:hover {
+      background: #a85c1a;
+      color: #ffe4b3;
+      text-decoration: none;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.13);
+    }
+    .top-menu a.active {
+      background: #fffbe7;
+      color: #d97428;
+      border: 2px solid #d97428;
+      cursor: default;
+      box-shadow: none;
+      pointer-events: none;
+    }
+    .section {
+      width: 100%;
+      background: #fffbe7;
+      padding: 64px 0 48px 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      min-height: 100vh;
+      border-bottom: 2px solid #e6d1a3;
+    }
+    .family-title {
+      font-size: 2.5em;
+      color: #d97428;
+      margin-bottom: 24px;
+      font-family: 'Georgia', serif;
+      font-weight: bold;
+      margin-top: 32px;
+      text-align: center;
+    }
+    .story {
+      font-size: 1.2em;
+      line-height: 1.7;
+      background: #fffbe7;
+      padding: 22px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+      max-width: 700px;
+    }
+  </style>
+</head>
+<body>
+  <nav class="top-menu">
+    <ul>
+      <li><a href="index.html">The Cluckington Family</a></li>
+      <li><a href="family-members.html" class="active">Family Members</a></li>
+      <li><a href="golden-knight.html">The Golden Knight of Chickenopolis</a></li>
+    </ul>
+  </nav>
+  <section class="section" id="family-members">
+    <img src="images/medieval_chicken_village.png" alt="Chicken Family Village" style="max-width:80%; max-height:80vh; border-radius:20px; box-shadow:0 4px 16px rgba(0,0,0,0.1); margin-bottom:32px;">
+    <div class="family-title">Cluckington Family Members</div>
+    <div class="story">
+      Mother Henrietta Cluckington was famous for her delicious and long lasting corn muffins, while Father Roostwell
+      Cluckington always woke up the city with his proud crowing at dawn and was known for stopping all of those pesky
+      animals that try to eat them. Their three chicks—Peep, Cheepers, and Nugget—wanted to be as heroic as their
+      father.
+    </div>
+  </section>
+</body>
+</html>
