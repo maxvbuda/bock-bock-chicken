@@ -228,6 +228,13 @@
             }, 800);
             hideFallbackButton();
           },
+          'onStateChange': function(event) {
+            // Loop the video when it ends
+            if (event.data === YT.PlayerState.ENDED) {
+              event.target.seekTo(0, true);
+              event.target.playVideo();
+            }
+          },
           'onError': function() {
             // Do nothing, button stays visible
           }
