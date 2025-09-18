@@ -185,12 +185,7 @@
       try {
         player.unMute();
         player.playVideo();
-        // If not playing after 2 seconds, keep button visible
-        setTimeout(function() {
-          if (player.getPlayerState && player.getPlayerState() === 1) {
-            hideFallbackButton();
-          }
-        }, 2000);
+        hideFallbackButton();
       } catch (e) {
         // Do nothing, button stays visible
       }
