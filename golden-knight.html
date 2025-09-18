@@ -202,14 +202,21 @@
           'onReady': function(event) {
             event.target.mute();
             event.target.playVideo();
-            // Seek to saved time if available
+            // Seek to saved time if available, but restart if near end
             try {
               var t = parseFloat(localStorage.getItem('bockbock_audio_time'));
-              if (!isNaN(t) && t > 0) {
+              var duration = event.target.getDuration ? event.target.getDuration() : 0;
+              if (!isNaN(t) && t > 0 && (!duration || t < duration - 2)) {
                 event.target.seekTo(t, true);
+              } else if (duration && t >= duration - 2) {
+                event.target.seekTo(0, true);
               }
             } catch (e) {}
             setTimeout(function() {
+              // If video is paused or ended, restart
+              if (event.target.getPlayerState && event.target.getPlayerState() !== 1) {
+                event.target.playVideo();
+              }
               tryPlayAudio(event.target);
             }, 1200);
           },
