@@ -192,17 +192,37 @@
         events: {
           'onReady': function(event) {
             event.target.mute();
-            event.target.playVideo();
-            // Seek to saved time if available
+            // Always seek to saved time or 0 if at end
+            let t = 0;
+            let duration = 0;
             try {
-              var t = parseFloat(localStorage.getItem('bockbock_audio_time'));
-              if (!isNaN(t) && t > 0) {
-                event.target.seekTo(t, true);
-              }
+              t = parseFloat(localStorage.getItem('bockbock_audio_time'));
+              duration = event.target.getDuration ? event.target.getDuration() : 0;
             } catch (e) {}
+            if (!isNaN(t) && t > 0 && (!duration || t < duration - 2)) {
+              event.target.seekTo(t, true);
+            } else {
+              event.target.seekTo(0, true);
+            }
+            // Always try to play and unmute after seeking
             setTimeout(function() {
-              tryPlayAudio(event.target);
-            }, 1200);
+              event.target.unMute();
+              event.target.playVideo();
+              // If not playing, force play again
+              setTimeout(function() {
+                if (event.target.getPlayerState && event.target.getPlayerState() !== 1) {
+                  event.target.playVideo();
+                }
+              }, 600);
+            }, 800);
+            hideFallbackButton();
+          },
+          'onStateChange': function(event) {
+            // Loop the video when it ends
+            if (event.data === YT.PlayerState.ENDED) {
+              event.target.seekTo(0, true);
+              event.target.playVideo();
+            }
           },
           'onError': function() {
             // Do nothing, button stays visible
