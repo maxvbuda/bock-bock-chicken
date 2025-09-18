@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <title>The Golden Knight of Chickenopolis</title>
   <link rel="stylesheet" href="style.css">
+    
 </head>
 <body>
   <style>
@@ -135,6 +136,127 @@
     </div>
   </section>
 
+
+  <!-- Audio Play Button -->
+  <div id="audio-fallback-btn-container" style="text-align:center; margin: 32px 0;">
+    <button id="audio-fallback-btn" style="font-size:1.2em; padding: 12px 28px; background: #ffe4b3; color: #7a4a13; border: none; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.07); cursor: pointer; font-family: 'Georgia', serif;">Play Theme Audio</button>
+    <div style="color:#a00; font-size:0.95em; margin-top:8px;">If you don't hear music, click the button above.</div>
+  </div>
+  <!-- Hidden YouTube iframe for audio -->
+  <div style="position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden;">
+    <div id="yt-audio"></div>
+  </div>
+  <script>
+    let ytPlayer;
+    let ytApiReady = false;
+    let audioPlayed = false;
+    let fallbackShown = false;
+    // Load YouTube IFrame API
+    var tag = document.createElement('script');
+    tag.src = "https://www.youtube.com/iframe_api";
+    var firstScriptTag = document.getElementsByTagName('script')[0];
+    firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+    // Save playback time before navigating away
+    function saveAudioTime() {
+      if (ytPlayer && ytPlayer.getCurrentTime) {
+        try {
+          localStorage.setItem('bockbock_audio_time', ytPlayer.getCurrentTime());
+        } catch (e) {}
+      }
+    }
+    // Attach to all menu links
+    document.addEventListener('DOMContentLoaded', function() {
+      document.querySelectorAll('.top-menu a').forEach(function(link) {
+        if (!link.classList.contains('active')) {
+          link.addEventListener('click', saveAudioTime);
+        }
+      });
+    });
+
+    function hideFallbackButton() {
+      if (!fallbackShown) {
+        document.getElementById('audio-fallback-btn-container').style.display = 'none';
+        fallbackShown = true;
+      }
+    }
+
+    function tryPlayAudio(player) {
+      try {
+        player.unMute();
+        player.playVideo();
+        // If not playing after 2 seconds, keep button visible
+        setTimeout(function() {
+          if (player.getPlayerState && player.getPlayerState() === 1) {
+            hideFallbackButton();
+          }
+        }, 2000);
+      } catch (e) {
+        // Do nothing, button stays visible
+      }
+    }
+
+    function createAndPlayYTPlayer() {
+      if (audioPlayed || !ytApiReady) return;
+      audioPlayed = true;
+      ytPlayer = new YT.Player('yt-audio', {
+        height: '1',
+        width: '1',
+        videoId: '5j1y_aZORZs',
+        events: {
+          'onReady': function(event) {
+            event.target.mute();
+            event.target.playVideo();
+            // Seek to saved time if available
+            try {
+              var t = parseFloat(localStorage.getItem('bockbock_audio_time'));
+              if (!isNaN(t) && t > 0) {
+                event.target.seekTo(t, true);
+              }
+            } catch (e) {}
+            setTimeout(function() {
+              tryPlayAudio(event.target);
+            }, 1200);
+          },
+          'onError': function() {
+            // Do nothing, button stays visible
+          }
+        }
+      });
+      window.removeEventListener('click', createAndPlayYTPlayer);
+      window.removeEventListener('keydown', createAndPlayYTPlayer);
+      window.removeEventListener('scroll', createAndPlayYTPlayer);
+      // Fallback: if player not created after 3 seconds, show button
+      setTimeout(function() {
+        if (!ytPlayer) showFallbackButton();
+      }, 3000);
+    }
+
+    window.onYouTubeIframeAPIReady = function() {
+      ytApiReady = true;
+      // Listen for first user interaction
+      window.addEventListener('click', createAndPlayYTPlayer);
+      window.addEventListener('keydown', createAndPlayYTPlayer);
+      window.addEventListener('scroll', createAndPlayYTPlayer);
+    };
+
+    // Fallback button handler
+    document.addEventListener('DOMContentLoaded', function() {
+      var btn = document.getElementById('audio-fallback-btn');
+      if (btn) {
+        btn.addEventListener('click', function() {
+          if (ytPlayer && ytPlayer.playVideo) {
+            ytPlayer.unMute();
+            ytPlayer.playVideo();
+          } else {
+            // If player not created, create and play
+            createAndPlayYTPlayer();
+          }
+        });
+      }
+      // Button is visible by default, nothing to do
+    });
+  </script>
 </body>
 </html>
 </body>
