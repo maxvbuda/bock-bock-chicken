@@ -232,12 +232,19 @@
       }, 3000);
     }
 
+
     window.onYouTubeIframeAPIReady = function() {
       ytApiReady = true;
       // Listen for first user interaction
-      window.addEventListener('click', createAndPlayYTPlayer);
-      window.addEventListener('keydown', createAndPlayYTPlayer);
-      window.addEventListener('scroll', createAndPlayYTPlayer);
+      function playOnFirstInteraction() {
+        createAndPlayYTPlayer();
+        window.removeEventListener('click', playOnFirstInteraction);
+        window.removeEventListener('keydown', playOnFirstInteraction);
+        window.removeEventListener('scroll', playOnFirstInteraction);
+      }
+      window.addEventListener('click', playOnFirstInteraction);
+      window.addEventListener('keydown', playOnFirstInteraction);
+      window.addEventListener('scroll', playOnFirstInteraction);
     };
 
     // Fallback button handler
