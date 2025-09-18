@@ -182,10 +182,11 @@
     }
 
     function tryPlayAudio(player) {
+      // Always hide the button immediately on any play attempt
+      hideFallbackButton();
       try {
         player.unMute();
         player.playVideo();
-        hideFallbackButton();
       } catch (e) {
         // Do nothing, button stays visible
       }
@@ -194,6 +195,7 @@
     function createAndPlayYTPlayer() {
       if (audioPlayed || !ytApiReady) return;
       audioPlayed = true;
+      hideFallbackButton(); // Hide button immediately
       ytPlayer = new YT.Player('yt-audio', {
         height: '1',
         width: '1',
@@ -201,24 +203,30 @@
         events: {
           'onReady': function(event) {
             event.target.mute();
-            event.target.playVideo();
-            // Seek to saved time if available, but restart if near end
+            // Always seek to saved time or 0 if at end
+            let t = 0;
+            let duration = 0;
             try {
-              var t = parseFloat(localStorage.getItem('bockbock_audio_time'));
-              var duration = event.target.getDuration ? event.target.getDuration() : 0;
-              if (!isNaN(t) && t > 0 && (!duration || t < duration - 2)) {
-                event.target.seekTo(t, true);
-              } else if (duration && t >= duration - 2) {
-                event.target.seekTo(0, true);
-              }
+              t = parseFloat(localStorage.getItem('bockbock_audio_time'));
+              duration = event.target.getDuration ? event.target.getDuration() : 0;
             } catch (e) {}
+            if (!isNaN(t) && t > 0 && (!duration || t < duration - 2)) {
+              event.target.seekTo(t, true);
+            } else {
+              event.target.seekTo(0, true);
+            }
+            // Always try to play and unmute after seeking
             setTimeout(function() {
-              // If video is paused or ended, restart
-              if (event.target.getPlayerState && event.target.getPlayerState() !== 1) {
-                event.target.playVideo();
-              }
-              tryPlayAudio(event.target);
-            }, 1200);
+              event.target.unMute();
+              event.target.playVideo();
+              // If not playing, force play again
+              setTimeout(function() {
+                if (event.target.getPlayerState && event.target.getPlayerState() !== 1) {
+                  event.target.playVideo();
+                }
+              }, 600);
+            }, 800);
+            hideFallbackButton();
           },
           'onError': function() {
             // Do nothing, button stays visible
@@ -254,9 +262,16 @@
       var btn = document.getElementById('audio-fallback-btn');
       if (btn) {
         btn.addEventListener('click', function() {
+          hideFallbackButton();
           if (ytPlayer && ytPlayer.playVideo) {
             ytPlayer.unMute();
             ytPlayer.playVideo();
+            // If not playing, force play again
+            setTimeout(function() {
+              if (ytPlayer.getPlayerState && ytPlayer.getPlayerState() !== 1) {
+                ytPlayer.playVideo();
+              }
+            }, 600);
           } else {
             // If player not created, create and play
             createAndPlayYTPlayer();
