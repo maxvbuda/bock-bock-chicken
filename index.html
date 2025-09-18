@@ -169,6 +169,23 @@
     var firstScriptTag = document.getElementsByTagName('script')[0];
     firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
+    // Save playback time before navigating away
+    function saveAudioTime() {
+      if (ytPlayer && ytPlayer.getCurrentTime) {
+        try {
+          localStorage.setItem('bockbock_audio_time', ytPlayer.getCurrentTime());
+        } catch (e) {}
+      }
+    }
+    // Attach to all menu links
+    document.addEventListener('DOMContentLoaded', function() {
+      document.querySelectorAll('.top-menu a').forEach(function(link) {
+        if (!link.classList.contains('active')) {
+          link.addEventListener('click', saveAudioTime);
+        }
+      });
+    });
+
     function hideFallbackButton() {
       if (!fallbackShown) {
         document.getElementById('audio-fallback-btn-container').style.display = 'none';
@@ -202,6 +219,13 @@
           'onReady': function(event) {
             event.target.mute();
             event.target.playVideo();
+            // Seek to saved time if available
+            try {
+              var t = parseFloat(localStorage.getItem('bockbock_audio_time'));
+              if (!isNaN(t) && t > 0) {
+                event.target.seekTo(t, true);
+              }
+            } catch (e) {}
             setTimeout(function() {
               tryPlayAudio(event.target);
             }, 1200);
