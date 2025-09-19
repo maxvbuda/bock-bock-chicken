@@ -1,3 +1,21 @@
+<div id="chicken-chatbot-message-icon" title="Open Chicken Chatbot" style="display:none;position:fixed;bottom:24px;right:24px;width:54px;height:54px;background:#d97428;border-radius:50%;box-shadow:0 4px 16px rgba(0,0,0,0.13);z-index:10000;align-items:center;justify-content:center;cursor:pointer;transition:background 0.2s;">
+  <div id="chicken-chatbot-message-icon-content" style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-size:2em;user-select:none;">🐔</div>
+</div>
+  // Minimize and restore logic
+  const chatbot = document.getElementById("chicken-chatbot");
+  const minimizeBtn = document.getElementById("chicken-chatbot-minimize");
+  const icon = document.getElementById("chicken-chatbot-message-icon");
+  minimizeBtn.onclick = function() {
+    chatbot.style.display = "none";
+    icon.style.display = "flex";
+  };
+  icon.onclick = function() {
+    chatbot.style.display = "flex";
+    icon.style.display = "none";
+  };
+  // Start with chatbot visible and icon hidden
+  chatbot.style.display = "flex";
+  icon.style.display = "none";
 <!DOCTYPE html>
 <html lang="en">
 
@@ -294,7 +312,178 @@
     });
   </script>
 </body>
-  <!-- Elfsight AI Chatbot | Untitled AI Chatbot -->
-  <script src="https://elfsightcdn.com/platform.js" async></script>
-  <div class="elfsight-app-37c60775-7db6-4370-b744-730c79e06f85" data-elfsight-app-lazy></div>
+</body>
+
+<!-- Chicken Chatbot -->
+<style>
+  #chicken-chatbot {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    width: 320px;
+    background: #fffbe7;
+    border: 2px solid #d97428;
+    border-radius: 16px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.13);
+    z-index: 9999;
+    font-family: 'Georgia', serif;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: box-shadow 0.2s, opacity 0.2s;
+  }
+  #chicken-chatbot-minimize {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: none;
+    border: none;
+    color: #fffbe7;
+    font-size: 1.2em;
+    cursor: pointer;
+    z-index: 10001;
+    padding: 0 6px;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+  }
+  #chicken-chatbot-minimize:hover {
+    opacity: 1;
+  }
+  #chicken-chatbot-message-icon {
+    display: none;
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    width: 54px;
+    height: 54px;
+    background: #d97428;
+    border-radius: 50%;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.13);
+    z-index: 10000;
+    <button id="chicken-chatbot-minimize" title="Minimize">&minus;</button>
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  #chicken-chatbot-message-icon:hover {
+    background: #a85c1a;
+  }
+  #chicken-chatbot-message-icon-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    font-size: 2em;
+    user-select: none;
+  }
+  #chicken-chatbot-header {
+    background: #d97428;
+    color: #fffbe7;
+    padding: 12px;
+    font-weight: bold;
+    text-align: center;
+    font-size: 1.1em;
+  }
+  #chicken-chatbot-messages {
+    flex: 1;
+    padding: 12px;
+    overflow-y: auto;
+    font-size: 1em;
+    min-height: 120px;
+    max-height: 220px;
+  }
+  #chicken-chatbot-input-row {
+    display: flex;
+    border-top: 1px solid #e6d1a3;
+    background: #fffbe7;
+  }
+  #chicken-chatbot-input {
+    flex: 1;
+    border: none;
+    padding: 10px;
+    font-size: 1em;
+    border-radius: 0 0 0 12px;
+    outline: none;
+    background: #fffbe7;
+  }
+  #chicken-chatbot-send {
+    border: none;
+    background: #d97428;
+    color: #fffbe7;
+    padding: 0 18px;
+    font-size: 1em;
+    border-radius: 0 0 12px 0;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background 0.2s;
+  }
+  #chicken-chatbot-send:hover {
+    background: #a85c1a;
+  }
+</style>
+<div id="chicken-chatbot">
+  <button id="chicken-chatbot-minimize" title="Minimize">&minus;</button>
+  <div id="chicken-chatbot-header" style="display:flex;align-items:center;justify-content:space-between;">
+    <span>Chicken Chatbot</span>
+    <div style="display:flex;gap:6px;align-items:center;">
+  <button id="chicken-chatbot-newchat" style="padding:4px 10px;font-size:0.95em;background:#ffe4b3;color:#d97428;border:none;border-radius:6px;cursor:pointer;margin-right:20px;">New Chat</button>
+    </div>
+  </div>
+  <div id="chicken-chatbot-messages"></div>
+  <div id="chicken-chatbot-input-row">
+    <input id="chicken-chatbot-input" type="text" placeholder="Say something...">
+    <button id="chicken-chatbot-send">Send</button>
+  </div>
+</div>
+<!-- Removed chicken face minimize icon -->
+<script>
+  const chickenWords = ["cluck", "squawk", "bawk", "peep"];
+  function chickenResponse() {
+    // Generate a random sequence of 4-10 chicken words
+    const count = Math.floor(Math.random() * 7) + 4;
+    let arr = [];
+    for (let i = 0; i < count; i++) {
+      arr.push(chickenWords[Math.floor(Math.random() * chickenWords.length)]);
+    }
+    // Capitalize first word, add punctuation
+    let str = arr.join(" ");
+    str = str.charAt(0).toUpperCase() + str.slice(1) + ["!", ".", "!!", "?", "!!!"][Math.floor(Math.random()*5)];
+    return str;
+  }
+  function addChickenMessage(text, fromUser) {
+    const msgDiv = document.createElement("div");
+    msgDiv.style.margin = "6px 0";
+    msgDiv.style.textAlign = fromUser ? "right" : "left";
+    msgDiv.style.color = fromUser ? "#7a4a13" : "#d97428";
+    msgDiv.textContent = text;
+    document.getElementById("chicken-chatbot-messages").appendChild(msgDiv);
+    document.getElementById("chicken-chatbot-messages").scrollTop = 9999;
+  }
+
+  // New Chat button logic
+  document.getElementById("chicken-chatbot-newchat").onclick = function() {
+    document.getElementById("chicken-chatbot-messages").innerHTML = "";
+    document.getElementById("chicken-chatbot-input").value = "";
+    document.getElementById("chicken-chatbot-input").focus();
+  };
+  document.getElementById("chicken-chatbot-send").onclick = function() {
+    const input = document.getElementById("chicken-chatbot-input");
+    const val = input.value.trim();
+    if (!val) return;
+    addChickenMessage(val, true);
+    setTimeout(() => {
+      addChickenMessage(chickenResponse(), false);
+    }, 500);
+    input.value = "";
+    input.focus();
+  };
+  document.getElementById("chicken-chatbot-input").addEventListener("keydown", function(e) {
+    if (e.key === "Enter") {
+      document.getElementById("chicken-chatbot-send").click();
+    }
+  });
+
+  // Minimize and restore logic removed; chatbot always open
+</script>
 </html>
