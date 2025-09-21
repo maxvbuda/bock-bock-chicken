@@ -134,6 +134,9 @@
       city touch their shields to the Golden Egg before battle, whispering his vow:<br>
       <em>“In every egg lies a legacy — and in every Cluckington, a hero.”</em>
     </div>
+    <div style="text-align:center; margin: 18px 0;">
+      <button id="autoread-toggle-btn" style="font-size:1.1em; padding: 10px 22px; background: #ffe4b3; color: #7a4a13; border: 1px solid #e6d1a3; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.07); cursor: pointer; font-family: 'Georgia', serif;">🔊 Read Story</button>
+    </div>
   </section>
 
 
@@ -147,6 +150,409 @@
     <div id="yt-audio"></div>
   </div>
   <script>
+    // --- Autoread Story with Start/Stop Button ---
+    (function() {
+      let utter = null;
+      let isReading = false;
+      function speakStory() {
+        if (!('speechSynthesis' in window)) return;
+        if (isReading) return;
+        const storyEl = document.querySelector('.story');
+        if (!storyEl) return;
+        const text = storyEl.innerText || storyEl.textContent;
+        if (!text) return;
+        utter = new window.SpeechSynthesisUtterance(text);
+        utter.rate = 1.08;
+        utter.pitch = 1.1;
+        utter.volume = 1;
+        isReading = true;
+        updateBtn();
+        window.speechSynthesis.speak(utter);
+        utter.onend = function() { isReading = false; updateBtn(); };
+        utter.onerror = function() { isReading = false; updateBtn(); };
+      }
+      function stopStory() {
+        if (!('speechSynthesis' in window)) return;
+        window.speechSynthesis.cancel();
+        isReading = false;
+        updateBtn();
+      }
+      function updateBtn() {
+        const btn = document.getElementById('autoread-toggle-btn');
+        if (!btn) return;
+        btn.textContent = isReading ? '⏹️ Stop Reading' : '🔊 Read Story';
+      }
+      window.addEventListener('DOMContentLoaded', function() {
+        const btn = document.getElementById('autoread-toggle-btn');
+        if (btn) {
+          btn.onclick = function() {
+            if (isReading) {
+              stopStory();
+            } else {
+              speakStory();
+            }
+          };
+        }
+      });
+    })();
+    // --- Chicken Chatbot UI and Logic ---
+    (function() {
+      const style = document.createElement('style');
+      style.textContent = `
+        .chicken-chatbot {
+          position: fixed;
+          bottom: 32px;
+          right: 32px;
+          width: 340px;
+          max-width: 92vw;
+          background: #fffbe7;
+          border: 2px solid #e6d1a3;
+          border-radius: 18px;
+          box-shadow: 0 6px 32px rgba(0,0,0,0.18);
+          z-index: 2147483647;
+          display: flex;
+          flex-direction: column;
+          font-family: 'Segoe UI', Arial, sans-serif;
+          transition: box-shadow 0.2s;
+        }
+        .chicken-chatbot.minimized {
+          width: 72px !important;
+          height: 72px !important;
+          min-width: 0 !important;
+          min-height: 0 !important;
+          overflow: visible !important;
+          background: #fffbe7 !important;
+          border: 4px solid #d97428 !important;
+          box-shadow: none !important;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          padding: 0 !important;
+          border-radius: 50% !important;
+          cursor: pointer !important;
+          z-index: 99999 !important;
+        }
+        .chicken-chatbot-header {
+          display: flex;
+          align-items: center;
+          background: #ffe4b3;
+          border-bottom: 1px solid #e6d1a3;
+          border-radius: 16px 16px 0 0;
+          padding: 8px 12px 8px 10px;
+          gap: 10px;
+        }
+        .chicken-face {
+          width: 36px;
+          height: 36px;
+          border-radius: 50%;
+          background: #fffbe7;
+          border: 2px solid #d97428;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 1.7em;
+          margin-right: 2px;
+        }
+        .chicken-chatbot-title {
+          font-weight: bold;
+          color: #d97428;
+          font-size: 1.1em;
+          flex: 1;
+        }
+        .chicken-chatbot-btn {
+          background: none;
+          border: none;
+          color: #d97428;
+          font-size: 1.3em;
+          cursor: pointer;
+          margin-left: 4px;
+          transition: color 0.2s;
+        }
+        .chicken-chatbot-btn:hover {
+          color: #a85c1a;
+        }
+        .chicken-chatbot-body {
+          padding: 16px 14px 12px 14px;
+          flex: 1;
+          overflow-y: auto;
+          background: #fffbe7;
+          min-height: 120px;
+          max-height: 260px;
+        }
+        .chicken-chatbot-messages {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+        }
+        .chicken-chatbot-message {
+          background: #ffe4b3;
+          border-radius: 10px;
+          padding: 8px 12px;
+          max-width: 80%;
+          font-size: 1em;
+          word-break: break-word;
+        }
+        .chicken-chatbot-message.user {
+          align-self: flex-end;
+          background: #d97428;
+          color: #fffbe7;
+        }
+        .chicken-chatbot-message.bot {
+          align-self: flex-start;
+          background: #fffbe7;
+          color: #a85c1a;
+          border: 1px solid #e6d1a3;
+        }
+        .chicken-chatbot-footer {
+          display: flex;
+          align-items: center;
+          padding: 10px 12px 12px 12px;
+          border-radius: 0 0 16px 16px;
+          background: #fffbe7;
+          border-top: 1px solid #e6d1a3;
+        }
+        .chicken-chatbot-input {
+          flex: 1;
+          padding: 7px 12px;
+          border-radius: 8px;
+          border: 1px solid #e6d1a3;
+          font-size: 1em;
+          outline: none;
+        }
+        .chicken-chatbot-send-btn {
+          background: #d97428;
+          color: #fffbe7;
+          border: none;
+          border-radius: 8px;
+          font-size: 1.1em;
+          padding: 7px 16px;
+          margin-left: 8px;
+          cursor: pointer;
+          transition: background 0.2s;
+        }
+        .chicken-chatbot-send-btn:hover {
+          background: #a85c1a;
+        }
+        .chicken-chatbot.minimized {
+          width: 72px !important;
+          height: 72px !important;
+          min-width: 0 !important;
+          min-height: 0 !important;
+          overflow: visible !important;
+          background: #fffbe7 !important;
+          border: 4px solid #d97428 !important;
+          box-shadow: none !important;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          padding: 0 !important;
+          border-radius: 50% !important;
+          cursor: pointer !important;
+          z-index: 99999 !important;
+        }
+        .chicken-chatbot.minimized .chicken-chatbot-header {
+          border-radius: 50%;
+          background: transparent;
+          border: none;
+          padding: 0;
+          justify-content: center;
+          width: 72px;
+          height: 72px;
+          align-items: center;
+          display: flex;
+          visibility: visible !important;
+          pointer-events: auto !important;
+        }
+        .chicken-chatbot.minimized .chicken-face {
+          margin: 0;
+          width: 54px;
+          height: 54px;
+          font-size: 2.7em;
+          border: none;
+          background: transparent;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: none;
+        }
+        .chicken-chatbot.minimized .chicken-chatbot-title,
+        .chicken-chatbot.minimized .chicken-chatbot-btn:not(#chicken-chatbot-min),
+        .chicken-chatbot.minimized .chicken-chatbot-body,
+        .chicken-chatbot.minimized .chicken-chatbot-footer {
+          visibility: hidden !important;
+          pointer-events: none !important;
+          height: 0 !important;
+          width: 0 !important;
+          min-width: 0 !important;
+          min-height: 0 !important;
+          max-width: 0 !important;
+          max-height: 0 !important;
+          overflow: hidden !important;
+          display: block !important;
+          position: absolute !important;
+          left: -9999px !important;
+          top: -9999px !important;
+        }
+        .chicken-chatbot.minimized .chicken-chatbot-btn#chicken-chatbot-min {
+          display: none !important;
+        }
+      `;
+      document.head.appendChild(style);
+
+      // Create chatbot container
+  const chatbot = document.createElement('div');
+  chatbot.className = 'chicken-chatbot minimized';
+  chatbot.innerHTML = `
+        <div class="chicken-chatbot-header">
+          <div class="chicken-face" title="Chicken Chatbot">🐔</div>
+          <div class="chicken-chatbot-title">Chicken Chatbot</div>
+          <button class="chicken-chatbot-btn" title="Speak Mode" id="chicken-chatbot-speak-toggle" aria-pressed="false">🔊</button>
+          <button class="chicken-chatbot-btn" title="New Chat" id="chicken-chatbot-new">🔄</button>
+          <button class="chicken-chatbot-btn" title="Minimize" id="chicken-chatbot-min">🗕</button>
+        </div>
+        <div class="chicken-chatbot-body">
+          <div class="chicken-chatbot-messages" id="chicken-chatbot-messages"></div>
+        </div>
+        <div class="chicken-chatbot-footer">
+          <input class="chicken-chatbot-input" id="chicken-chatbot-input" type="text" placeholder="Type your message..." autocomplete="off" />
+          <button class="chicken-chatbot-send-btn" id="chicken-chatbot-send">Send</button>
+        </div>
+      `;
+      document.body.appendChild(chatbot);
+
+      // Minimize/restore logic
+      const minBtn = chatbot.querySelector('#chicken-chatbot-min');
+      const newBtn = chatbot.querySelector('#chicken-chatbot-new');
+      const face = chatbot.querySelector('.chicken-face');
+      const speakToggle = chatbot.querySelector('#chicken-chatbot-speak-toggle');
+      let speakMode = false;
+      function speakBotMsg(text) {
+        if (!('speechSynthesis' in window)) return;
+        const utter = new window.SpeechSynthesisUtterance(text);
+        const voices = window.speechSynthesis.getVoices();
+        if (voices && voices.length) {
+          // Prefer animal/cartoon/bird voices, else default
+          let chickenVoice = voices.find(v => /chicken|bird|duck|cartoon|fun|animal|silly|squeaky|helium/i.test(v.name));
+          utter.voice = chickenVoice || voices[0];
+        }
+        // Make the voice sound more like a chicken: high pitch, fast, short
+        utter.rate = 1.5 + Math.random() * 0.4; // 1.5 - 1.9
+        utter.pitch = 2.0 + Math.random() * 0.7; // 2.0 - 2.7
+        utter.volume = 1;
+        // Optionally, break up long phrases into short bursts for more "chickeny" effect
+        if (text.length > 18) {
+          let parts = text.split(/[!?.]/).filter(Boolean);
+          let delay = 0;
+          for (let part of parts) {
+            const u = new window.SpeechSynthesisUtterance(part.trim());
+            u.voice = utter.voice;
+            u.rate = utter.rate;
+            u.pitch = utter.pitch;
+            u.volume = utter.volume;
+            setTimeout(() => window.speechSynthesis.speak(u), delay);
+            delay += 350 + Math.random() * 200;
+          }
+        } else {
+          window.speechSynthesis.speak(utter);
+        }
+      }
+      if (speakToggle) {
+        speakToggle.onclick = function() {
+          speakMode = !speakMode;
+          speakToggle.setAttribute('aria-pressed', speakMode ? 'true' : 'false');
+          speakToggle.style.color = speakMode ? '#a85c1a' : '#d97428';
+        };
+      }
+      minBtn.onclick = () => chatbot.classList.add('minimized');
+      face.onclick = () => chatbot.classList.remove('minimized');
+
+      // New Chat logic
+      newBtn.onclick = () => {
+        const msgBox = chatbot.querySelector('#chicken-chatbot-messages');
+        msgBox.innerHTML = '';
+        const greeting = randomGreeting();
+        addBotMsg(greeting);
+        if (speakMode) speakBotMsg(greeting);
+      };
+
+      // Message logic
+      const input = chatbot.querySelector('#chicken-chatbot-input');
+      const sendBtn = chatbot.querySelector('#chicken-chatbot-send');
+      const msgBox = chatbot.querySelector('#chicken-chatbot-messages');
+
+      function addMsg(text, who) {
+        const msg = document.createElement('div');
+        msg.className = 'chicken-chatbot-message ' + who;
+        msg.textContent = text;
+        msgBox.appendChild(msg);
+        msgBox.scrollTop = msgBox.scrollHeight;
+      }
+      function addBotMsg(text) { addMsg(text, 'bot'); }
+      function addUserMsg(text) { addMsg(text, 'user'); }
+
+      function randomGreeting() {
+        const greetings = [
+          'Bawk bawk bawk! Cluck cluck cluck! Peep peep peep! Squawk squawk!',
+          'Cluck cluck cluck! Bawk-a-ROO! Peepity peep bawk bawk!',
+          'Squawkity squawk! Peep peep peep! Bawk bawk!',
+          'Peep peep peep! Bawk bawk! Cluck cluck! Bawk bawk!',
+          'Bawk bawk! Cluck cluck! Peep! Squawk squawk!',
+          'Bawk-a-ROO! Cluck cluck! Peep peep! Squawk squawk!',
+          'Peepity peep bawk bawk! Cluck cluck! Squawk squawk!',
+          'Squawk squawk! Cluck cluck! Bawk bawk bawk!',
+          'Bawk bawk! Peep peep! Cluck cluck! Squawkity squawk!',
+          'Cluck-a-doodle cluck! Bawk bawk bawk! Peep peep!'
+        ];
+        return greetings[Math.floor(Math.random() * greetings.length)];
+      }
+      function randomChickenReply() {
+        const sounds = [
+          'Bawk bawk bawk! Cluck-a-doodle-doo! Peep peep, squawk squawk! Bawk bawk bawk bawk!',
+          'Cluck cluck cluck cluck bawk bawk bawk! Peep peep! Squawk squawk squawk!',
+          'Squawkity squawk! Peep peep bawk bawk! Cluck cluck cluck cluck!',
+          'Bawk bawk! Cluck cluck! Peep peep! Bawk bawk bawk!',
+          'Cluck-a-doodle-doo! Bawk bawk bawk! Peep peep! Squawk squawk!',
+          'Peep peep! Bawk bawk bawk bawk! Cluck cluck! Squawk squawk!',
+          'Squawk! Cluck cluck cluck! Bawk bawk! Peep peep peep!',
+          'Bawk bawk! Peep peep! Cluck cluck! Squawk squawk squawk!',
+          'Cluck cluck! Bawk bawk bawk bawk! Peep peep! Squawkity squawk!',
+          'Squawkity squawk! Peep peep! Bawk bawk! Cluck cluck cluck!',
+          'Bawk-a-ROO! Cluck cluck squawk! Peep peep! Bawk bawk bawk!',
+          'Peep peep peep! Bawk bawk bawk! Cluck cluck! Squawk squawk!',
+          'Cluck cluck! Squawk squawk! Peep! Bawk bawk! Cluck cluck!',
+          'Bawk bawk bawkity bawk! Cluck cluck! Peep peep! Squawk squawk!',
+          'Squawk-a-doodle! Peep peep cluck cluck! Bawk bawk! Cluck cluck!',
+          'Cluck cluck cluck! Bawk bawk-a-doodle! Peep peep! Squawk squawk!',
+          'Peepity peep! Squawk squawk! Bawk bawk! Cluck cluck cluck!',
+          'Bawk bawk! Cluck cluck! Peep peep! Squawk! Bawk bawk bawk!',
+          'Squawkity squawk! Bawk bawk bawk! Cluck cluck! Peep peep!',
+          'Cluck-a-doodle cluck! Peep peep! Bawk bawk! Squawk squawk!'
+        ];
+        return sounds[Math.floor(Math.random() * sounds.length)];
+      }
+
+      // Initial greeting
+      const initialGreeting = randomGreeting();
+      addBotMsg(initialGreeting);
+      if (speakMode) speakBotMsg(initialGreeting);
+
+      function sendUserMsg() {
+        const val = input.value.trim();
+        if (!val) return;
+        addUserMsg(val);
+        input.value = '';
+        setTimeout(() => {
+          const reply = randomChickenReply();
+          addBotMsg(reply);
+          if (speakMode) speakBotMsg(reply);
+        }, 600 + Math.random() * 400);
+      }
+      sendBtn.onclick = sendUserMsg;
+      input.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') sendUserMsg();
+      });
+    })();
+    // --- End Chicken Chatbot ---
     let ytPlayer;
     let ytApiReady = false;
     let audioPlayed = false;
