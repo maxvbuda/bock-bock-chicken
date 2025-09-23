@@ -209,187 +209,291 @@
       <li><a href="homework.html" class="active">Homework Kanban</a></li>
     </ul>
   </nav>
-  <div class="kanban-board">
-    <div class="kanban-column" data-status="todo">
-      <h2>To Do</h2>
-      <div class="kanban-tasks" id="todo-tasks"></div>
-      <div class="kanban-add-task">
-        <input type="text" id="todo-input" placeholder="Add new homework...">
-        <button data-status="todo">Add</button>
-      </div>
-    </div>
-    <div class="kanban-column" data-status="inprogress">
-      <h2>In Progress</h2>
-      <div class="kanban-tasks" id="inprogress-tasks"></div>
-      <div class="kanban-add-task">
-        <input type="text" id="inprogress-input" placeholder="Add new homework...">
-        <button data-status="inprogress">Add</button>
-      </div>
-    </div>
-    <div class="kanban-column" data-status="done">
-      <h2>Done</h2>
-      <div class="kanban-tasks" id="done-tasks"></div>
-      <div class="kanban-add-task">
-        <input type="text" id="done-input" placeholder="Add new homework...">
-        <button data-status="done">Add</button>
-      </div>
+  <div id="add-column-container" style="text-align: center; padding: 20px 0; background: #f7f6f2;">
+    <button id="add-column-btn" style="background: #5a9a5a; color: #fff; border: none; border-radius: 8px; font-size: 1.1em; padding: 10px 20px; cursor: pointer; transition: background 0.2s;">+ Add Column</button>
+    <div id="add-column-form" style="display: none; gap: 8px; justify-content: center;">
+      <input type="text" id="new-column-title" placeholder="Enter column name..." style="padding: 8px 12px; border-radius: 5px; border: 1px solid #e6d1a3; font-size: 1em;">
+      <button id="save-column-btn" style="background: #5a9a5a; color: #fff; border: none; border-radius: 5px; padding: 8px 16px; cursor: pointer;">Save</button>
+      <button id="cancel-add-column-btn" style="background: #d97428; color: #fff; border: none; border-radius: 5px; padding: 8px 12px; cursor: pointer;">Cancel</button>
     </div>
   </div>
+  <div class="kanban-board" id="kanban-board">
+    <!-- Columns will be dynamically inserted here -->
+  </div>
+
   <script>
     document.addEventListener('DOMContentLoaded', function() {
-      // Kanban board logic with localStorage
-      let kanbanData = {
-        todo: [],
-        inprogress: [],
-        done: []
-      };
+      let kanbanData = [];
 
       function saveKanban() {
-        localStorage.setItem('kanban_homework', JSON.stringify(kanbanData));
+        try {
+          localStorage.setItem('kanban_homework_dynamic', JSON.stringify(kanbanData));
+        } catch (e) {
+          console.error("Error saving to localStorage", e);
+        }
       }
 
       function loadKanban() {
-        const data = localStorage.getItem('kanban_homework');
+        const data = localStorage.getItem('kanban_homework_dynamic');
         if (data) {
           try {
-            kanbanData = JSON.parse(data) || { todo: [], inprogress: [], done: [] };
+            kanbanData = JSON.parse(data);
+            // Ensure data is an array
+            if (!Array.isArray(kanbanData)) {
+                throw new Error("Data is not an array");
+            }
           } catch (e) {
-            kanbanData = { todo: [], inprogress: [], done: [] };
+            console.error("Error parsing kanban data, resetting.", e);
+            initializeDefaultKanban();
           }
+        } else {
+            // Check for old data and migrate it
+            const oldData = localStorage.getItem('kanban_homework');
+            if(oldData) {
+                try {
+                    const parsedOldData = JSON.parse(oldData);
+                    kanbanData = [
+                        { title: "To Do", tasks: parsedOldData.todo || [] },
+                        { title: "In Progress", tasks: parsedOldData.inprogress || [] },
+                        { title: "Done", tasks: parsedOldData.done || [] }
+                    ];
+                    saveKanban(); // Save in new format
+                    localStorage.removeItem('kanban_homework'); // Remove old data
+                } catch (e) {
+                    initializeDefaultKanban();
+                }
+            } else {
+                initializeDefaultKanban();
+            }
         }
+      }
+      
+      function initializeDefaultKanban() {
+        kanbanData = [
+          { title: "To Do", tasks: ["Example task 1"] },
+          { title: "In Progress", tasks: [] },
+          { title: "Done", tasks: [] }
+        ];
       }
 
       function renderKanban() {
-        ['todo','inprogress','done'].forEach(status => {
-          const tasksDiv = document.getElementById(status+'-tasks');
-          const columnDiv = tasksDiv.closest('.kanban-column');
-          tasksDiv.innerHTML = '';
-          if (kanbanData[status]) {
-            kanbanData[status].forEach((task, idx) => {
-              const div = document.createElement('div');
-              div.className = 'kanban-task';
-              // Centered text container
-              const textWrap = document.createElement('div');
-              textWrap.style.position = 'absolute';
-              textWrap.style.top = '50%';
-              textWrap.style.left = '50%';
-              textWrap.style.transform = 'translate(-50%, -50%)';
-              textWrap.style.width = '70%';
-              textWrap.style.height = '60%';
-              textWrap.style.display = 'flex';
-              textWrap.style.alignItems = 'center';
-              textWrap.style.justifyContent = 'center';
-              textWrap.style.textAlign = 'center';
-              textWrap.style.pointerEvents = 'none';
-              // Task text span
-              const span = document.createElement('span');
-              span.textContent = task;
-              span.style.display = 'inline-block';
-              span.style.wordBreak = 'break-word';
-              span.style.fontSize = '1em';
-              span.style.color = '#7a4a13';
-              span.style.fontWeight = 'bold';
-              span.style.background = 'none';
-              span.style.borderRadius = '0';
-              span.style.padding = '0';
-              textWrap.appendChild(span);
-              // Delete button (X) absolutely positioned just to the right of the egg
-              const delBtn = document.createElement('button');
-              delBtn.textContent = '✖';
-              delBtn.title = 'Delete';
-              delBtn.style.cssText = `
-                position: absolute;
-                right: 0.2cm;
-                top: 50%;
-                transform: translateY(-50%);
-                background: #ffe4b3;
-                color: #a00;
-                border: none;
-                font-size: 1.1em;
-                border-radius: 4px;
-                cursor: pointer;
-                padding: 2px 8px;
-                pointer-events: auto;
-                z-index: 3;
-                box-shadow: 0 2px 8px rgba(0,0,0,0.07);
-              `;
-              delBtn.onclick = function(e) {
-                e.stopPropagation();
-                kanbanData[status].splice(idx,1);
-                saveKanban();
-                renderKanban();
-              };
-              div.appendChild(textWrap);
-              div.appendChild(delBtn);
-              div.draggable = true;
-              div.dataset.status = status;
-              div.dataset.idx = idx;
-              div.addEventListener('dragstart', onDragStart);
-              div.addEventListener('dragend', onDragEnd);
-              tasksDiv.appendChild(div);
+        const board = document.getElementById('kanban-board');
+        board.innerHTML = ''; // Clear the board
+
+        kanbanData.forEach((column, columnIndex) => {
+          const columnDiv = document.createElement('div');
+          columnDiv.className = 'kanban-column';
+          columnDiv.dataset.columnIndex = columnIndex;
+
+          // Header with editable title and delete button
+          const headerDiv = document.createElement('div');
+          headerDiv.style.display = 'flex';
+          headerDiv.style.justifyContent = 'space-between';
+          headerDiv.style.alignItems = 'center';
+          headerDiv.style.padding = '0 8px';
+
+          const h2 = document.createElement('h2');
+          h2.textContent = column.title;
+          h2.contentEditable = true;
+          h2.style.flexGrow = '1';
+          h2.addEventListener('blur', () => {
+            kanbanData[columnIndex].title = h2.textContent;
+            saveKanban();
+          });
+          
+          const deleteColBtn = document.createElement('button');
+          deleteColBtn.textContent = '×';
+          deleteColBtn.title = 'Delete Column';
+          deleteColBtn.style.cssText = `background: #d97428; color: #fff; border: none; border-radius: 50%; width: 24px; height: 24px; font-size: 1.2em; cursor: pointer; line-height: 1;`;
+          deleteColBtn.onclick = () => deleteColumn(columnIndex);
+
+          headerDiv.appendChild(h2);
+          headerDiv.appendChild(deleteColBtn);
+          columnDiv.appendChild(headerDiv);
+
+          // Tasks container
+          const tasksDiv = document.createElement('div');
+          tasksDiv.className = 'kanban-tasks';
+          tasksDiv.dataset.columnIndex = columnIndex;
+          tasksDiv.addEventListener('dragover', onDragOver);
+          tasksDiv.addEventListener('drop', onDrop);
+
+          if (column.tasks) {
+            column.tasks.forEach((taskText, taskIndex) => {
+              tasksDiv.appendChild(createTaskElement(taskText, columnIndex, taskIndex));
             });
           }
+          columnDiv.appendChild(tasksDiv);
+
+          // Add task form
+          const addTaskDiv = document.createElement('div');
+          addTaskDiv.className = 'kanban-add-task';
+          const input = document.createElement('input');
+          input.type = 'text';
+          input.placeholder = 'Add new homework...';
+          input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+              addTask(columnIndex, input.value);
+              input.value = '';
+            }
+          });
+          const button = document.createElement('button');
+          button.textContent = 'Add';
+          button.onclick = () => {
+            addTask(columnIndex, input.value);
+            input.value = '';
+          };
+          addTaskDiv.appendChild(input);
+          addTaskDiv.appendChild(button);
+          columnDiv.appendChild(addTaskDiv);
+
+          board.appendChild(columnDiv);
         });
       }
 
-      function addTask(status) {
-        const input = document.getElementById(status+'-input');
-        const val = input.value.trim();
-        if (!val) return;
-        if (!kanbanData[status]) {
-            kanbanData[status] = [];
+      function createTaskElement(taskText, columnIndex, taskIndex) {
+        const div = document.createElement('div');
+        div.className = 'kanban-task';
+        div.draggable = true;
+        div.dataset.columnIndex = columnIndex;
+        div.dataset.taskIndex = taskIndex;
+
+        const textWrap = document.createElement('div');
+        textWrap.style.cssText = `position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 70%; height: 60%; display: flex; align-items: center; justify-content: center; text-align: center; pointer-events: none;`;
+        
+        const span = document.createElement('span');
+        span.textContent = taskText;
+        span.style.cssText = `display: inline-block; word-break: break-word; font-size: 1em; color: #7a4a13; font-weight: bold;`;
+        textWrap.appendChild(span);
+
+        const delBtn = document.createElement('button');
+        delBtn.textContent = '✖';
+        delBtn.title = 'Delete Task';
+        delBtn.style.cssText = `position: absolute; right: 0.2cm; top: 50%; transform: translateY(-50%); background: #ffe4b3; color: #a00; border: none; font-size: 1.1em; border-radius: 4px; cursor: pointer; padding: 2px 8px; pointer-events: auto; z-index: 3; box-shadow: 0 2px 8px rgba(0,0,0,0.07);`;
+        delBtn.onclick = (e) => {
+          e.stopPropagation();
+          deleteTask(columnIndex, taskIndex);
+        };
+
+        div.appendChild(textWrap);
+        div.appendChild(delBtn);
+        div.addEventListener('dragstart', onDragStart);
+        div.addEventListener('dragend', onDragEnd);
+        return div;
+      }
+
+      function addTask(columnIndex, text) {
+        const taskText = text.trim();
+        if (!taskText) return;
+        if (!kanbanData[columnIndex].tasks) {
+          kanbanData[columnIndex].tasks = [];
         }
-        kanbanData[status].push(val);
-        input.value = '';
+        kanbanData[columnIndex].tasks.push(taskText);
         saveKanban();
         renderKanban();
       }
 
+      function deleteTask(columnIndex, taskIndex) {
+        kanbanData[columnIndex].tasks.splice(taskIndex, 1);
+        saveKanban();
+        renderKanban();
+      }
+
+      function addColumn(title) {
+        if (title) {
+          kanbanData.push({ title: title, tasks: [] });
+          saveKanban();
+          renderKanban();
+        }
+      }
+
+      function deleteColumn(columnIndex) {
+        if (confirm(`Are you sure you want to delete the column "${kanbanData[columnIndex].title}"?`)) {
+          kanbanData.splice(columnIndex, 1);
+          saveKanban();
+          renderKanban();
+        }
+      }
+
+      document.getElementById('add-column-btn').addEventListener('click', () => {
+        document.getElementById('add-column-btn').style.display = 'none';
+        document.getElementById('add-column-form').style.display = 'flex';
+        document.getElementById('new-column-title').focus();
+      });
+
+      document.getElementById('save-column-btn').addEventListener('click', () => {
+        const newTitle = document.getElementById('new-column-title').value.trim();
+        if (newTitle) {
+          addColumn(newTitle);
+          document.getElementById('new-column-title').value = '';
+          document.getElementById('add-column-btn').style.display = 'block';
+          document.getElementById('add-column-form').style.display = 'none';
+        }
+      });
+
+      document.getElementById('cancel-add-column-btn').addEventListener('click', () => {
+        document.getElementById('new-column-title').value = '';
+        document.getElementById('add-column-btn').style.display = 'block';
+        document.getElementById('add-column-form').style.display = 'none';
+      });
+
+      document.getElementById('new-column-title').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          document.getElementById('save-column-btn').click();
+        } else if (e.key === 'Escape') {
+          document.getElementById('cancel-add-column-btn').click();
+        }
+      });
+
       // Drag and drop logic
       let dragSrc = null;
+
       function onDragStart(e) {
-        dragSrc = { status: e.target.dataset.status, idx: +e.target.dataset.idx };
+        dragSrc = {
+          columnIndex: e.target.dataset.columnIndex,
+          taskIndex: e.target.dataset.taskIndex
+        };
         e.target.classList.add('dragging');
       }
+
       function onDragEnd(e) {
         e.target.classList.remove('dragging');
       }
 
-      document.querySelectorAll('.kanban-tasks').forEach(col => {
-        col.addEventListener('dragover', function(e) {
-          e.preventDefault();
-        });
-        col.addEventListener('drop', function(e) {
-          e.preventDefault();
-          if (!dragSrc) return;
-          const toStatus = col.id.replace('-tasks','');
-          const task = kanbanData[dragSrc.status][dragSrc.idx];
-          kanbanData[dragSrc.status].splice(dragSrc.idx,1);
-          if (!kanbanData[toStatus]) {
-            kanbanData[toStatus] = [];
-          }
-          kanbanData[toStatus].push(task);
-          saveKanban();
-          renderKanban();
-          dragSrc = null;
-        });
-      });
+      function onDragOver(e) {
+        e.preventDefault();
+      }
 
-      document.querySelectorAll('.kanban-add-task input').forEach(input => {
-        input.addEventListener('keydown', function(e) {
-          if (e.key === 'Enter') {
-            const status = this.id.replace('-input', '');
-            addTask(status);
-          }
-        });
-      });
+      function onDrop(e) {
+        e.preventDefault();
+        if (!dragSrc) return;
 
-      document.querySelectorAll('.kanban-add-task button').forEach(button => {
-        button.addEventListener('click', () => {
-            const status = button.dataset.status;
-            addTask(status);
-        });
-      });
+        const dropTarget = e.target.closest('.kanban-column');
+        if (!dropTarget) return;
+
+        const toColumnIndex = dropTarget.dataset.columnIndex;
+        const fromColumnIndex = dragSrc.columnIndex;
+        const fromTaskIndex = dragSrc.taskIndex;
+
+        // Move task data
+        const task = kanbanData[fromColumnIndex].tasks.splice(fromTaskIndex, 1)[0];
+        if (!kanbanData[toColumnIndex].tasks) {
+          kanbanData[toColumnIndex].tasks = [];
+        }
+        
+        // Find drop position
+        const dropTaskTarget = e.target.closest('.kanban-task');
+        if(dropTaskTarget) {
+            const toTaskIndex = dropTaskTarget.dataset.taskIndex;
+            kanbanData[toColumnIndex].tasks.splice(toTaskIndex, 0, task);
+        } else {
+            kanbanData[toColumnIndex].tasks.push(task);
+        }
+
+        saveKanban();
+        renderKanban();
+        dragSrc = null;
+      }
 
       // Initial load
       loadKanban();
