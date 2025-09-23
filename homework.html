@@ -77,9 +77,9 @@
       background: #fffbe7;
       border: 2px solid #e6d1a3;
       border-radius: 16px;
-  min-width: 180px;
-  max-width: 320px;
-  min-height: 320px;
+  min-width: 250px;
+  max-width: 400px;
+  min-height: 700px;
   padding: 12px 6px 18px 6px;
   flex: 1 1 0;
     @media (max-width: 900px) {
@@ -88,9 +88,9 @@
         padding: 0 1vw;
       }
       .kanban-column {
-        min-width: 120px;
-        max-width: 220px;
-        min-height: 220px;
+        min-width: 180px;
+        max-width: 280px;
+        min-height: 600px;
         padding: 8px 2px 12px 2px;
       }
     }
@@ -117,8 +117,9 @@
   flex: 1;
   min-height: 60px;
   position: relative;
-  min-height: 320px;
-  display: block;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
   margin-bottom: 2.2cm;
     }
     .kanban-task {
@@ -144,6 +145,9 @@
   text-shadow: none;
   position: relative;
   overflow: hidden;
+    }
+    .kanban-task:not
+      margin-top: -3.4cm;
     }
     .kanban-task.dragging {
       opacity: 0.5;
@@ -196,6 +200,7 @@
   </style>
 </head>
 <body>
+  <!-- Authentication check removed -->
   <nav class="top-menu">
     <ul>
       <li><a href="index.html">The Cluckington Family</a></li>
@@ -210,7 +215,7 @@
       <div class="kanban-tasks" id="todo-tasks"></div>
       <div class="kanban-add-task">
         <input type="text" id="todo-input" placeholder="Add new homework...">
-        <button onclick="addTask('todo')">Add</button>
+        <button data-status="todo">Add</button>
       </div>
     </div>
     <div class="kanban-column" data-status="inprogress">
@@ -218,7 +223,7 @@
       <div class="kanban-tasks" id="inprogress-tasks"></div>
       <div class="kanban-add-task">
         <input type="text" id="inprogress-input" placeholder="Add new homework...">
-        <button onclick="addTask('inprogress')">Add</button>
+        <button data-status="inprogress">Add</button>
       </div>
     </div>
     <div class="kanban-column" data-status="done">
@@ -226,134 +231,178 @@
       <div class="kanban-tasks" id="done-tasks"></div>
       <div class="kanban-add-task">
         <input type="text" id="done-input" placeholder="Add new homework...">
-        <button onclick="addTask('done')">Add</button>
+        <button data-status="done">Add</button>
       </div>
     </div>
   </div>
   <script>
-    // Kanban board logic with localStorage
-    let kanbanData = {
-      todo: [],
-      inprogress: [],
-      done: []
-    };
-    function saveKanban() {
-      localStorage.setItem('kanban_homework', JSON.stringify(kanbanData));
-    }
-    function loadKanban() {
-      const data = localStorage.getItem('kanban_homework');
-      if (data) {
-        try {
-          kanbanData = JSON.parse(data);
-        } catch (e) {}
+    document.addEventListener('DOMContentLoaded', function() {
+      // Kanban board logic with localStorage
+      let kanbanData = {
+        todo: [],
+        inprogress: [],
+        done: []
+      };
+
+      function saveKanban() {
+        localStorage.setItem('kanban_homework', JSON.stringify(kanbanData));
       }
-    }
-    function renderKanban() {
-      ['todo','inprogress','done'].forEach(status => {
-        const tasksDiv = document.getElementById(status+'-tasks');
-        const columnDiv = tasksDiv.closest('.kanban-column');
-        tasksDiv.innerHTML = '';
-        kanbanData[status].forEach((task, idx) => {
-          const div = document.createElement('div');
-          div.className = 'kanban-task';
-          // Centered text container
-          const textWrap = document.createElement('div');
-          textWrap.style.position = 'absolute';
-          textWrap.style.top = '50%';
-          textWrap.style.left = '50%';
-          textWrap.style.transform = 'translate(-50%, -50%)';
-          textWrap.style.width = '70%';
-          textWrap.style.height = '60%';
-          function renderKanban() {
-            ['todo','inprogress','done'].forEach(status => {
-              const tasksDiv = document.getElementById(status+'-tasks');
-              const columnDiv = tasksDiv.closest('.kanban-column');
-              tasksDiv.innerHTML = '';
-              kanbanData[status].forEach((task, idx) => {
-                const div = document.createElement('div');
-                div.className = 'kanban-task';
-                // Centered text container
-                const textWrap = document.createElement('div');
-                textWrap.style.position = 'absolute';
-                textWrap.style.top = '50%';
-                textWrap.style.left = '50%';
-                textWrap.style.transform = 'translate(-50%, -50%)';
-                textWrap.style.width = '70%';
-                textWrap.style.height = '60%';
-                textWrap.style.display = 'flex';
-                textWrap.style.alignItems = 'center';
-                textWrap.style.justifyContent = 'center';
-                textWrap.style.textAlign = 'center';
-                textWrap.style.pointerEvents = 'none';
-                // Task text span
-                const span = document.createElement('span');
-                span.textContent = task;
-                span.style.display = 'inline-block';
-                span.style.wordBreak = 'break-word';
-                span.style.fontSize = '1em';
-                span.style.color = '#7a4a13';
-                span.style.fontWeight = 'bold';
-                span.style.background = 'none';
-                span.style.borderRadius = '0';
-                span.style.padding = '0';
-                textWrap.appendChild(span);
-                // Delete button (X) absolutely positioned just to the right of the egg
-                const delBtn = document.createElement('button');
-                delBtn.textContent = '✖';
-                delBtn.title = 'Delete';
-                delBtn.style.cssText = `
-                  position: absolute;
-                  right: 0.2cm;
-                  top: 50%;
-                  transform: translateY(-50%);
-                  background: #ffe4b3;
-                  color: #a00;
-                  border: none;
-                  font-size: 1.1em;
-                  border-radius: 4px;
-                  cursor: pointer;
-                  padding: 2px 8px;
-                  pointer-events: auto;
-                  z-index: 3;
-                  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
-                `;
-                delBtn.onclick = function(e) {
-                  e.stopPropagation();
-                  kanbanData[status].splice(idx,1);
-                  saveKanban();
-                  renderKanban();
-                };
-                div.appendChild(textWrap);
-                div.appendChild(delBtn);
-                div.draggable = true;
-                div.dataset.status = status;
-                div.dataset.idx = idx;
-                div.addEventListener('dragstart', onDragStart);
-                div.addEventListener('dragend', onDragEnd);
-                tasksDiv.appendChild(div);
-              });
-              // Dynamically set min-height of column based on number of eggs
-              // Each egg is about 180px tall + 3.4cm gap (129px) except last
-              const numEggs = kanbanData[status].length;
-              let minHeight = 320;
-              if (numEggs > 0) {
-                minHeight = numEggs * (180 + 129) - 129 + 100; // 100px buffer for add box
-              }
-              columnDiv.style.minHeight = minHeight + 'px';
+
+      function loadKanban() {
+        const data = localStorage.getItem('kanban_homework');
+        if (data) {
+          try {
+            kanbanData = JSON.parse(data) || { todo: [], inprogress: [], done: [] };
+          } catch (e) {
+            kanbanData = { todo: [], inprogress: [], done: [] };
+          }
+        }
+      }
+
+      function renderKanban() {
+        ['todo','inprogress','done'].forEach(status => {
+          const tasksDiv = document.getElementById(status+'-tasks');
+          const columnDiv = tasksDiv.closest('.kanban-column');
+          tasksDiv.innerHTML = '';
+          if (kanbanData[status]) {
+            kanbanData[status].forEach((task, idx) => {
+              const div = document.createElement('div');
+              div.className = 'kanban-task';
+              // Centered text container
+              const textWrap = document.createElement('div');
+              textWrap.style.position = 'absolute';
+              textWrap.style.top = '50%';
+              textWrap.style.left = '50%';
+              textWrap.style.transform = 'translate(-50%, -50%)';
+              textWrap.style.width = '70%';
+              textWrap.style.height = '60%';
+              textWrap.style.display = 'flex';
+              textWrap.style.alignItems = 'center';
+              textWrap.style.justifyContent = 'center';
+              textWrap.style.textAlign = 'center';
+              textWrap.style.pointerEvents = 'none';
+              // Task text span
+              const span = document.createElement('span');
+              span.textContent = task;
+              span.style.display = 'inline-block';
+              span.style.wordBreak = 'break-word';
+              span.style.fontSize = '1em';
+              span.style.color = '#7a4a13';
+              span.style.fontWeight = 'bold';
+              span.style.background = 'none';
+              span.style.borderRadius = '0';
+              span.style.padding = '0';
+              textWrap.appendChild(span);
+              // Delete button (X) absolutely positioned just to the right of the egg
+              const delBtn = document.createElement('button');
+              delBtn.textContent = '✖';
+              delBtn.title = 'Delete';
+              delBtn.style.cssText = `
+                position: absolute;
+                right: 0.2cm;
+                top: 50%;
+                transform: translateY(-50%);
+                background: #ffe4b3;
+                color: #a00;
+                border: none;
+                font-size: 1.1em;
+                border-radius: 4px;
+                cursor: pointer;
+                padding: 2px 8px;
+                pointer-events: auto;
+                z-index: 3;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+              `;
+              delBtn.onclick = function(e) {
+                e.stopPropagation();
+                kanbanData[status].splice(idx,1);
+                saveKanban();
+                renderKanban();
+              };
+              div.appendChild(textWrap);
+              div.appendChild(delBtn);
+              div.draggable = true;
+              div.dataset.status = status;
+              div.dataset.idx = idx;
+              div.addEventListener('dragstart', onDragStart);
+              div.addEventListener('dragend', onDragEnd);
+              tasksDiv.appendChild(div);
             });
           }
-        const toStatus = col.id.replace('-tasks','');
-        const task = kanbanData[dragSrc.status][dragSrc.idx];
-        kanbanData[dragSrc.status].splice(dragSrc.idx,1);
-        kanbanData[toStatus].push(task);
+        });
+      }
+
+      function addTask(status) {
+        const input = document.getElementById(status+'-input');
+        const val = input.value.trim();
+        if (!val) return;
+        if (!kanbanData[status]) {
+            kanbanData[status] = [];
+        }
+        kanbanData[status].push(val);
+        input.value = '';
         saveKanban();
         renderKanban();
-        dragSrc = null;
+      }
+
+      // Drag and drop logic
+      let dragSrc = null;
+      function onDragStart(e) {
+        dragSrc = { status: e.target.dataset.status, idx: +e.target.dataset.idx };
+        e.target.classList.add('dragging');
+      }
+      function onDragEnd(e) {
+        e.target.classList.remove('dragging');
+      }
+
+      document.querySelectorAll('.kanban-tasks').forEach(col => {
+        col.addEventListener('dragover', function(e) {
+          e.preventDefault();
+        });
+        col.addEventListener('drop', function(e) {
+          e.preventDefault();
+          if (!dragSrc) return;
+          const toStatus = col.id.replace('-tasks','');
+          const task = kanbanData[dragSrc.status][dragSrc.idx];
+          kanbanData[dragSrc.status].splice(dragSrc.idx,1);
+          if (!kanbanData[toStatus]) {
+            kanbanData[toStatus] = [];
+          }
+          kanbanData[toStatus].push(task);
+          saveKanban();
+          renderKanban();
+          dragSrc = null;
+        });
       });
+
+      document.querySelectorAll('.kanban-add-task input').forEach(input => {
+        input.addEventListener('keydown', function(e) {
+          if (e.key === 'Enter') {
+            const status = this.id.replace('-input', '');
+            addTask(status);
+          }
+        });
+      });
+
+      document.querySelectorAll('.kanban-add-task button').forEach(button => {
+        button.addEventListener('click', () => {
+            const status = button.dataset.status;
+            addTask(status);
+        });
+      });
+
+      // Initial load
+      loadKanban();
+      renderKanban();
     });
-    // Initial load
-    loadKanban();
-    renderKanban();
+  </script>
+  <!-- Logout Script -->
+  <script>
+    document.getElementById('logout-btn').addEventListener('click', function(e) {
+      e.preventDefault();
+      localStorage.removeItem('username');
+      window.location.href = 'signin.html';
+    });
   </script>
 </body>
 </html>
