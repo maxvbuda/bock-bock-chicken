@@ -2195,6 +2195,16 @@
             speedBoostActive = false;
         }
         
+        // Check if invincibility has expired
+        if (invincibilityActive && Date.now() > invincibilityTimer) {
+            invincibilityActive = false;
+        }
+        
+        // Check if freeze has expired
+        if (freezeActive && Date.now() > freezeTimer) {
+            freezeActive = false;
+        }
+        
         // Calculate new position with appropriate speed
         const newX = pacmanPosition.x + (pacmanDirection.x * speedFactor);
         const newY = pacmanPosition.y + (pacmanDirection.y * speedFactor);
@@ -2276,7 +2286,7 @@
             if (speedBoostActive) {
                 speedIndicator.style.display = 'inline';
                 // Calculate and display remaining time
-                const timeLeft = Math.ceil((speedBoostTimer - Date.now()) / 1000);
+                const timeLeft = Math.max(0, Math.ceil((speedBoostTimer - Date.now()) / 1000));
                 speedIndicator.textContent = `\u26a1 Speed (${timeLeft}s)`;
             } else {
                 speedIndicator.style.display = 'none';
@@ -2285,7 +2295,7 @@
             if (invincibilityActive) {
                 shieldIndicator.style.display = 'inline';
                 // Calculate and display remaining time
-                const timeLeft = Math.ceil((invincibilityTimer - Date.now()) / 1000);
+                const timeLeft = Math.max(0, Math.ceil((invincibilityTimer - Date.now()) / 1000));
                 shieldIndicator.textContent = `\ud83d\udee1\ufe0f Shield (${timeLeft}s)`;
             } else {
                 shieldIndicator.style.display = 'none';
@@ -2294,7 +2304,7 @@
             if (freezeActive) {
                 freezeIndicator.style.display = 'inline';
                 // Calculate and display remaining time
-                const timeLeft = Math.ceil((freezeTimer - Date.now()) / 1000);
+                const timeLeft = Math.max(0, Math.ceil((freezeTimer - Date.now()) / 1000));
                 freezeIndicator.textContent = `\u2744\ufe0f Freeze (${timeLeft}s)`;
             } else {
                 freezeIndicator.style.display = 'none';
