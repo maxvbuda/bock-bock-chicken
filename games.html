@@ -935,6 +935,12 @@
     let allGhostsEliminated = false;
     let pacmanSize = 15;
     let ghostSize = 15;
+    
+    // Boss fox variables
+    let bossActive = false;
+    let bossFox = null;
+    let bossHealth = 0;
+    let bossMaxHealth = 0;
     let pelletSize = 5;
     let powerPelletSize = 10;
     let powerMode = false;
@@ -1062,6 +1068,87 @@
     }
     
     // Create ghosts at different corners of the maze
+    function createBossFox() {
+        const mazeWidth = maze[0].length;
+        const mazeHeight = maze.length;
+        
+        // Only create boss on certain levels (every 3rd level)
+        if (currentLevel % 3 === 0) {
+            bossActive = true;
+            
+            // Calculate health based on level
+            bossMaxHealth = Math.min(3 + Math.floor(currentLevel / 3), 10); // Max 10 health
+            bossHealth = bossMaxHealth;
+            
+            // Place boss in center of the maze
+            let bossX = Math.floor(mazeWidth / 2);
+            let bossY = Math.floor(mazeHeight / 2);
+            
+            // Make sure it's on a path
+            if (maze[bossY][bossX] === 1) {
+                // Find nearest path
+                let found = false;
+                for (let radius = 1; radius < 5 && !found; radius++) {
+                    for (let dy = -radius; dy <= radius && !found; dy++) {
+                        for (let dx = -radius; dx <= radius && !found; dx++) {
+                            const newY = bossY + dy;
+                            const newX = bossX + dx;
+                            if (newY >= 0 && newY < mazeHeight && newX >= 0 && newX < mazeWidth && maze[newY][newX] === 0) {
+                                bossX = newX;
+                                bossY = newY;
+                                found = true;
+                            }
+                        }
+                    }
+                }
+            }
+            
+            bossFox = {
+                x: bossX * cellSize + cellSize / 2,
+                y: bossY * cellSize + cellSize / 2,
+                color: 'gold', // Special color for boss
+                direction: { x: 0, y: 0 },
+                speed: 1.8 + (currentLevel * 0.1), // Faster than regular ghosts
+                frightened: false,
+                isBoss: true,
+                size: ghostSize * 1.5, // Larger than regular ghosts
+                attackCooldown: 0,
+                attackRadius: 0,
+                dashCooldown: 0,
+                dashTarget: null,
+                specialAbilityTimer: 0
+            };
+            
+            console.log(`Boss fox spawned at level ${currentLevel} with ${bossHealth} health!`);
+            
+            // Add boss to ghosts array
+            ghosts.push(bossFox);
+            
+            // Create a special text announcement
+            const bossText = document.createElement('div');
+            bossText.textContent = '⚠️ BOSS FOX APPEARED! ⚠️';
+            bossText.style.position = 'absolute';
+            bossText.style.left = '50%';
+            bossText.style.top = '30%';
+            bossText.style.transform = 'translate(-50%, -50%)';
+            bossText.style.fontSize = '28px';
+            bossText.style.fontWeight = 'bold';
+            bossText.style.color = '#ff4500';
+            bossText.style.zIndex = '1000';
+            bossText.style.transition = 'all 1.5s';
+            document.body.appendChild(bossText);
+            
+            // Animate and remove
+            setTimeout(() => {
+                bossText.style.opacity = '0';
+                bossText.style.top = '20%';
+                setTimeout(() => {
+                    document.body.removeChild(bossText);
+                }, 1500);
+            }, 2000);
+        }
+    }
+
     function createGhosts() {
         const mazeWidth = maze[0].length;
         const mazeHeight = maze.length;
@@ -1070,6 +1157,8 @@
         const ghostColors = ['red', 'pink', 'cyan', 'orange'];
         ghosts = [];
         allGhostsEliminated = false;
+        bossFox = null;
+        bossActive = false;
         
         // Place ghosts in each corner (making sure they're on paths)
         const corners = [
@@ -1150,6 +1239,94 @@
             text: 'EXTRA LIFE!',
             isScoreText: true
         });
+    }
+    
+    // Draw the boss fox with special effects and health bar
+    function drawBossFox(boss) {
+        // Draw boss fox glow/aura
+        const glowPulse = Math.sin(Date.now() / 150) * 0.2 + 0.8;
+        
+        if (powerMode && boss.frightened) {
+            // Frightened boss has blue aura but still looks intimidating
+            pacmanCtx.fillStyle = 'rgba(30, 100, 255, ' + glowPulse * 0.3 + ')';
+            pacmanCtx.beginPath();
+            pacmanCtx.arc(boss.x, boss.y, boss.size * 1.8, 0, Math.PI * 2);
+            pacmanCtx.fill();
+        } else {
+            // Boss has fiery red/gold aura
+            const gradient = pacmanCtx.createRadialGradient(
+                boss.x, boss.y, boss.size * 0.8,
+                boss.x, boss.y, boss.size * 1.8
+            );
+            gradient.addColorStop(0, 'rgba(255, 215, 0, ' + glowPulse * 0.5 + ')');
+            gradient.addColorStop(0.5, 'rgba(255, 140, 0, ' + glowPulse * 0.3 + ')');
+            gradient.addColorStop(1, 'rgba(255, 0, 0, 0)');
+            
+            pacmanCtx.fillStyle = gradient;
+            pacmanCtx.beginPath();
+            pacmanCtx.arc(boss.x, boss.y, boss.size * 1.8, 0, Math.PI * 2);
+            pacmanCtx.fill();
+        }
+        
+        // Draw boss fox
+        pacmanCtx.font = "45px Arial"; // Boss is bigger
+        pacmanCtx.textAlign = "center";
+        pacmanCtx.textBaseline = "middle";
+        
+        if (powerMode && boss.frightened) {
+            // Even when frightened, boss is still somewhat intimidating
+            pacmanCtx.fillText('🦊', boss.x, boss.y);
+            pacmanCtx.fillStyle = 'rgba(100, 100, 255, 0.7)';
+            pacmanCtx.fillText('👑', boss.x, boss.y - 25); // Crown slightly blue
+        } else {
+            // Normal boss state
+            pacmanCtx.fillText('🦊', boss.x, boss.y);
+            
+            // Add a crown to show it's the boss
+            pacmanCtx.fillStyle = 'gold';
+            pacmanCtx.fillText('👑', boss.x, boss.y - 25);
+        }
+        
+        // Draw boss attack visualization if attacking
+        if (boss.attackCooldown > 0) {
+            pacmanCtx.beginPath();
+            pacmanCtx.arc(boss.x, boss.y, boss.attackRadius, 0, Math.PI * 2);
+            pacmanCtx.strokeStyle = 'rgba(255, 0, 0, ' + (boss.attackCooldown / 20) + ')';
+            pacmanCtx.lineWidth = 3;
+            pacmanCtx.stroke();
+        }
+        
+        // Draw health bar
+        const healthBarWidth = boss.size * 3;
+        const healthBarHeight = 8;
+        const healthPercentage = bossHealth / bossMaxHealth;
+        
+        // Health bar background
+        pacmanCtx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+        pacmanCtx.fillRect(
+            boss.x - healthBarWidth/2,
+            boss.y - boss.size - 15,
+            healthBarWidth,
+            healthBarHeight
+        );
+        
+        // Health bar fill - color changes based on health percentage
+        let healthColor;
+        if (healthPercentage > 0.6) {
+            healthColor = 'lime';
+        } else if (healthPercentage > 0.3) {
+            healthColor = 'yellow';
+        } else {
+            healthColor = 'red';
+        }
+        
+        pacmanCtx.fillStyle = healthColor;
+        pacmanCtx.fillRect(
+            boss.x - healthBarWidth/2,
+            boss.y - boss.size - 15,
+            healthBarWidth * healthPercentage,
+            healthBarHeight
+        );
     }
     
     function createEliminationEffect(x, y) {
@@ -1550,6 +1727,10 @@
             console.log('Ghosts created:', ghosts.length);
             createSpecialPowerUps();
             console.log('Special power-ups created:', specialPowerUps.length);
+            createBossFox(); // Add boss fox if it's a boss level
+            if (bossActive) {
+                console.log('Boss fox created with', bossHealth, 'health!');
+            }
         } catch (error) {
             console.error('Error during game initialization:', error);
             // Create a basic maze as fallback
@@ -1659,6 +1840,13 @@
     function drawGhosts() {
         ghosts.forEach(ghost => {
             pacmanCtx.save();
+            
+            // Check if this ghost is a boss
+            if (ghost.isBoss) {
+                drawBossFox(ghost);
+                pacmanCtx.restore();
+                return;
+            }
             
             // Draw fox emoji
             pacmanCtx.font = "30px Arial";
@@ -2003,25 +2191,189 @@
             
             if (distance < pacmanSize + ghostSize/2) {
                 if (powerMode && ghost.frightened) {
-                    // Eat the ghost - completely eliminate it from the game
-                    ghostsEaten++;
-                    pacmanScore += ghostsEaten * 200; // 200, 400, 800, 1600 points
-                    pacmanScoreSpan.textContent = pacmanScore;
-                    
-                    // Create a visual elimination effect at the ghost's position
-                    createEliminationEffect(ghost.x, ghost.y);
-                    
-                    // Mark this ghost for removal
-                    ghostsToRemove.push(i);
-                    
-                    // Higher chance (40%) to spawn a life pellet where the ghost was
-                    if (Math.random() < 0.4) {
-                        lifePellets.push({
-                            x: ghost.x,
-                            y: ghost.y,
-                            pulseOffset: 0,
-                            pulseDirection: 1
-                        });
+                    if (ghost.isBoss) {
+                        // Boss takes damage instead of being eliminated immediately
+                        bossHealth--;
+                        
+                        // Create damage visual effect
+                        createEliminationEffect(ghost.x + (Math.random() * 30 - 15), ghost.y + (Math.random() * 30 - 15));
+                        
+                        // Add points for damaging the boss
+                        pacmanScore += 300;
+                        pacmanScoreSpan.textContent = pacmanScore;
+                        
+                        // Show damage text
+                        const bossHitText = document.createElement('div');
+                        bossHitText.textContent = 'BOSS DAMAGED!';
+                        bossHitText.style.position = 'absolute';
+                        bossHitText.style.left = `${ghost.x}px`;
+                        bossHitText.style.top = `${ghost.y - 50}px`;
+                        bossHitText.style.fontSize = '18px';
+                        bossHitText.style.fontWeight = 'bold';
+                        bossHitText.style.color = 'red';
+                        bossHitText.style.zIndex = '1000';
+                        bossHitText.style.transform = 'translate(-50%, -50%)';
+                        bossHitText.style.transition = 'all 0.5s';
+                        document.body.appendChild(bossHitText);
+                        
+                        // Animate and remove text
+                        setTimeout(() => {
+                            bossHitText.style.opacity = '0';
+                            bossHitText.style.top = `${ghost.y - 80}px`;
+                            setTimeout(() => {
+                                document.body.removeChild(bossHitText);
+                            }, 500);
+                        }, 500);
+                        
+                        // Check if boss is defeated
+                        if (bossHealth <= 0) {
+                            // Boss defeated - big points and rewards!
+                            pacmanScore += 2000 * currentLevel; // Big reward for defeating boss
+                            pacmanScoreSpan.textContent = pacmanScore;
+                            
+                            // Create big explosion effect
+                            for (let j = 0; j < 3; j++) {
+                                setTimeout(() => {
+                                    createEliminationEffect(ghost.x, ghost.y);
+                                }, j * 200);
+                            }
+                            
+                            // Mark boss for removal
+                            ghostsToRemove.push(i);
+                            bossActive = false;
+                            
+                            // Spawn multiple rewards
+                            // 1. Extra life
+                            lifePellets.push({
+                                x: ghost.x,
+                                y: ghost.y - 30,
+                                pulseOffset: 0,
+                                pulseDirection: 1
+                            });
+                            
+                            // 2. Random power-ups
+                            const powerUpTypes = [
+                                { type: 'speed', emoji: '⚡', color: 'rgba(255, 255, 0, 0.8)', description: 'Speed Boost' },
+                                { type: 'invincibility', emoji: '🛡️', color: 'rgba(0, 100, 255, 0.8)', description: 'Shield' },
+                                { type: 'freeze', emoji: '❄️', color: 'rgba(0, 255, 255, 0.8)', description: 'Freeze' }
+                            ];
+                            
+                            // Spawn all three types of power-ups
+                            for (let j = 0; j < powerUpTypes.length; j++) {
+                                const angle = (j / powerUpTypes.length) * Math.PI * 2;
+                                const distance = 60;
+                                const x = ghost.x + Math.cos(angle) * distance;
+                                const y = ghost.y + Math.sin(angle) * distance;
+                                
+                                specialPowerUps.push({
+                                    x: x,
+                                    y: y,
+                                    type: powerUpTypes[j].type,
+                                    emoji: powerUpTypes[j].emoji,
+                                    color: powerUpTypes[j].color,
+                                    description: powerUpTypes[j].description,
+                                    pulseOffset: 0,
+                                    pulseDirection: 1
+                                });
+                            }
+                            
+                            // Show boss defeated message
+                            const bossDefeatedText = document.createElement('div');
+                            bossDefeatedText.textContent = '✨ BOSS DEFEATED! ✨';
+                            bossDefeatedText.style.position = 'absolute';
+                            bossDefeatedText.style.left = '50%';
+                            bossDefeatedText.style.top = '40%';
+                            bossDefeatedText.style.transform = 'translate(-50%, -50%) scale(0.5)';
+                            bossDefeatedText.style.fontSize = '36px';
+                            bossDefeatedText.style.fontWeight = 'bold';
+                            bossDefeatedText.style.color = 'gold';
+                            bossDefeatedText.style.textShadow = '0 0 10px red';
+                            bossDefeatedText.style.zIndex = '1000';
+                            bossDefeatedText.style.transition = 'all 1s';
+                            document.body.appendChild(bossDefeatedText);
+                            
+                            // Animate message
+                            setTimeout(() => {
+                                bossDefeatedText.style.transform = 'translate(-50%, -50%) scale(1.2)';
+                                setTimeout(() => {
+                                    bossDefeatedText.style.transform = 'translate(-50%, -50%) scale(1)';
+                                    setTimeout(() => {
+                                        bossDefeatedText.style.opacity = '0';
+                                        setTimeout(() => {
+                                            document.body.removeChild(bossDefeatedText);
+                                        }, 1000);
+                                    }, 2000);
+                                }, 200);
+                            }, 100);
+                        } else {
+                            // Boss not defeated yet, just knocked back slightly
+                            const knockbackDistance = 50;
+                            const angle = Math.atan2(ghost.y - pacmanPosition.y, ghost.x - pacmanPosition.x);
+                            ghost.x += Math.cos(angle) * knockbackDistance;
+                            ghost.y += Math.sin(angle) * knockbackDistance;
+                            
+                            // Make sure boss doesn't go through walls after knockback
+                            const cellX = Math.floor(ghost.x / cellSize);
+                            const cellY = Math.floor(ghost.y / cellSize);
+                            if (cellX >= 0 && cellX < maze[0].length && cellY >= 0 && cellY < maze.length) {
+                                if (maze[cellY][cellX] === 1) {
+                                    // Move boss back if it would go through a wall
+                                    ghost.x -= Math.cos(angle) * knockbackDistance;
+                                    ghost.y -= Math.sin(angle) * knockbackDistance;
+                                }
+                            }
+                            
+                            // Boss temporarily becomes more frightened after being hit
+                            ghost.frightened = true;
+                            
+                            // Boss special ability cooldown is extended when damaged
+                            ghost.specialAbilityTimer = Date.now() + 2000;
+                        }
+                    } else {
+                        // Regular ghost elimination
+                        ghostsEaten++;
+                        pacmanScore += ghostsEaten * 200; // 200, 400, 800, 1600 points
+                        pacmanScoreSpan.textContent = pacmanScore;
+                        
+                        // Create a visual elimination effect at the ghost's position
+                        createEliminationEffect(ghost.x, ghost.y);
+                        
+                        // Mark this ghost for removal
+                        ghostsToRemove.push(i);
+                        
+                        // When a fox is eliminated:
+                        // 40% chance to spawn a life pellet
+                        // 20% chance to spawn a special power-up
+                        // 40% chance to spawn nothing
+                        const dropRoll = Math.random();
+                        if (dropRoll < 0.4) {
+                            // Spawn life pellet
+                            lifePellets.push({
+                                x: ghost.x,
+                                y: ghost.y,
+                                pulseOffset: 0,
+                                pulseDirection: 1
+                            });
+                        } else if (dropRoll < 0.6) {
+                            // Spawn a random special power-up
+                            const powerUpTypes = [
+                                { type: 'speed', emoji: '⚡', color: 'rgba(255, 255, 0, 0.8)', description: 'Speed Boost' },
+                                { type: 'invincibility', emoji: '🛡️', color: 'rgba(0, 100, 255, 0.8)', description: 'Shield' },
+                                { type: 'freeze', emoji: '❄️', color: 'rgba(0, 255, 255, 0.8)', description: 'Freeze' }
+                            ];
+                            const randomType = powerUpTypes[Math.floor(Math.random() * powerUpTypes.length)];
+                            
+                            specialPowerUps.push({
+                                x: ghost.x,
+                                y: ghost.y,
+                                type: randomType.type,
+                                emoji: randomType.emoji,
+                                color: randomType.color,
+                                description: randomType.description,
+                                pulseOffset: 0,
+                                pulseDirection: 1
+                            });
+                        }
                     }
                 } else if (!powerMode && !invincibilityActive) {
                     // Pac-Man gets caught if not invincible
@@ -2078,6 +2430,146 @@
     }
     
     function moveGhosts() {
+        // Handle boss special abilities
+        if (bossActive && bossFox) {
+            // Update boss attack cooldown
+            if (bossFox.attackCooldown > 0) {
+                bossFox.attackCooldown--;
+                bossFox.attackRadius += 5;
+                
+                // Check if player is within attack range
+                const distanceToBoss = Math.sqrt(
+                    Math.pow(pacmanPosition.x - bossFox.x, 2) + 
+                    Math.pow(pacmanPosition.y - bossFox.y, 2)
+                );
+                
+                if (distanceToBoss < bossFox.attackRadius && !invincibilityActive) {
+                    // Player gets hit by boss attack
+                    pacmanLives--;
+                    pacmanLivesSpan.textContent = pacmanLives;
+                    
+                    // Create attack hit effect
+                    createEliminationEffect(pacmanPosition.x, pacmanPosition.y);
+                    
+                    // Reset boss attack
+                    bossFox.attackCooldown = 0;
+                    bossFox.attackRadius = 0;
+                    
+                    // Check for game over
+                    if (pacmanLives <= 0) {
+                        pacmanGameRunning = false;
+                        pacmanStartButton.style.display = 'block';
+                        pacmanStartButton.textContent = 'Game Over - Try Again';
+                    } else {
+                        // Temporarily move player to safe position
+                        pacmanPosition = { x: 400, y: 300 };
+                        pacmanDirection = { x: 0, y: 0 };
+                    }
+                }
+            }
+            
+            // Boss special abilities based on remaining health
+            if (!bossFox.frightened && Date.now() > bossFox.specialAbilityTimer) {
+                // Special abilities more frequent when boss has less health
+                const healthPercentage = bossHealth / bossMaxHealth;
+                
+                if (Math.random() < 0.02 + (0.08 * (1 - healthPercentage))) {
+                    const ability = Math.floor(Math.random() * 3);
+                    
+                    switch(ability) {
+                        case 0: // Area attack
+                            bossFox.attackCooldown = 20;
+                            bossFox.attackRadius = 20;
+                            bossFox.specialAbilityTimer = Date.now() + 5000;
+                            console.log("Boss used area attack!");
+                            break;
+                            
+                        case 1: // Dash toward player
+                            // Store target position
+                            bossFox.dashTarget = {
+                                x: pacmanPosition.x,
+                                y: pacmanPosition.y
+                            };
+                            bossFox.dashCooldown = 30;
+                            bossFox.specialAbilityTimer = Date.now() + 4000;
+                            console.log("Boss used dash attack!");
+                            break;
+                            
+                        case 2: // Summon minion
+                            // Only summon if there are fewer than 8 ghosts
+                            if (ghosts.length < 8) {
+                                const offset = 40;
+                                const ghostColors = ['red', 'pink', 'cyan', 'orange'];
+                                const newGhost = {
+                                    x: bossFox.x + (Math.random() * offset - offset/2),
+                                    y: bossFox.y + (Math.random() * offset - offset/2),
+                                    color: ghostColors[Math.floor(Math.random() * ghostColors.length)],
+                                    direction: { x: 0, y: 0 },
+                                    speed: 1.5,
+                                    frightened: false
+                                };
+                                
+                                ghosts.push(newGhost);
+                                
+                                // Create summon effect
+                                createEliminationEffect(newGhost.x, newGhost.y);
+                                console.log("Boss summoned a minion!");
+                            }
+                            bossFox.specialAbilityTimer = Date.now() + 8000;
+                            break;
+                    }
+                }
+            }
+            
+            // Process boss dash attack
+            if (bossFox.dashCooldown > 0) {
+                bossFox.dashCooldown--;
+                
+                // Move toward dash target
+                if (bossFox.dashTarget) {
+                    const angle = Math.atan2(
+                        bossFox.dashTarget.y - bossFox.y,
+                        bossFox.dashTarget.x - bossFox.x
+                    );
+                    
+                    const dashSpeed = 5;
+                    const newX = bossFox.x + Math.cos(angle) * dashSpeed;
+                    const newY = bossFox.y + Math.sin(angle) * dashSpeed;
+                    
+                    // Check for wall collision
+                    const cellX = Math.floor(newX / cellSize);
+                    const cellY = Math.floor(newY / cellSize);
+                    
+                    if (cellX >= 0 && cellX < maze[0].length && 
+                        cellY >= 0 && cellY < maze.length && 
+                        maze[cellY][cellX] !== 1) {
+                        bossFox.x = newX;
+                        bossFox.y = newY;
+                    } else {
+                        // Hit a wall, end dash early
+                        bossFox.dashCooldown = 0;
+                        bossFox.dashTarget = null;
+                    }
+                    
+                    // Create trail effect
+                    if (bossFox.dashCooldown % 3 === 0) {
+                        eliminationEffects.push({
+                            x: bossFox.x,
+                            y: bossFox.y,
+                            radius: 5,
+                            color: 'rgba(255, 165, 0, 0.7)',
+                            speedX: 0,
+                            speedY: 0,
+                            life: 10,
+                            currentLife: 0,
+                            text: null,
+                            isScoreText: false
+                        });
+                    }
+                }
+            }
+        }
+        
         // Check if freeze power-up is active
         if (freezeActive) {
             // Draw frozen effect on all ghosts but don't move them
@@ -2147,7 +2639,46 @@
                 if (powerMode && ghost.frightened) {
                     // When frightened, choose a random direction
                     chosenDirection = possibleDirections[Math.floor(Math.random() * possibleDirections.length)];
+                } else if (ghost.isBoss && !ghost.dashCooldown) {
+                    // Boss fox has more advanced AI when not dashing
+                    
+                    // When chasing, prefer directions that get closer to Pac-Man
+                    possibleDirections.sort((a, b) => {
+                        const distA = Math.pow(pacmanPosition.x - (ghost.x + a.x * cellSize), 2) + 
+                                     Math.pow(pacmanPosition.y - (ghost.y + a.y * cellSize), 2);
+                        const distB = Math.pow(pacmanPosition.x - (ghost.x + b.x * cellSize), 2) + 
+                                     Math.pow(pacmanPosition.y - (ghost.y + b.y * cellSize), 2);
+                        return distA - distB; // Sort by closest to Pac-Man
+                    });
+                    
+                    // Boss is much more determined to chase the player - less randomness
+                    if (Math.random() < 0.05) { // Only 5% chance to choose randomly
+                        chosenDirection = possibleDirections[Math.floor(Math.random() * possibleDirections.length)];
+                    } else {
+                        chosenDirection = possibleDirections[0]; // Choose closest direction to Pac-Man
+                    }
+                    
+                    // Boss will occasionally perform a predictive movement - anticipating player's move
+                    if (Math.random() < 0.3) {
+                        // Try to predict where player is going based on their direction
+                        const predictedPosition = {
+                            x: pacmanPosition.x + (pacmanDirection.x * 100),
+                            y: pacmanPosition.y + (pacmanDirection.y * 100)
+                        };
+                        
+                        // Sort directions based on predicted position
+                        possibleDirections.sort((a, b) => {
+                            const predDistA = Math.pow(predictedPosition.x - (ghost.x + a.x * cellSize), 2) + 
+                                           Math.pow(predictedPosition.y - (ghost.y + a.y * cellSize), 2);
+                            const predDistB = Math.pow(predictedPosition.x - (ghost.x + b.x * cellSize), 2) + 
+                                           Math.pow(predictedPosition.y - (ghost.y + b.y * cellSize), 2);
+                            return predDistA - predDistB;
+                        });
+                        
+                        chosenDirection = possibleDirections[0];
+                    }
                 } else {
+                    // Regular fox behavior
                     // When chasing, prefer directions that get closer to Pac-Man
                     possibleDirections.sort((a, b) => {
                         const distA = Math.pow(pacmanPosition.x - (ghost.x + a.x * cellSize), 2) + 
