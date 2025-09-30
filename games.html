@@ -1072,8 +1072,11 @@
         const mazeWidth = maze[0].length;
         const mazeHeight = maze.length;
         
+        console.log("Checking for boss at level:", currentLevel);
+        
         // Only create boss on certain levels (every 3rd level)
         if (currentLevel % 3 === 0) {
+            console.log("Boss condition met! Creating boss for level:", currentLevel);
             bossActive = true;
             
             // Calculate health based on level
@@ -1727,9 +1730,12 @@
             console.log('Ghosts created:', ghosts.length);
             createSpecialPowerUps();
             console.log('Special power-ups created:', specialPowerUps.length);
+            console.log("About to check for boss fox at level:", currentLevel);
             createBossFox(); // Add boss fox if it's a boss level
             if (bossActive) {
                 console.log('Boss fox created with', bossHealth, 'health!');
+            } else {
+                console.log('No boss fox created at level:', currentLevel);
             }
         } catch (error) {
             console.error('Error during game initialization:', error);
