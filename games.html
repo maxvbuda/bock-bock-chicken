@@ -1074,8 +1074,9 @@
         
         console.log("Checking for boss at level:", currentLevel);
         
-        // Only create boss on certain levels (every 3rd level)
-        if (currentLevel % 3 === 0) {
+        // Create boss every 3 levels starting at level 3
+        // Using absolute mod to ensure consistent behavior
+        if (currentLevel >= 3 && (currentLevel % 3) === 0) {
             console.log("Boss condition met! Creating boss for level:", currentLevel);
             bossActive = true;
             
@@ -2412,6 +2413,7 @@
             
             // Advance to next level
             currentLevel++;
+            console.log("Level complete - advancing to level:", currentLevel);
             allGhostsEliminated = false;
             
             // Reset power-up states before next level
