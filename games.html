@@ -1084,27 +1084,105 @@
             bossMaxHealth = Math.min(3 + Math.floor(currentLevel / 3), 10); // Max 10 health
             bossHealth = bossMaxHealth;
             
-            // Place boss in center of the maze
-            let bossX = Math.floor(mazeWidth / 2);
-            let bossY = Math.floor(mazeHeight / 2);
+            // Place boss at one of the sides of the maze instead of the center
+            // Randomly choose a side: 0=top, 1=right, 2=bottom, 3=left
+            const side = Math.floor(Math.random() * 4);
             
-            // Make sure it's on a path
-            if (maze[bossY][bossX] === 1) {
-                // Find nearest path
-                let found = false;
-                for (let radius = 1; radius < 5 && !found; radius++) {
-                    for (let dy = -radius; dy <= radius && !found; dy++) {
-                        for (let dx = -radius; dx <= radius && !found; dx++) {
-                            const newY = bossY + dy;
-                            const newX = bossX + dx;
-                            if (newY >= 0 && newY < mazeHeight && newX >= 0 && newX < mazeWidth && maze[newY][newX] === 0) {
-                                bossX = newX;
-                                bossY = newY;
-                                found = true;
-                            }
+            let bossX, bossY;
+            let found = false;
+            
+            // Try to find a valid path position along the chosen side
+            switch (side) {
+                case 0: // top
+                    bossY = 1; // Start at second row to avoid the border wall
+                    for (let x = 1; x < mazeWidth - 1 && !found; x++) {
+                        if (maze[bossY][x] === 0) {
+                            bossX = x;
+                            found = true;
                         }
                     }
+                    break;
+                case 1: // right
+                    bossX = mazeWidth - 2; // Second to last column
+                    for (let y = 1; y < mazeHeight - 1 && !found; y++) {
+                        if (maze[y][bossX] === 0) {
+                            bossY = y;
+                            found = true;
+                        }
+                    }
+                    break;
+                case 2: // bottom
+                    bossY = mazeHeight - 2; // Second to last row
+                    for (let x = 1; x < mazeWidth - 1 && !found; x++) {
+                        if (maze[bossY][x] === 0) {
+                            bossX = x;
+                            found = true;
+                        }
+                    }
+                    break;
+                case 3: // left
+                    bossX = 1; // Start at second column
+                    for (let y = 1; y < mazeHeight - 1 && !found; y++) {
+                        if (maze[y][bossX] === 0) {
+                            bossY = y;
+                            found = true;
+                        }
+                    }
+                    break;
+            }
+            
+            // If we couldn't find a path on the chosen side, try other sides
+            if (!found) {
+                for (let altSide = 0; altSide < 4 && !found; altSide++) {
+                    if (altSide === side) continue; // Skip the side we already tried
+                    
+                    switch (altSide) {
+                        case 0: // top
+                            bossY = 1;
+                            for (let x = 1; x < mazeWidth - 1 && !found; x++) {
+                                if (maze[bossY][x] === 0) {
+                                    bossX = x;
+                                    found = true;
+                                }
+                            }
+                            break;
+                        case 1: // right
+                            bossX = mazeWidth - 2;
+                            for (let y = 1; y < mazeHeight - 1 && !found; y++) {
+                                if (maze[y][bossX] === 0) {
+                                    bossY = y;
+                                    found = true;
+                                }
+                            }
+                            break;
+                        case 2: // bottom
+                            bossY = mazeHeight - 2;
+                            for (let x = 1; x < mazeWidth - 1 && !found; x++) {
+                                if (maze[bossY][x] === 0) {
+                                    bossX = x;
+                                    found = true;
+                                }
+                            }
+                            break;
+                        case 3: // left
+                            bossX = 1;
+                            for (let y = 1; y < mazeHeight - 1 && !found; y++) {
+                                if (maze[y][bossX] === 0) {
+                                    bossY = y;
+                                    found = true;
+                                }
+                            }
+                            break;
+                    }
                 }
+            }
+            
+            // As a last resort, fallback to a random position if no valid side position found
+            if (!found) {
+                do {
+                    bossX = Math.floor(Math.random() * (mazeWidth - 2)) + 1;
+                    bossY = Math.floor(Math.random() * (mazeHeight - 2)) + 1;
+                } while (maze[bossY][bossX] !== 0);
             }
             
             bossFox = {
