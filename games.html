@@ -15,7 +15,7 @@
       width: 100%;
       background: #fffbe7;
       border-bottom: 2px solid #e6d1a3;
-      display: flex;
+      display: flex;f
       justify-content: center;
       align-items: center;
       padding: 0;
@@ -269,11 +269,52 @@
     <div class="game-stats" id="tower-defense-stats">
       <span>Money: <span id="money">150</span></span> |
       <span>Lives: <span id="lives">10</span></span> |
-      <span>Wave: <span id="wave">0</span></span>
+      <span>Wave: <span id="wave">0</span></span> |
+      <span>Score: <span id="score">0</span></span>
     </div>
-    <div class="canvas-container" style="margin-bottom: 20px;"> <!-- Override the large margin -->
+    <div class="canvas-container" style="margin-bottom: 20px; position: relative;"> <!-- Override the large margin and add relative positioning -->
       <canvas id="tower-defense-canvas" width="800" height="600"></canvas>
       <button class="start-button" id="tower-defense-start-button">Start Game</button>
+      
+      <!-- Game Over Overlay -->
+      <div id="game-over-overlay" style="
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        color: white;
+        font-family: Arial, sans-serif;
+        z-index: 1000;
+      ">
+        <h1 style="color: #ff4444; font-size: 48px; margin: 0; text-shadow: 2px 2px 4px rgba(0,0,0,0.8);">
+          GAME OVER
+        </h1>
+        <p style="font-size: 24px; margin: 20px 0; text-align: center;">
+          The foxes have overrun your chicken coop!<br>
+          Wave reached: <span id="final-wave">0</span><br>
+          Foxes defeated: <span id="final-score">0</span>
+        </p>
+        <button id="try-again-button" style="
+          background: #4CAF50;
+          color: white;
+          border: none;
+          padding: 15px 30px;
+          font-size: 20px;
+          border-radius: 8px;
+          cursor: pointer;
+          margin-top: 20px;
+          box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+          transition: background-color 0.3s;
+        " onmouseover="this.style.backgroundColor='#45a049'" onmouseout="this.style.backgroundColor='#4CAF50'">
+          Try Again
+        </button>
+      </div>
     </div>
     <div id="tower-defense-controls" style="margin-top: 10px;">
       <button class="tower-button" data-type="scaredy" data-cost="25">Buy Scaredy-Cat (Cost: 25)</button>
@@ -284,6 +325,8 @@
       <button id="next-wave-button" style="display: none;">Start Next Wave</button>
       <button id="sell-tower-button">Sell Tower</button>
       <button id="target-button">Set Target</button>
+      <button id="debug-sprites-button" onclick="toggleSpriteDebug()">Debug Sprites</button>
+      <button id="debug-game-button" onclick="debugGame()">Debug Game</button>
     </div>
     <div class="game-instructions">
       <p><strong>How to play:</strong> Place towers to defend against incoming foxes. Earn money by defeating enemies.</p>
@@ -296,16 +339,80 @@
     <div class="game-stats" id="pacman-stats">
       <span>Score: <span id="pacman-score">0</span></span> |
       <span>Lives: <span id="pacman-lives">3</span></span> |
-      <span>Level: <span id="pacman-level">1</span></span>
+      <span>Level: <span id="pacman-level">1</span></span> |
+      <span>Time: <span id="pacman-timer" style="color: #ff4500; font-weight: bold;">2:00</span></span>
       <div id="power-up-indicators" style="margin-top: 5px;">
         <span id="speed-indicator" style="display: none; margin-right: 10px;">⚡ Speed</span>
         <span id="shield-indicator" style="display: none; margin-right: 10px;">🛡️ Shield</span>
         <span id="freeze-indicator" style="display: none;">❄️ Freeze</span>
       </div>
     </div>
+    <button id="pro-tip-button" style="margin: 10px 0; padding: 8px 16px; background-color: #ff6b35; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 14px;">💡 Get Pro Tip (Cost: 1 Life)</button>
+    <div id="pro-tip-display" style="margin-bottom: 10px; font-size: 0.9em; color: #2a5a2a; background-color: rgba(144,238,144,0.3); padding: 10px; border-radius: 5px; border-left: 4px solid #2a5a2a; display: none;"></div>
     <div class="canvas-container">
       <canvas id="pacman-canvas" width="800" height="600"></canvas>
       <button class="start-button" id="pacman-start-button">Start Game</button>
+      
+      <!-- Character Selection Screen -->
+      <div id="character-selection" style="display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(255, 255, 255, 0.98); padding: 40px; border-radius: 15px; box-shadow: 0 8px 32px rgba(0,0,0,0.3); text-align: center; z-index: 1000; max-width: 600px;">
+        <h2 style="margin: 0 0 20px 0; color: #333; font-size: 32px;">Choose Your Character</h2>
+        <div style="display: flex; gap: 30px; justify-content: center; margin-top: 30px;">
+          <!-- Chicken Option -->
+          <div id="select-chicken" style="cursor: pointer; padding: 25px; border: 3px solid #4CAF50; border-radius: 12px; background: linear-gradient(135deg, #fffacd 0%, #fff8dc 100%); transition: all 0.3s; width: 220px;">
+            <div style="font-size: 80px; margin-bottom: 15px;">🐔</div>
+            <h3 style="margin: 10px 0; color: #2d5016; font-size: 24px;">Chicken</h3>
+            <p style="color: #555; font-size: 14px; line-height: 1.6; margin: 10px 0;">
+              <strong>Objective:</strong> Collect all pellets and avoid foxes!<br>
+              <strong>Special:</strong> Can use power-ups and gain lives
+            </p>
+          </div>
+          
+          <!-- Fox Option -->
+          <div id="select-fox" style="cursor: pointer; padding: 25px; border: 3px solid #ff6b35; border-radius: 12px; background: linear-gradient(135deg, #ffe4d6 0%, #ffd5ba 100%); transition: all 0.3s; width: 220px;">
+            <div style="font-size: 80px; margin-bottom: 15px;">🦊</div>
+            <h3 style="margin: 10px 0; color: #8b2500; font-size: 24px;">Fox</h3>
+            <p style="color: #555; font-size: 14px; line-height: 1.6; margin: 10px 0;">
+              <strong>Objective:</strong> Hunt the chicken AI!<br>
+              <strong>Special:</strong> Can collect fox power-ups for boosts
+            </p>
+          </div>
+        </div>
+        <p style="margin-top: 25px; color: #666; font-size: 13px; font-style: italic;">Click on a character to select</p>
+      </div>
+      
+      <!-- Boss Fox Choice Modal -->
+      <div id="boss-fox-choice" style="display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(255, 255, 255, 0.98); padding: 40px; border-radius: 15px; box-shadow: 0 8px 32px rgba(255, 69, 0, 0.5); text-align: center; z-index: 1001; max-width: 650px; border: 4px solid gold;">
+        <h2 style="margin: 0 0 15px 0; color: #ff4500; font-size: 36px;">👑 BOSS FOX APPEARED! 👑</h2>
+        <p style="font-size: 18px; color: #333; margin-bottom: 25px;">Choose your playstyle for this level:</p>
+        <div style="display: flex; gap: 30px; justify-content: center; margin-top: 20px;">
+          <!-- Boss Fox Option -->
+          <div id="select-boss-fox" style="cursor: pointer; padding: 25px; border: 3px solid gold; border-radius: 12px; background: linear-gradient(135deg, #fff9e6 0%, #ffe9b3 100%); transition: all 0.3s; width: 240px;">
+            <div style="font-size: 80px; margin-bottom: 15px;">👑🦊</div>
+            <h3 style="margin: 10px 0; color: #8b6914; font-size: 24px;">Boss Fox Only</h3>
+            <p style="color: #555; font-size: 14px; line-height: 1.6; margin: 10px 0;">
+              <strong>Play as the powerful Boss Fox!</strong><br>
+              • 1.5x larger size<br>
+              • Faster speed<br>
+              • Special abilities<br>
+              • Solo challenge
+            </p>
+          </div>
+          
+          <!-- Regular Foxes Option -->
+          <div id="select-regular-foxes" style="cursor: pointer; padding: 25px; border: 3px solid #ff6b35; border-radius: 12px; background: linear-gradient(135deg, #ffe4d6 0%, #ffd5ba 100%); transition: all 0.3s; width: 240px;">
+            <div style="font-size: 80px; margin-bottom: 15px;">🦊🦊🦊</div>
+            <h3 style="margin: 10px 0; color: #8b2500; font-size: 24px;">3 Regular Foxes</h3>
+            <p style="color: #555; font-size: 14px; line-height: 1.6; margin: 10px 0;">
+              <strong>Control the 3-fox pack!</strong><br>
+              • All 3 foxes move together<br>
+              • Team strategy<br>
+              • Cover more ground<br>
+              • Classic gameplay
+            </p>
+          </div>
+        </div>
+        <p style="margin-top: 25px; color: #666; font-size: 13px; font-style: italic;">Choose wisely - each has unique advantages!</p>
+      </div>
       
       <!-- Virtual Controls for Mobile Devices -->
       <div class="virtual-controls" id="virtual-controls">
@@ -319,6 +426,11 @@
       <p><strong>How to play:</strong> Use arrow keys (or on-screen controls on mobile) to navigate the maze, collect chicken feed and avoid foxes!</p>
       <div id="power-up-tips" style="margin-top: 10px; font-size: 0.9em; color: #4a4a4a; background-color: rgba(255,255,0,0.1); padding: 8px; border-radius: 5px;"></div>
     </div>
+  </div>
+
+  <div id="minimap-wrapper" style="position: fixed; right: 20px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; align-items: center; gap: 10px; cursor: move; background: rgba(255,255,255,0.9); padding: 10px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.2); user-select: none;">
+    <h3 style="margin: 0; color: #333; cursor: grab;">Minimap</h3>
+    <canvas id="pacman-minimap-canvas" width="160" height="160" style="border: 2px solid #ccc; background-color: #222; display: block;"></canvas>
   </div>
 
   <script>
@@ -354,6 +466,7 @@
     const startButton = document.getElementById('tower-defense-start-button');
     const moneySpan = document.getElementById('money');
     const livesSpan = document.getElementById('lives');
+    const scoreSpan = document.getElementById('score');
     const waveSpan = document.getElementById('wave');
     const nextWaveButton = document.getElementById('next-wave-button');
     const sellTowerButton = document.getElementById('sell-tower-button');
@@ -361,6 +474,7 @@
     const towerInfoBar = document.getElementById('tower-info-bar');
 
     let money = 150;
+    let score = 0; // Track foxes defeated
     let lives = 10;
     let wave = 0;
     let enemies = [];
@@ -372,11 +486,224 @@
     let sellingTower = false;
     let targetingMode = false;
     let globalTarget = null;
+    let hoveredTower = null;
+
+    // Super Chicken sprite animation variables
+    let superChickenSprite = null;
+    let superChickenSpriteLoaded = false;
+    let superChickenStaticSprite = null; // Static version for idle state
+    let superChickenIsAnimatedGif = true; // Using your animated GIF
+    let superChickenGifCanvas = null; // Canvas to force GIF animation
+    let superChickenGifCtx = null;
+    const superChickenFrameWidth = 64;
+    const superChickenFrameHeight = 64;
+
+    // Enemy GIF animation variables
+    let enemyGifs = {
+        normal: { gif: null, loaded: false },
+        speedy: { gif: null, loaded: false },
+        tank: { gif: null, loaded: false }
+    };
+    const enemySpriteSize = 30;
+
+    // Load the super chicken sprite
+    function loadSuperChickenSprite() {
+        // Load the animated GIF
+        superChickenSprite = new Image();
+        superChickenSprite.onload = () => {
+            superChickenSpriteLoaded = true;
+            console.log('Super chicken animated GIF loaded successfully');
+            console.log('GIF dimensions:', superChickenSprite.width, 'x', superChickenSprite.height);
+        };
+        superChickenSprite.onerror = (error) => {
+            console.error('Failed to load super chicken GIF:', error);
+            console.log('Trying fallback canvas sprite');
+            superChickenIsAnimatedGif = false;
+            createFallbackSprite();
+        };
+        superChickenSprite.src = "images/chicken_cannon_animated.gif";
+        
+        // Load a static version for idle state
+        superChickenStaticSprite = new Image();
+        superChickenStaticSprite.onload = () => {
+            console.log('Super chicken static image loaded successfully');
+        };
+        superChickenStaticSprite.onerror = () => {
+            console.log('Static sprite failed, will use first frame of GIF');
+        };
+        // Try to load a static version, fallback to existing PNG
+        superChickenStaticSprite.src = "images/image-1760203619908.png";
+    }
+
+    // Create a fallback sprite using canvas if the image file doesn't exist
+    function createFallbackSprite() {
+        const canvas = document.createElement('canvas');
+        const totalFrames = 3; // Define locally since we removed the global
+        canvas.width = superChickenFrameWidth * totalFrames; // 192px total
+        canvas.height = superChickenFrameHeight; // 64px
+        const ctx = canvas.getContext('2d');
+        
+        // Helper function to draw a chicken cannon
+        function drawChickenCannon(offsetX, muzzleFlash = false, smoke = false, recoil = 0) {
+            const x = offsetX;
+            
+            // Cannon base (round)
+            ctx.fillStyle = '#4A4A4A'; // Dark gray metal
+            ctx.beginPath();
+            ctx.arc(x + 25, 32, 15, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Cannon barrel
+            ctx.fillStyle = '#666666'; // Gray metal
+            ctx.fillRect(x + 15 - recoil, 28, 35, 8);
+            
+            // Cannon barrel tip
+            ctx.fillStyle = '#333333'; // Darker tip
+            ctx.fillRect(x + 48 - recoil, 27, 4, 10);
+            
+            // Chicken body (plump and round)
+            ctx.fillStyle = '#FFFFFF'; // White chicken
+            ctx.beginPath();
+            ctx.ellipse(x + 20, 35, 12, 8, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Chicken head
+            ctx.fillStyle = '#FFFFFF';
+            ctx.beginPath();
+            ctx.arc(x + 15, 30, 6, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Chicken beak
+            ctx.fillStyle = '#FFA500'; // Orange beak
+            ctx.beginPath();
+            ctx.moveTo(x + 9, 30);
+            ctx.lineTo(x + 5, 29);
+            ctx.lineTo(x + 9, 32);
+            ctx.fill();
+            
+            // Chicken eye
+            ctx.fillStyle = '#000000';
+            ctx.beginPath();
+            ctx.arc(x + 12, 28, 1.5, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Chicken comb (red crown)
+            ctx.fillStyle = '#FF0000';
+            ctx.beginPath();
+            ctx.moveTo(x + 12, 24);
+            ctx.lineTo(x + 14, 22);
+            ctx.lineTo(x + 16, 24);
+            ctx.lineTo(x + 18, 22);
+            ctx.lineTo(x + 20, 24);
+            ctx.lineTo(x + 18, 26);
+            ctx.lineTo(x + 12, 26);
+            ctx.fill();
+            
+            // Chicken wattle (red chin thing)
+            ctx.fillStyle = '#FF0000';
+            ctx.beginPath();
+            ctx.ellipse(x + 14, 34, 2, 3, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Chicken feet
+            ctx.fillStyle = '#FFA500'; // Orange feet
+            ctx.fillRect(x + 16, 43, 2, 4);
+            ctx.fillRect(x + 20, 43, 2, 4);
+            ctx.fillRect(x + 24, 43, 2, 4);
+            
+            // Muzzle flash
+            if (muzzleFlash) {
+                const gradient = ctx.createRadialGradient(x + 52, 32, 0, x + 52, 32, 12);
+                gradient.addColorStop(0, '#FFFFFF');
+                gradient.addColorStop(0.3, '#FFFF00');
+                gradient.addColorStop(0.7, '#FF6600');
+                gradient.addColorStop(1, 'rgba(255, 0, 0, 0)');
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(x + 52, 32, 12, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Add some spark effects
+                ctx.fillStyle = '#FFFFFF';
+                for (let i = 0; i < 6; i++) {
+                    const angle = (Math.PI * 2 * i) / 6;
+                    const sparkX = x + 52 + Math.cos(angle) * 8;
+                    const sparkY = 32 + Math.sin(angle) * 8;
+                    ctx.beginPath();
+                    ctx.arc(sparkX, sparkY, 1, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+            
+            // Smoke
+            if (smoke) {
+                // Multiple smoke puffs
+                for (let i = 0; i < 3; i++) {
+                    const smokeX = x + 48 + (i * 5);
+                    const smokeY = 20 + (i * 3);
+                    const smokeSize = 6 - i;
+                    
+                    ctx.fillStyle = `rgba(128, 128, 128, ${0.6 - i * 0.2})`;
+                    ctx.beginPath();
+                    ctx.arc(smokeX, smokeY, smokeSize, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+        }
+        
+        // Clear canvas with transparent background
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // Frame 0: Idle state
+        drawChickenCannon(0);
+        
+        // Frame 1: Firing state with muzzle flash
+        drawChickenCannon(superChickenFrameWidth, true, false);
+        
+        // Frame 2: Smoke/recoil state
+        drawChickenCannon(superChickenFrameWidth * 2, false, true, 3);
+        
+        // Convert canvas to image
+        superChickenSprite = new Image();
+        superChickenSprite.onload = () => {
+            superChickenSpriteLoaded = true;
+            console.log('Awesome super chicken cannon sprite created successfully');
+        };
+        superChickenSprite.src = canvas.toDataURL();
+    }
+
+    // Initialize sprite loading
+    loadSuperChickenSprite();
+    loadEnemyGifs();
+
+    // Load enemy animated GIFs - use your animation.gif file
+    function loadEnemyGifs() {
+        // Use animation.gif for all enemy types
+        loadEnemyGif('normal', 'animation.gif', 'Fox');
+        loadEnemyGif('speedy', 'animation.gif', 'Wolf');  
+        loadEnemyGif('tank', 'animation.gif', 'Boar');
+    }
+
+    // Load a specific enemy GIF file
+    function loadEnemyGif(type, filename, name) {
+        enemyGifs[type].gif = new Image();
+        enemyGifs[type].gif.onload = () => {
+            enemyGifs[type].loaded = true;
+            console.log(`${name} GIF (${filename}) loaded successfully`);
+        };
+        enemyGifs[type].gif.onerror = () => {
+            console.log(`${name} GIF (${filename}) failed to load, using emoji fallback`);
+            enemyGifs[type].loaded = false;
+        };
+        enemyGifs[type].gif.src = `images/${filename}`;
+    }
+
+
 
     const towerData = {
         scaredy: { name: 'Scaredy-Cat', cost: 25, damage: 3, range: 80, fireRate: 90, emoji: '🐣', description: 'A cheap, weak tower. Better than nothing.' },
         normal: { name: 'Chicken Tower', cost: 50, damage: 5, range: 150, fireRate: 45, emoji: '🐔', description: 'A standard, reliable tower.' },
-        super: { name: 'Super Chicken', cost: 100, damage: 10, range: 200, fireRate: 30, emoji: '🐓', description: 'An expensive but powerful tower.' },
+        super: { name: 'Super Chicken', cost: 100, damage: 10, range: 200, fireRate: 30, emoji: '🐓', description: 'An expensive but powerful tower with animated sprite cannon.' },
         slowing: { name: 'Ice Chicken', cost: 60, damage: 1, range: 180, fireRate: 60, emoji: '🧊', description: 'Dramatically slows enemies within its extended range.' },
         rapid: { name: 'Gatling Chicken', cost: 80, damage: 4, range: 170, fireRate: 8, emoji: '💥', description: 'Unleashes a storm of projectiles with incredible firing speed.' }
     };
@@ -387,15 +714,482 @@
         { x: 700, y: 300 }, { x: 800, y: 300 }
     ];
 
-    function drawPath() {
-        ctx.strokeStyle = '#d2b48c';
-        ctx.lineWidth = 40;
+    // Pre-generated static elements for the medieval path
+    let pathStones = [];
+    let pathGrass = [];
+    let pathPebbles = [];
+    let pathGenerated = false;
+
+    function generateStaticPathElements() {
+        if (pathGenerated) return;
+        
+        pathStones = [];
+        pathGrass = [];
+        pathPebbles = [];
+        
+        // Generate static cobblestones
+        for (let i = 0; i < path.length - 1; i++) {
+            const start = path[i];
+            const end = path[i + 1];
+            const dx = end.x - start.x;
+            const dy = end.y - start.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            const steps = Math.floor(distance / 15);
+            
+            for (let j = 0; j <= steps; j++) {
+                const t = j / steps;
+                const x = start.x + dx * t;
+                const y = start.y + dy * t;
+                
+                const perpX = -dy / distance;
+                const perpY = dx / distance;
+                
+                for (let row = -1; row <= 1; row++) {
+                    for (let col = -12; col <= 12; col += 6) {
+                        const stoneX = x + perpX * col + (Math.random() - 0.5) * 4;
+                        const stoneY = y + perpY * col + (Math.random() - 0.5) * 4;
+                        const stoneSize = 4 + Math.random() * 3;
+                        const weathering = Math.random();
+                        
+                        let stoneColor;
+                        if (weathering < 0.3) {
+                            stoneColor = '#8B7355';
+                        } else if (weathering < 0.6) {
+                            stoneColor = '#A0855B';
+                        } else {
+                            stoneColor = '#D2B48C';
+                        }
+                        
+                        const hasMoss = Math.random() < 0.2;
+                        const isPolygonal = Math.random() < 0.7;
+                        const mossOffsetX = (Math.random() - 0.5) * 2;
+                        const mossOffsetY = (Math.random() - 0.5) * 2;
+                        const mossSize = 1 + Math.random();
+                        const sides = isPolygonal ? 5 + Math.floor(Math.random() * 3) : 0;
+                        
+                        // Generate static radius values for polygonal stones
+                        const radiusVariations = [];
+                        if (isPolygonal) {
+                            for (let s = 0; s < sides; s++) {
+                                radiusVariations.push(0.7 + Math.random() * 0.6);
+                            }
+                        }
+                        
+                        pathStones.push({
+                            x: stoneX,
+                            y: stoneY,
+                            size: stoneSize,
+                            color: stoneColor,
+                            hasMoss: hasMoss,
+                            mossOffsetX: mossOffsetX,
+                            mossOffsetY: mossOffsetY,
+                            mossSize: mossSize,
+                            isPolygonal: isPolygonal,
+                            sides: sides,
+                            radiusVariations: radiusVariations
+                        });
+                    }
+                }
+            }
+        }
+        
+        // Generate static grass
+        for (let i = 0; i < path.length - 1; i++) {
+            const start = path[i];
+            const end = path[i + 1];
+            const dx = end.x - start.x;
+            const dy = end.y - start.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            const perpX = -dy / distance;
+            const perpY = dx / distance;
+            
+            for (let side = -1; side <= 1; side += 2) {
+                for (let grass = 0; grass < distance; grass += 20) {
+                    const t = grass / distance;
+                    const roadX = start.x + dx * t;
+                    const roadY = start.y + dy * t;
+                    const grassX = roadX + perpX * side * (28 + Math.random() * 15);
+                    const grassY = roadY + perpY * side * (28 + Math.random() * 15);
+                    
+                    if (Math.random() < 0.4) {
+                        for (let blade = 0; blade < 3; blade++) {
+                            const bladeX = grassX + (Math.random() - 0.5) * 6;
+                            const bladeY = grassY + (Math.random() - 0.5) * 6;
+                            const bladeEndX = bladeX + (Math.random() - 0.5) * 4;
+                            const bladeEndY = bladeY - 3 - Math.random() * 4;
+                            
+                            pathGrass.push({
+                                startX: bladeX,
+                                startY: bladeY,
+                                endX: bladeEndX,
+                                endY: bladeEndY
+                            });
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Generate static pebbles
+        for (let i = 0; i < 30; i++) {
+            const segmentIndex = Math.floor(Math.random() * (path.length - 1));
+            const t = Math.random();
+            const start = path[segmentIndex];
+            const end = path[segmentIndex + 1];
+            const dx = end.x - start.x;
+            const dy = end.y - start.y;
+            
+            const pebbleX = start.x + dx * t + (Math.random() - 0.5) * 30;
+            const pebbleY = start.y + dy * t + (Math.random() - 0.5) * 30;
+            const pebbleSize = 1 + Math.random() * 2;
+            const pebbleColor = Math.random() < 0.5 ? '#696969' : '#A9A9A9';
+            
+            pathPebbles.push({
+                x: pebbleX,
+                y: pebbleY,
+                size: pebbleSize,
+                color: pebbleColor
+            });
+        }
+        
+        pathGenerated = true;
+    }
+
+    // Helper function to draw path with organic curves
+    function drawPathWithCurves() {
         ctx.beginPath();
         ctx.moveTo(path[0].x, path[0].y);
+        
+        // Create smooth, organic curves between path points
         for (let i = 1; i < path.length; i++) {
-            ctx.lineTo(path[i].x, path[i].y);
+            if (i === path.length - 1) {
+                ctx.lineTo(path[i].x, path[i].y);
+            } else {
+                const current = path[i];
+                const next = path[i + 1];
+                const prev = path[i - 1];
+                
+                // Calculate control points for smoother curves
+                const controlOffset = 0.3;
+                const cp1x = current.x + (prev.x - next.x) * controlOffset;
+                const cp1y = current.y + (prev.y - next.y) * controlOffset;
+                const cp2x = current.x - (prev.x - next.x) * controlOffset;
+                const cp2y = current.y - (prev.y - next.y) * controlOffset;
+                
+                const midX = (current.x + next.x) / 2;
+                const midY = (current.y + next.y) / 2;
+                
+                ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, midX, midY);
+            }
         }
         ctx.stroke();
+    }
+
+    function drawPath() {
+        // Generate static elements once
+        generateStaticPathElements();
+        
+        // Create a masterpiece medieval road inspired by N.C. Wyeth's King Arthur illustrations
+        
+        // Foundation layer - deep earth and ancient foundations
+        const foundationGradient = ctx.createLinearGradient(0, 0, 800, 600);
+        foundationGradient.addColorStop(0, '#3D2914'); // Deep brown
+        foundationGradient.addColorStop(0.5, '#4A341A'); // Rich earth
+        foundationGradient.addColorStop(1, '#2F1B0C'); // Dark loam
+        ctx.strokeStyle = foundationGradient;
+        ctx.lineWidth = 70;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        drawPathWithCurves();
+        
+        // Ancient Roman substructure - weathered stone base
+        ctx.strokeStyle = '#6B5B47'; // Ancient stone
+        ctx.lineWidth = 65;
+        drawPathWithCurves();
+        
+        // Medieval road base - centuries of wear
+        const roadGradient = ctx.createLinearGradient(0, 200, 0, 400);
+        roadGradient.addColorStop(0, '#8B7355'); // Weathered brown
+        roadGradient.addColorStop(0.3, '#A0855B'); // Medium stone
+        roadGradient.addColorStop(0.7, '#8B7355'); // Aged surface
+        roadGradient.addColorStop(1, '#6B5B47'); // Deep shadows
+        ctx.strokeStyle = roadGradient;
+        ctx.lineWidth = 58;
+        drawPathWithCurves();
+        
+        // Primary cobblestone surface with realistic variations
+        const cobbleGradient = ctx.createRadialGradient(400, 300, 0, 400, 300, 400);
+        cobbleGradient.addColorStop(0, '#D2B48C'); // Light tan center
+        cobbleGradient.addColorStop(0.4, '#C19A6B'); // Medium tan
+        cobbleGradient.addColorStop(0.8, '#A0855B'); // Darker edges
+        cobbleGradient.addColorStop(1, '#8B7355'); // Shadow perimeter
+        ctx.strokeStyle = cobbleGradient;
+        ctx.lineWidth = 48;
+        drawPathWithCurves();
+        
+        // Worn traffic patterns - heavy use areas
+        ctx.strokeStyle = '#9B7A57'; // Worn stone
+        ctx.lineWidth = 35;
+        drawPathWithCurves();
+        
+        // Central cart track - deep grooves from centuries of wheels
+        const trackGradient = ctx.createLinearGradient(0, 0, 0, 600);
+        trackGradient.addColorStop(0, '#7A6142'); // Deep rut
+        trackGradient.addColorStop(0.5, '#8B6914'); // Muddy center
+        trackGradient.addColorStop(1, '#6B4E23'); // Shadow depth
+        ctx.strokeStyle = trackGradient;
+        ctx.lineWidth = 25;
+        drawPathWithCurves();
+        
+        // Master-crafted individual cobblestones with artistic detail
+        pathStones.forEach(stone => {
+            // Create individual stone lighting based on position
+            const lightAngle = Math.atan2(stone.y - 200, stone.x - 400) + Math.PI / 4;
+            const lightIntensity = (Math.sin(lightAngle) + 1) / 2;
+            
+            // Base stone color with lighting
+            const baseColor = stone.color;
+            const r = parseInt(baseColor.substr(1, 2), 16);
+            const g = parseInt(baseColor.substr(3, 2), 16);
+            const b = parseInt(baseColor.substr(5, 2), 16);
+            
+            // Apply lighting
+            const litR = Math.min(255, Math.floor(r * (0.7 + lightIntensity * 0.5)));
+            const litG = Math.min(255, Math.floor(g * (0.7 + lightIntensity * 0.5)));
+            const litB = Math.min(255, Math.floor(b * (0.7 + lightIntensity * 0.5)));
+            
+            // Shadow color
+            const shadowR = Math.floor(r * 0.4);
+            const shadowG = Math.floor(g * 0.4);
+            const shadowB = Math.floor(b * 0.4);
+            
+            // Draw stone shadow first
+            ctx.fillStyle = `rgb(${shadowR}, ${shadowG}, ${shadowB})`;
+            ctx.beginPath();
+            if (stone.isPolygonal) {
+                for (let s = 0; s < stone.sides; s++) {
+                    const angle = (s / stone.sides) * Math.PI * 2;
+                    const radius = stone.size * stone.radiusVariations[s];
+                    const sx = stone.x + Math.cos(angle) * radius + 1;
+                    const sy = stone.y + Math.sin(angle) * radius + 1;
+                    if (s === 0) ctx.moveTo(sx, sy);
+                    else ctx.lineTo(sx, sy);
+                }
+                ctx.closePath();
+            } else {
+                ctx.arc(stone.x + 1, stone.y + 1, stone.size, 0, Math.PI * 2);
+            }
+            ctx.fill();
+            
+            // Draw main stone
+            ctx.fillStyle = `rgb(${litR}, ${litG}, ${litB})`;
+            ctx.strokeStyle = '#4A3429'; // Deep mortar color
+            ctx.lineWidth = 0.8;
+            
+            ctx.beginPath();
+            if (stone.isPolygonal) {
+                for (let s = 0; s < stone.sides; s++) {
+                    const angle = (s / stone.sides) * Math.PI * 2;
+                    const radius = stone.size * stone.radiusVariations[s];
+                    const sx = stone.x + Math.cos(angle) * radius;
+                    const sy = stone.y + Math.sin(angle) * radius;
+                    if (s === 0) ctx.moveTo(sx, sy);
+                    else ctx.lineTo(sx, sy);
+                }
+                ctx.closePath();
+            } else {
+                ctx.arc(stone.x, stone.y, stone.size, 0, Math.PI * 2);
+            }
+            ctx.fill();
+            ctx.stroke();
+            
+            // Add stone highlights
+            const highlightR = Math.min(255, litR + 40);
+            const highlightG = Math.min(255, litG + 40);
+            const highlightB = Math.min(255, litB + 40);
+            ctx.fillStyle = `rgb(${highlightR}, ${highlightG}, ${highlightB})`;
+            ctx.beginPath();
+            ctx.arc(stone.x - stone.size * 0.3, stone.y - stone.size * 0.3, stone.size * 0.2, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Enhanced moss with multiple shades
+            if (stone.hasMoss) {
+                // Dark moss base
+                ctx.fillStyle = '#3D5F1F';
+                ctx.beginPath();
+                ctx.arc(stone.x + stone.mossOffsetX, 
+                       stone.y + stone.mossOffsetY, 
+                       stone.mossSize * 1.2, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Bright moss highlights
+                ctx.fillStyle = '#556B2F';
+                ctx.beginPath();
+                ctx.arc(stone.x + stone.mossOffsetX * 0.7, 
+                       stone.y + stone.mossOffsetY * 0.7, 
+                       stone.mossSize, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Moss highlights
+                ctx.fillStyle = '#6B8E23';
+                ctx.beginPath();
+                ctx.arc(stone.x + stone.mossOffsetX * 0.5, 
+                       stone.y + stone.mossOffsetY * 0.5, 
+                       stone.mossSize * 0.6, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        });
+        
+        // Clean stone wheel ruts - worn grooves without mud
+        const rutGradient = ctx.createLinearGradient(0, 0, 0, 600);
+        rutGradient.addColorStop(0, '#8B7355'); // Stone shadow
+        rutGradient.addColorStop(0.3, '#A0855B'); // Medium stone
+        rutGradient.addColorStop(0.7, '#9B7A57'); // Worn stone
+        rutGradient.addColorStop(1, '#6B5B47'); // Deep shadow
+        
+        // Left wheel rut with artistic variation
+        ctx.strokeStyle = rutGradient;
+        ctx.lineWidth = 4;
+        ctx.setLineDash([]);
+        for (let pass = 0; pass < 3; pass++) {
+            ctx.beginPath();
+            for (let i = 0; i < path.length - 1; i++) {
+                const start = path[i];
+                const end = path[i + 1];
+                const dx = end.x - start.x;
+                const dy = end.y - start.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                const perpX = -dy / distance * (10 + pass * 2);
+                const perpY = dx / distance * (10 + pass * 2);
+                
+                if (i === 0) ctx.moveTo(start.x + perpX, start.y + perpY);
+                
+                // Add organic variation to rut depth
+                const variation = Math.sin(i * 0.8) * 2;
+                ctx.lineTo(end.x + perpX + variation, end.y + perpY + variation);
+            }
+            ctx.lineWidth = 4 - pass;
+            ctx.stroke();
+        }
+        
+        // Right wheel rut with matching detail
+        for (let pass = 0; pass < 3; pass++) {
+            ctx.beginPath();
+            for (let i = 0; i < path.length - 1; i++) {
+                const start = path[i];
+                const end = path[i + 1];
+                const dx = end.x - start.x;
+                const dy = end.y - start.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                const perpX = -dy / distance * (10 + pass * 2);
+                const perpY = dx / distance * (10 + pass * 2);
+                
+                if (i === 0) ctx.moveTo(start.x - perpX, start.y - perpY);
+                
+                const variation = Math.sin(i * 0.8 + Math.PI) * 2;
+                ctx.lineTo(end.x - perpX + variation, end.y - perpY + variation);
+            }
+            ctx.lineWidth = 4 - pass;
+            ctx.stroke();
+        }
+        
+        // Artistic wild vegetation with medieval atmosphere
+        ctx.strokeStyle = '#2F4F2F'; // Dark forest green base
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        pathGrass.forEach((blade, index) => {
+            // Vary grass color for depth
+            if (index % 3 === 0) ctx.strokeStyle = '#228B22';
+            else if (index % 3 === 1) ctx.strokeStyle = '#32CD32';
+            else ctx.strokeStyle = '#2F4F2F';
+            
+            ctx.beginPath();
+            ctx.moveTo(blade.startX, blade.startY);
+            ctx.lineTo(blade.endX, blade.endY);
+            ctx.stroke();
+        });
+        
+        // Add atmospheric wildflowers and herbs
+        for (let i = 0; i < 15; i++) {
+            const segmentIndex = Math.floor(Math.random() * (path.length - 1));
+            const t = Math.random();
+            const start = path[segmentIndex];
+            const end = path[segmentIndex + 1];
+            const dx = end.x - start.x;
+            const dy = end.y - start.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            const perpX = -dy / distance;
+            const perpY = dx / distance;
+            
+            const side = Math.random() < 0.5 ? -1 : 1;
+            const flowerX = start.x + dx * t + perpX * side * (35 + Math.random() * 20);
+            const flowerY = start.y + dy * t + perpY * side * (35 + Math.random() * 20);
+            
+            // Tiny wildflowers
+            const colors = ['#9370DB', '#FFB6C1', '#FFFACD', '#98FB98'];
+            ctx.fillStyle = colors[Math.floor(Math.random() * colors.length)];
+            ctx.beginPath();
+            ctx.arc(flowerX, flowerY, 1.5, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        
+        // Artistic scattered debris and medieval atmosphere
+        pathPebbles.forEach(pebble => {
+            // Enhanced pebbles with better shading
+            const shadowOffset = 1;
+            
+            // Pebble shadow
+            ctx.fillStyle = '#3C3C3C';
+            ctx.beginPath();
+            ctx.arc(pebble.x + shadowOffset, pebble.y + shadowOffset, pebble.size, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Main pebble
+            ctx.fillStyle = pebble.color;
+            ctx.beginPath();
+            ctx.arc(pebble.x, pebble.y, pebble.size, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Pebble highlight
+            ctx.fillStyle = '#D3D3D3';
+            ctx.beginPath();
+            ctx.arc(pebble.x - pebble.size * 0.3, pebble.y - pebble.size * 0.3, pebble.size * 0.3, 0, Math.PI * 2);
+            ctx.fill();
+        });
+        
+        // Add medieval road atmosphere - morning mist effect
+        const mistGradient = ctx.createRadialGradient(400, 300, 0, 400, 300, 600);
+        mistGradient.addColorStop(0, 'rgba(255, 255, 255, 0.02)');
+        mistGradient.addColorStop(0.5, 'rgba(240, 240, 240, 0.05)');
+        mistGradient.addColorStop(1, 'rgba(200, 200, 200, 0.08)');
+        
+        ctx.fillStyle = mistGradient;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        // Final artistic touches - road wear patterns
+        ctx.strokeStyle = 'rgba(160, 133, 91, 0.3)';
+        ctx.lineWidth = 1;
+        for (let i = 0; i < path.length - 1; i++) {
+            const start = path[i];
+            const end = path[i + 1];
+            
+            // Add subtle wear lines across the road
+            for (let wear = 0; wear < 5; wear++) {
+                const t = wear / 4;
+                const wearX = start.x + (end.x - start.x) * t;
+                const wearY = start.y + (end.y - start.y) * t;
+                const dx = end.x - start.x;
+                const dy = end.y - start.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                const perpX = -dy / distance * 15;
+                const perpY = dx / distance * 15;
+                
+                ctx.beginPath();
+                ctx.moveTo(wearX - perpX, wearY - perpY);
+                ctx.lineTo(wearX + perpX, wearY + perpY);
+                ctx.stroke();
+            }
+        }
         
         // Draw global target if it exists
         if (globalTarget) {
@@ -446,23 +1240,104 @@
 
     function gameLoop() {
         if (!gameRunning) return;
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        drawPath();
-        drawCoop();
         
-        towers.forEach(t => t.update());
-        enemies.forEach(e => e.update());
-        projectiles.forEach(p => p.update());
+        try {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawPath();
+            drawCoop();
+            
+            towers.forEach(t => {
+                try {
+                    t.update();
+                } catch (error) {
+                    console.error('Error updating tower:', error);
+                }
+            });
+            
+            enemies.forEach(e => {
+                try {
+                    e.update();
+                } catch (error) {
+                    console.error('Error updating enemy:', error);
+                }
+            });
+            
+            projectiles.forEach(p => {
+                try {
+                    p.update();
+                } catch (error) {
+                    console.error('Error updating projectile:', error);
+                }
+            });
 
-        enemies = enemies.filter(e => e.isAlive);
-        projectiles = projectiles.filter(p => p.isAlive);
+            enemies = enemies.filter(e => {
+                if (!e.isAlive) {
+                    e.cleanup(); // Clean up GIF elements
+                    return false;
+                }
+                return true;
+            });
+            projectiles = projectiles.filter(p => p.isAlive);
 
-        if (waveInProgress && enemies.length === 0) {
-            waveInProgress = false;
-            nextWaveButton.style.display = 'inline-block';
+            if (waveInProgress && enemies.length === 0) {
+                waveInProgress = false;
+                nextWaveButton.style.display = 'inline-block';
+            }
+        } catch (error) {
+            console.error('Error in game loop:', error);
         }
 
         requestAnimationFrame(gameLoop);
+    }
+
+    function showGameOver() {
+        gameRunning = false;
+        const gameOverOverlay = document.getElementById('game-over-overlay');
+        const finalWaveSpan = document.getElementById('final-wave');
+        const finalScoreSpan = document.getElementById('final-score');
+        
+        finalWaveSpan.textContent = wave;
+        finalScoreSpan.textContent = score;
+        
+        gameOverOverlay.style.display = 'flex';
+    }
+
+    function restartGame() {
+        // Reset all game variables
+        money = 150;
+        lives = 10;
+        wave = 0;
+        score = 0;
+        gameRunning = false;
+        waveInProgress = false;
+        enemies = [];
+        projectiles = [];
+        towers = [];
+        
+        // Clear all DOM elements created for towers and enemies
+        const existingElements = document.querySelectorAll('.tower-gif-element, .tower-static-element, .enemy-gif-element');
+        existingElements.forEach(element => element.remove());
+        
+        // Clean up any remaining enemy GIF elements
+        enemies.forEach(enemy => enemy.cleanup());
+        
+        // Reset UI
+        moneySpan.textContent = money;
+        livesSpan.textContent = lives;
+        waveSpan.textContent = wave;
+        scoreSpan.textContent = score;
+        
+        // Hide game over overlay
+        const gameOverOverlay = document.getElementById('game-over-overlay');
+        gameOverOverlay.style.display = 'none';
+        
+        // Show start button
+        startButton.style.display = 'inline-block';
+        nextWaveButton.style.display = 'none';
+        
+        // Clear canvas
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        drawPath();
     }
 
     startButton.addEventListener('click', () => {
@@ -478,6 +1353,12 @@
         if (gameRunning && !waveInProgress) {
             startNextWave();
         }
+    });
+
+    // Try Again button event listener
+    const tryAgainButton = document.getElementById('try-again-button');
+    tryAgainButton.addEventListener('click', () => {
+        restartGame();
     });
 
     function startNextWave() {
@@ -515,6 +1396,8 @@
             this.isAlive = true;
             this.slowedUntil = 0;
             this.originalSpeed = 1;
+            this.gifElement = null;
+            this.id = 'enemy_' + Date.now() + '_' + Math.random(); // Unique ID for each enemy
 
             switch(type) {
                 case 'speedy':
@@ -535,6 +1418,42 @@
             }
             this.speed = this.originalSpeed;
             this.health = this.maxHealth;
+            this.rotation = 0; // Initialize rotation for directional facing
+            
+            // Create GIF element if available
+            this.createGifElement();
+        }
+
+        createGifElement() {
+            const gifData = enemyGifs[this.type];
+            if (gifData && gifData.loaded) {
+                this.gifElement = document.createElement('img');
+                this.gifElement.src = gifData.gif.src;
+                this.gifElement.style.position = 'absolute';
+                this.gifElement.style.width = enemySpriteSize + 'px';
+                this.gifElement.style.height = enemySpriteSize + 'px';
+                this.gifElement.style.pointerEvents = 'none';
+                this.gifElement.style.zIndex = '5';
+                this.gifElement.classList.add('enemy-gif-element');
+                this.gifElement.id = this.id;
+                
+                // Add to canvas container
+                const canvasContainer = canvas.parentElement;
+                if (canvasContainer.style.position !== 'relative') {
+                    canvasContainer.style.position = 'relative';
+                }
+                canvasContainer.appendChild(this.gifElement);
+                
+                console.log(`Created GIF element for ${this.type} enemy`);
+            }
+        }
+
+        cleanup() {
+            // Remove GIF element when enemy is destroyed
+            if (this.gifElement) {
+                this.gifElement.remove();
+                this.gifElement = null;
+            }
         }
 
         update() {
@@ -544,11 +1463,11 @@
 
             if (this.pathIndex >= path.length - 1) {
                 this.isAlive = false;
+                this.cleanup();
                 lives--;
                 livesSpan.textContent = lives;
                 if (lives <= 0) {
-                    alert('Game Over!');
-                    gameRunning = false;
+                    showGameOver();
                 }
                 return;
             }
@@ -558,13 +1477,43 @@
             const dy = target.y - this.y;
             const distance = Math.sqrt(dx * dx + dy * dy);
 
+            // Calculate rotation based on movement direction
+            if (dx !== 0 || dy !== 0) {
+                this.rotation = Math.atan2(dy, dx);
+            }
+
             if (distance < this.speed) {
                 this.pathIndex++;
             } else {
                 this.x += (dx / distance) * this.speed;
                 this.y += (dy / distance) * this.speed;
             }
+            
+            // Update GIF position if it exists
+            this.updateGifPosition();
             this.draw();
+        }
+
+        updateGifPosition() {
+            if (this.gifElement) {
+                const canvasStyle = window.getComputedStyle(canvas);
+                const canvasMarginLeft = parseInt(canvasStyle.marginLeft) || 0;
+                const canvasMarginTop = parseInt(canvasStyle.marginTop) || 0;
+                const canvasBorderLeft = parseInt(canvasStyle.borderLeftWidth) || 0;
+                const canvasBorderTop = parseInt(canvasStyle.borderTopWidth) || 0;
+                
+                const leftPos = canvasMarginLeft + canvasBorderLeft + this.x - enemySpriteSize/2;
+                const topPos = canvasMarginTop + canvasBorderTop + this.y - enemySpriteSize/2;
+                
+                this.gifElement.style.left = leftPos + 'px';
+                this.gifElement.style.top = topPos + 'px';
+                
+                // Apply rotation based on movement direction
+                if (this.rotation !== undefined) {
+                    this.gifElement.style.transform = `rotate(${this.rotation}rad)`;
+                    this.gifElement.style.transformOrigin = 'center center';
+                }
+            }
         }
 
         draw() {
@@ -579,13 +1528,34 @@
             ctx.fillStyle = '#00ff00';
             ctx.fillRect(barX, barY, barWidth * healthPercentage, barHeight);
 
-            // Draw emoji
-            ctx.font = "25px Arial";
-            ctx.textAlign = "center";
-            ctx.textBaseline = "middle";
-            ctx.fillText(this.emoji, this.x, this.y);
-            ctx.textAlign = "start";
-            ctx.textBaseline = "alphabetic";
+            // Draw GIF or emoji
+            const gifData = enemyGifs[this.type];
+            if (this.gifElement && gifData && gifData.loaded) {
+                // GIF is handled by DOM element, just draw a subtle placeholder
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, enemySpriteSize/2, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+                ctx.fill();
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+                ctx.restore();
+            } else {
+                // Fallback to emoji if GIF not available
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                if (this.rotation !== undefined) {
+                    ctx.rotate(this.rotation);
+                }
+                ctx.font = "25px Arial";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillText(this.emoji, 0, 0);
+                ctx.restore();
+                ctx.textAlign = "start";
+                ctx.textBaseline = "alphabetic";
+            }
         }
     }
 
@@ -603,6 +1573,15 @@
             this.fireCooldown = 0;
             this.targetPosition = null;
             this.isSelected = false;
+            
+            // Animation properties for super chicken
+            if (type === 'super') {
+                // Track firing state for animation control
+                this.isFiring = false;
+                this.fireAnimationTimer = 0;
+                this.fireAnimationDuration = 1000; // 1 second of animation
+                console.log('Super chicken tower created with firing animation control');
+            }
         }
 
         update() {
@@ -610,10 +1589,30 @@
             if (this.fireCooldown <= 0) {
                 const target = this.findTarget();
                 if (target) {
-                    projectiles.push(new Projectile(this.x, this.y, target, this.damage, this.type));
-                    this.fireCooldown = this.fireRate;
+                    try {
+                        projectiles.push(new Projectile(this.x, this.y, target, this.damage, this.type));
+                        this.fireCooldown = this.fireRate;
+                        
+                        // Trigger firing animation for super chicken
+                        if (this.type === 'super') {
+                            this.isFiring = true;
+                            this.fireAnimationTimer = Date.now();
+                            console.log('Super chicken firing - starting animation');
+                        }
+                    } catch (error) {
+                        console.error('Error creating projectile:', error);
+                    }
                 }
             }
+            
+            // Update firing animation state for super chicken
+            if (this.type === 'super' && this.isFiring) {
+                if (Date.now() - this.fireAnimationTimer > this.fireAnimationDuration) {
+                    this.isFiring = false;
+                    console.log('Super chicken firing animation ended');
+                }
+            }
+            
             this.draw();
         }
 
@@ -669,20 +1668,161 @@
             return closestEnemy;
         }
 
-        draw() {
-            // Draw tower emoji
-            ctx.font = "30px Arial";
-            ctx.fillText(this.emoji, this.x, this.y);
+        updateSuperChickenAnimation() {
+            const now = Date.now();
+            
+            // Handle firing animation timing
+            if (this.isFiring) {
+                // Total firing sequence duration is frame 1 (200ms) + frame 2 (400ms) = 600ms
+                const timeSinceFiring = now - this.fireAnimationTimer;
+                
+                if (timeSinceFiring <= superChickenFrameDurations[1]) {
+                    // Still in firing frame (frame 1)
+                    this.animationFrame = 1;
+                } else if (timeSinceFiring <= superChickenFrameDurations[1] + superChickenFrameDurations[2]) {
+                    // Now in smoke frame (frame 2)
+                    this.animationFrame = 2;
+                } else {
+                    // Firing sequence complete, return to idle
+                    this.isFiring = false;
+                    this.animationFrame = 0;
+                    this.animationTimer = now;
+                }
+            } else {
+                // When not firing, stay on idle frame (0) and handle idle animation
+                if (now - this.animationTimer > this.currentFrameDuration) {
+                    this.animationFrame = 0;
+                    this.animationTimer = now;
+                    this.currentFrameDuration = superChickenFrameDurations[0];
+                }
+            }
+        }
 
-            // Draw range circle
-            ctx.beginPath();
-            ctx.arc(this.x, this.y, this.range, 0, Math.PI * 2);
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
-            ctx.lineWidth = 2;
-            ctx.stroke();
+        draw() {
+            // Special rendering for super chicken with animated GIF
+            if (this.type === 'super' && superChickenSpriteLoaded && superChickenSprite) {
+                ctx.save();
+                
+                const spriteSize = 60;
+                try {
+                    // Determine which image to show based on firing state
+                    const shouldAnimate = this.isFiring;
+                    
+                    // Check if we already have a DOM element for this tower
+                    if (!this.gifElement) {
+                        // Create static image element
+                        this.staticElement = document.createElement('img');
+                        this.staticElement.style.position = 'absolute';
+                        this.staticElement.style.width = spriteSize + 'px';
+                        this.staticElement.style.height = spriteSize + 'px';
+                        this.staticElement.style.pointerEvents = 'none';
+                        this.staticElement.style.zIndex = '10';
+                        this.staticElement.src = superChickenStaticSprite.src || "images/image-1760203619908.png";
+                        
+                        // Create animated GIF element
+                        this.gifElement = document.createElement('img');
+                        this.gifElement.src = "images/chicken_cannon_animated.gif";
+                        this.gifElement.style.position = 'absolute';
+                        this.gifElement.style.width = spriteSize + 'px';
+                        this.gifElement.style.height = spriteSize + 'px';
+                        this.gifElement.style.pointerEvents = 'none';
+                        this.gifElement.style.zIndex = '10';
+                        this.gifElement.style.display = 'none'; // Start hidden
+                        
+                        // Add both to the canvas container
+                        const canvasContainer = canvas.parentElement;
+                        if (canvasContainer.style.position !== 'relative') {
+                            canvasContainer.style.position = 'relative';
+                        }
+                        canvasContainer.appendChild(this.staticElement);
+                        canvasContainer.appendChild(this.gifElement);
+                        
+                        console.log('Created both static and animated elements for Super Chicken tower');
+                    }
+                    
+                    // Position both elements
+                    const canvasStyle = window.getComputedStyle(canvas);
+                    const canvasMarginLeft = parseInt(canvasStyle.marginLeft) || 0;
+                    const canvasMarginTop = parseInt(canvasStyle.marginTop) || 0;
+                    const canvasBorderLeft = parseInt(canvasStyle.borderLeftWidth) || 0;
+                    const canvasBorderTop = parseInt(canvasStyle.borderTopWidth) || 0;
+                    
+                    const leftPos = canvasMarginLeft + canvasBorderLeft + this.x - spriteSize/2;
+                    const topPos = canvasMarginTop + canvasBorderTop + this.y - spriteSize/2;
+                    
+                    // Update positions for both elements
+                    this.staticElement.style.left = leftPos + 'px';
+                    this.staticElement.style.top = topPos + 'px';
+                    this.gifElement.style.left = leftPos + 'px';
+                    this.gifElement.style.top = topPos + 'px';
+                    
+                    // Show/hide based on firing state
+                    if (shouldAnimate) {
+                        this.staticElement.style.display = 'none';
+                        this.gifElement.style.display = 'block';
+                    } else {
+                        this.staticElement.style.display = 'block';
+                        this.gifElement.style.display = 'none';
+                    }
+                    
+                    // Draw a placeholder circle on canvas to show tower is there
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, spriteSize/2, 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+                    ctx.fill();
+                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                    
+                } catch (error) {
+                    console.error('Error setting up animated GIF element:', error);
+                    // Fallback to emoji if GIF fails
+                    ctx.font = "30px Arial";
+                    ctx.textAlign = "center";
+                    ctx.textBaseline = "middle";
+                    ctx.fillStyle = 'red';
+                    ctx.fillText(this.emoji, this.x, this.y);
+                }
+                
+                ctx.restore();
+                
+                // Debug info
+                if (typeof window.DEBUG_SPRITES !== 'undefined' && window.DEBUG_SPRITES) {
+                    ctx.save();
+                    ctx.font = "10px Arial";
+                    ctx.fillStyle = 'white';
+                    ctx.strokeStyle = 'black';
+                    ctx.lineWidth = 1;
+                    const debugText = this.isFiring ? 'FIRING' : 'IDLE';
+                    ctx.strokeText(debugText, this.x - 15, this.y - 30);
+                    ctx.fillText(debugText, this.x - 15, this.y - 30);
+                    ctx.restore();
+                }
+            } else {
+                // Fallback to emoji for other towers or if GIF fails
+                ctx.save();
+                ctx.font = "30px Arial";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillStyle = 'white';
+                ctx.fillText(this.emoji, this.x, this.y);
+                ctx.restore();
+            }
+
+            // Draw range circle when tower is selected or hovered
+            if (this.isSelected || this === hoveredTower) {
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.range, 0, Math.PI * 2);
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                ctx.restore();
+            }
             
             // Draw target if this tower has one
             if (this.targetPosition) {
+                ctx.save();
                 // Line from tower to target
                 ctx.beginPath();
                 ctx.moveTo(this.x, this.y);
@@ -693,6 +1833,7 @@
                 
                 // Draw the crosshair
                 drawCrosshair(this.targetPosition.x, this.targetPosition.y);
+                ctx.restore();
             }
         }
     }
@@ -730,9 +1871,13 @@
                 
                 if (this.target.health <= 0) {
                     this.target.isAlive = false;
+                    this.target.cleanup(); // Clean up GIF elements
                     // Add 5 money for every fox destroyed
                     money += 5;
                     moneySpan.textContent = money;
+                    // Increment score for every fox defeated
+                    score++;
+                    scoreSpan.textContent = score;
                 }
                 this.isAlive = false;
             } else {
@@ -856,6 +2001,15 @@
 
           if (towerIndex !== -1) {
               const tower = towers[towerIndex];
+              
+              // Clean up both GIF elements if they exist
+              if (tower.gifElement) {
+                  tower.gifElement.remove();
+              }
+              if (tower.staticElement) {
+                  tower.staticElement.remove();
+              }
+              
               money += Math.floor(tower.cost / 2);
               moneySpan.textContent = money;
               towers.splice(towerIndex, 1);
@@ -900,12 +2054,107 @@
         return false;
     }
     
+    // Debug function to toggle sprite debug mode
+    function toggleSpriteDebug() {
+        window.DEBUG_SPRITES = !window.DEBUG_SPRITES;
+        const button = document.getElementById('debug-sprites-button');
+        button.textContent = window.DEBUG_SPRITES ? 'Debug ON' : 'Debug Sprites';
+        button.style.backgroundColor = window.DEBUG_SPRITES ? '#ff6666' : '';
+        console.log('Sprite debug mode:', window.DEBUG_SPRITES ? 'ON' : 'OFF');
+        
+        // Log current super chicken towers and their animation state
+        const superTowers = towers.filter(t => t.type === 'super');
+        if (superTowers.length > 0) {
+            console.log('Super chicken towers found:', superTowers.length);
+            superTowers.forEach((tower, index) => {
+                console.log(`Tower ${index}:`, {
+                    x: tower.x,
+                    y: tower.y,
+                    spriteLoaded: superChickenSpriteLoaded
+                });
+            });
+        } else {
+            console.log('No super chicken towers found');
+        }
+    }
+    
+    // Debug function to check game state
+    function debugGame() {
+        console.log('=== GAME DEBUG INFO ===');
+        console.log('Game running:', gameRunning);
+        console.log('Towers:', towers.length);
+        console.log('Enemies:', enemies.length);
+        console.log('Projectiles:', projectiles.length);
+        console.log('Super chicken sprite loaded:', superChickenSpriteLoaded);
+        console.log('Canvas dimensions:', canvas.width, 'x', canvas.height);
+        
+        // Log super chicken towers specifically
+        const superTowers = towers.filter(t => t.type === 'super');
+        console.log('Super chicken towers:', superTowers.length);
+        superTowers.forEach((tower, i) => {
+            console.log(`Super tower ${i}:`, {
+                x: tower.x,
+                y: tower.y,
+                damage: tower.damage,
+                range: tower.range,
+                fireCooldown: tower.fireCooldown
+            });
+        });
+        
+        console.log('========================');
+    }
+    
     // ************* PAC-MAN GAME IMPLEMENTATION *************
     const pacmanCanvas = document.getElementById('pacman-canvas');
     const pacmanCtx = pacmanCanvas.getContext('2d');
+    const pacmanMinimapCanvas = document.getElementById('pacman-minimap-canvas');
+    const pacmanMinimapCtx = pacmanMinimapCanvas.getContext('2d');
     const pacmanStartButton = document.getElementById('pacman-start-button');
     const pacmanScoreSpan = document.getElementById('pacman-score');
     const pacmanLivesSpan = document.getElementById('pacman-lives');
+    const pacmanTimerSpan = document.getElementById('pacman-timer');
+    
+    // Pac-Man chicken GIF variables
+    let pacmanChickenGif = null;
+    let pacmanChickenGifUrl = "images/running_chicken.gif";
+    let pacmanChickenGifLoaded = false;
+    let pacmanChickenElement = null;
+    const pacmanChickenSize = 30;
+    
+    // Load the running chicken GIF for Pac-Man
+    function loadPacmanChickenGif() {
+        pacmanChickenGif = new Image();
+        pacmanChickenGif.onload = () => {
+            pacmanChickenGifLoaded = true;
+            console.log('Pac-Man running chicken GIF loaded successfully');
+        };
+        pacmanChickenGif.onerror = (error) => {
+            console.error('Failed to load Pac-Man chicken GIF:', error);
+            pacmanChickenGifLoaded = false;
+        };
+        pacmanChickenGif.src = pacmanChickenGifUrl;
+    }
+    
+    // Pac-Man fox GIF variables
+    let pacmanFoxGifUrl = "images/animation.gif";
+    let pacmanFoxGif = null;
+    let pacmanFoxGifLoaded = false;
+    const pacmanFoxSize = 30;
+    
+    // Load the animation GIF for foxes
+    function loadPacmanFoxGif() {
+        // Test if the GIF loads and create an image object for canvas drawing
+        pacmanFoxGif = new Image();
+        pacmanFoxGif.onload = () => {
+            pacmanFoxGifLoaded = true;
+            console.log('Pac-Man fox GIF loaded successfully');
+        };
+        pacmanFoxGif.onerror = (error) => {
+            console.error('Failed to load Pac-Man fox GIF:', error);
+            pacmanFoxGifLoaded = false;
+        };
+        pacmanFoxGif.src = pacmanFoxGifUrl;
+    }
     
     // Pac-Man Game Variables
     let pacmanGameRunning = false;
@@ -921,6 +2170,19 @@
     let powerPellets = [];
     let lifePellets = []; // Special pellets that grant extra lives
     let specialPowerUps = []; // New special power-ups (speed, invincibility, freeze)
+    let foxPowerUps = []; // Power-ups that foxes can collect
+    let foxPowerUpSpawnTimer = 0;
+    
+    // Character selection
+    let playerCharacter = 'chicken'; // 'chicken' or 'fox'
+    let characterSelected = false;
+    let spawnProtectionTime = 0; // Time until collision detection is enabled
+    let foxModeChoice = 'pack'; // 'pack' (3 foxes) or 'boss' (boss fox only) - tracks player's choice in fox mode
+    
+    // Timer variables
+    let gameTimeRemaining = 120; // 2 minutes in seconds
+    let gameStartTime = 0;
+    let lastTimerUpdate = 0;
     
     // Power-up states
     let speedBoostActive = false;
@@ -935,6 +2197,9 @@
     let allGhostsEliminated = false;
     let pacmanSize = 15;
     let ghostSize = 15;
+    
+    // Ghost-passable walls map (tracks which walls can be passed through by ghost foxes)
+    let ghostWalls = [];
     
     // Boss fox variables
     let bossActive = false;
@@ -955,36 +2220,54 @@
         
         // Initialize empty maze
         maze = [];
+        ghostWalls = []; // Initialize ghost-passable walls
+        
         for (let y = 0; y < mazeHeight; y++) {
             const row = [];
+            const ghostRow = [];
             for (let x = 0; x < mazeWidth; x++) {
+                let isWall = false;
+                let isGhostPassable = false;
+                
                 // Make walls around the edges
                 if (x === 0 || y === 0 || x === mazeWidth - 1 || y === mazeHeight - 1) {
-                    row.push(1); // Wall
+                    isWall = true;
+                    isGhostPassable = false; // Edge walls are never passable
+    
+      
+      
+      
                 } 
                 // Create some internal walls in a pattern
                 else if ((x % 2 === 0 && y % 2 === 0) && 
                          (x > 2 && y > 2) && 
                          (x < mazeWidth - 3 && y < mazeHeight - 3)) {
-                    row.push(1); // Wall
+                    isWall = true;
+                    // Internal grid walls are ghost-passable
+                    isGhostPassable = true;
                 } 
                 // Create some horizontal walls
                 else if ((y === 3 || y === mazeHeight - 4) && 
                         (x > 3 && x < mazeWidth - 4) && 
                         (x % 3 !== 0)) {
-                    row.push(1); // Wall
+                    isWall = true;
+                    // Most horizontal walls are ghost-passable (70% chance)
+                    isGhostPassable = Math.random() < 0.7;
                 }
                 // Create some vertical walls
                 else if ((x === 3 || x === mazeWidth - 4) && 
                         (y > 3 && y < mazeHeight - 4) && 
                         (y % 3 !== 0)) {
-                    row.push(1); // Wall
+                    isWall = true;
+                    // Most vertical walls are ghost-passable (70% chance)
+                    isGhostPassable = Math.random() < 0.7;
                 }
-                else {
-                    row.push(0); // Path
-                }
+                
+                row.push(isWall ? 1 : 0);
+                ghostRow.push(isGhostPassable ? 1 : 0);
             }
             maze.push(row);
+            ghostWalls.push(ghostRow);
         }
         
         // Ensure Pac-Man starting position is a path
@@ -992,10 +2275,12 @@
         const startY = Math.floor(pacmanPosition.y / cellSize);
         if (startX >= 0 && startX < mazeWidth && startY >= 0 && startY < mazeHeight) {
             maze[startY][startX] = 0;
+            ghostWalls[startY][startX] = 0; // Can't pass through start
             // Clear a small area around starting position
             for (let y = Math.max(0, startY - 1); y <= Math.min(mazeHeight - 1, startY + 1); y++) {
                 for (let x = Math.max(0, startX - 1); x <= Math.min(mazeWidth - 1, startX + 1); x++) {
                     maze[y][x] = 0;
+                    ghostWalls[y][x] = 0;
                 }
             }
         }
@@ -1007,6 +2292,13 @@
         powerPellets = [];
         lifePellets = []; // Clear life pellets
         specialPowerUps = []; // Clear special power-ups
+        foxPowerUps = []; // Clear fox power-ups
+        foxPowerUpSpawnTimer = 0; // Reset spawn timer
+        
+        // FOX MODE: Don't spawn pellets, only fox power-ups will spawn during gameplay
+        if (playerCharacter === 'fox') {
+            return;
+        }
         
         // Add a hint message about strategic power-ups
         const powerUpTips = document.getElementById('power-up-tips');
@@ -1072,11 +2364,15 @@
         const mazeWidth = maze[0].length;
         const mazeHeight = maze.length;
         
-        console.log("Checking for boss at level:", currentLevel);
+        console.log("Checking for boss at level:", currentLevel, "foxModeChoice:", foxModeChoice);
         
-        // Create boss every 3 levels starting at level 3
-        // Using absolute mod to ensure consistent behavior
-        if (currentLevel >= 3 && (currentLevel % 3) === 0) {
+        // Create boss if:
+        // 1. It's a boss level (every 3 levels starting at level 3) OR
+        // 2. Player chose boss mode in fox mode
+        const isBossLevel = currentLevel >= 3 && (currentLevel % 3) === 0;
+        const shouldCreateBoss = isBossLevel || (playerCharacter === 'fox' && foxModeChoice === 'boss');
+        
+        if (shouldCreateBoss) {
             console.log("Boss condition met! Creating boss for level:", currentLevel);
             bossActive = true;
             
@@ -1206,6 +2502,34 @@
             // Add boss to ghosts array
             ghosts.push(bossFox);
             
+            // IN FOX MODE: Show choice modal ONLY on actual boss levels (not every level if player chose boss)
+            // This is the first time they encounter a boss level
+            const isBossLevel = currentLevel >= 3 && (currentLevel % 3) === 0;
+            if (playerCharacter === 'fox' && isBossLevel && foxModeChoice === 'pack') {
+                // First boss encounter or they previously chose pack - give them the choice
+                // Pause the game
+                pacmanGameRunning = false;
+                
+                // Show the boss fox choice modal
+                const bossChoice = document.getElementById('boss-fox-choice');
+                bossChoice.style.display = 'block';
+                
+                console.log('Boss choice modal shown - game paused');
+            } else if (playerCharacter === 'fox' && foxModeChoice === 'boss') {
+                // Player previously chose boss mode - auto-select boss and make it player-controlled
+                ghosts = ghosts.filter(ghost => ghost.isBoss);
+                if (ghosts.length > 0) {
+                    ghosts[0].isPlayer = true;
+                    ghosts[0].id = 'boss_fox_player';
+                    if (!ghosts[0].direction) {
+                        ghosts[0].direction = { x: 0, y: 0 };
+                    }
+                    ghosts[0].vx = 0;
+                    ghosts[0].vy = 0;
+                }
+                console.log('Boss mode: Auto-selected boss fox (player chose boss previously)');
+            }
+            
             // Create a special text announcement
             const bossText = document.createElement('div');
             bossText.textContent = '⚠️ BOSS FOX APPEARED! ⚠️';
@@ -1242,7 +2566,56 @@
         bossFox = null;
         bossActive = false;
         
-        // Place ghosts in each corner (making sure they're on paths)
+        // FOX PLAYER MODE: Spawn 3 player-controlled foxes at corners (avoiding chicken spawn area)
+        if (playerCharacter === 'fox') {
+            // Define 3 corner positions for the fox pack (excluding top-left where chicken spawns)
+            const foxCorners = [
+                { x: mazeWidth - 2, y: 1, color: 'gold' },        // Top-right (Leader)
+                { x: 1, y: mazeHeight - 2, color: 'orange' },     // Bottom-left
+                { x: mazeWidth - 2, y: mazeHeight - 2, color: 'darkorange' } // Bottom-right
+            ];
+            
+            // Spawn each fox at a corner
+            foxCorners.forEach((corner, index) => {
+                let foxX = corner.x;
+                let foxY = corner.y;
+                
+                // Make sure the corner is on a path, otherwise find nearest path
+                if (maze[foxY][foxX] === 1) {
+                    // Find nearest path
+                    let found = false;
+                    for (let radius = 1; radius < 5 && !found; radius++) {
+                        for (let dy = -radius; dy <= radius && !found; dy++) {
+                            for (let dx = -radius; dx <= radius && !found; dx++) {
+                                const newY = foxY + dy;
+                                const newX = foxX + dx;
+                                if (newY >= 0 && newY < mazeHeight && newX >= 0 && newX < mazeWidth && maze[newY][newX] === 0) {
+                                    foxX = newX;
+                                    foxY = newY;
+                                    found = true;
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                ghosts.push({
+                    x: foxX * cellSize + cellSize / 2,
+                    y: foxY * cellSize + cellSize / 2,
+                    color: corner.color,
+                    direction: { x: 0, y: 0 },
+                    speed: 2.0,
+                    frightened: false,
+                    isGhost: false,
+                    isPlayer: true // All foxes are player-controlled
+                });
+            });
+            
+            console.log(`Fox pack spawned with ${ghosts.length} foxes at corners (avoiding chicken spawn)`);
+            return; // Don't spawn other foxes
+        }
+        
+        // CHICKEN PLAYER MODE: Place ghosts in each corner (making sure they're on paths)
         const corners = [
             { x: 1, y: 1 },
             { x: mazeWidth - 2, y: 1 },
@@ -1276,9 +2649,79 @@
                 color: ghostColors[i % ghostColors.length],
                 direction: { x: 0, y: 0 },
                 speed: 1.5,
-                frightened: false
+                frightened: false,
+                isGhost: false  // Regular fox
             });
         });
+        
+        // Add ghost foxes that can pass through walls (on higher levels)
+        if (currentLevel >= 2) {
+            const ghostFoxCount = Math.min(currentLevel - 1, 3); // 1 ghost fox on level 2, up to 3
+            const ghostFoxColors = ['purple', 'magenta', 'lime'];
+            
+            // Spawn ghost foxes on the sides of the board
+            const sides = [
+                { name: 'top', positions: [] },
+                { name: 'bottom', positions: [] },
+                { name: 'left', positions: [] },
+                { name: 'right', positions: [] }
+            ];
+            
+            // Generate valid positions on each side
+            for (let i = 1; i < mazeWidth - 1; i++) {
+                // Top side
+                for (let y = 1; y < 3; y++) {
+                    if (maze[y][i] === 0) {
+                        sides[0].positions.push({ x: i, y: y });
+                        break;
+                    }
+                }
+                // Bottom side
+                for (let y = mazeHeight - 3; y < mazeHeight - 1; y++) {
+                    if (maze[y][i] === 0) {
+                        sides[1].positions.push({ x: i, y: y });
+                        break;
+                    }
+                }
+            }
+            
+            for (let i = 1; i < mazeHeight - 1; i++) {
+                // Left side
+                for (let x = 1; x < 3; x++) {
+                    if (maze[i][x] === 0) {
+                        sides[2].positions.push({ x: x, y: i });
+                        break;
+                    }
+                }
+                // Right side
+                for (let x = mazeWidth - 3; x < mazeWidth - 1; x++) {
+                    if (maze[i][x] === 0) {
+                        sides[3].positions.push({ x: x, y: i });
+                        break;
+                    }
+                }
+            }
+            
+            // Distribute ghost foxes across the sides
+            for (let i = 0; i < ghostFoxCount; i++) {
+                const sideIndex = i % 4;
+                const side = sides[sideIndex];
+                
+                if (side.positions.length > 0) {
+                    const position = side.positions[Math.floor(Math.random() * side.positions.length)];
+                    
+                    ghosts.push({
+                        x: position.x * cellSize + cellSize / 2,
+                        y: position.y * cellSize + cellSize / 2,
+                        color: ghostFoxColors[i % ghostFoxColors.length],
+                        direction: { x: 0, y: 0 },
+                        speed: 1.8,
+                        frightened: false,
+                        isGhost: true  // This is a ghost fox - can pass through walls
+                    });
+                }
+            }
+        }
     }
     
     // Array to hold particle effects for ghost elimination
@@ -1325,6 +2768,86 @@
     
     // Draw the boss fox with special effects and health bar
     function drawBossFox(boss) {
+        // IN FOX MODE (player-controlled): Create/update GIF element like regular foxes
+        if (playerCharacter === 'fox' && boss.isPlayer) {
+            console.log('Drawing player-controlled boss fox at:', boss.x, boss.y, 'has GIF:', !!boss.gifElement);
+            
+            // Create or update GIF element for boss fox if not already created
+            if (pacmanFoxGifLoaded && !boss.gifElement) {
+                boss.gifElement = document.createElement('img');
+                boss.gifElement.src = pacmanFoxGifUrl;
+                boss.gifElement.style.position = 'absolute';
+                boss.gifElement.style.width = (pacmanFoxSize * 1.5) + 'px'; // Boss is 1.5x larger
+                boss.gifElement.style.height = (pacmanFoxSize * 1.5) + 'px';
+                boss.gifElement.style.pointerEvents = 'none';
+                boss.gifElement.style.zIndex = '5';
+                boss.gifElement.classList.add('pacman-ghost-gif');
+                boss.gifElement.id = 'boss_fox_gif';
+                
+                // Add to canvas container
+                const canvasContainer = pacmanCanvas.parentElement;
+                if (canvasContainer.style.position !== 'relative') {
+                    canvasContainer.style.position = 'relative';
+                }
+                canvasContainer.appendChild(boss.gifElement);
+                console.log('Boss fox GIF element created');
+            }
+            
+            // Update GIF element position if it exists
+            if (boss.gifElement && pacmanFoxGifLoaded) {
+                const canvasRect = pacmanCanvas.getBoundingClientRect();
+                const displaySize = pacmanFoxSize * 1.5; // Boss is 1.5x size
+                
+                const leftPos = canvasRect.left - pacmanCanvas.parentElement.getBoundingClientRect().left + boss.x - displaySize/2;
+                const topPos = canvasRect.top - pacmanCanvas.parentElement.getBoundingClientRect().top + boss.y - displaySize/2;
+                
+                boss.gifElement.style.left = leftPos + 'px';
+                boss.gifElement.style.top = topPos + 'px';
+                
+                // Apply rotation based on movement direction
+                // Fox GIF faces right by default
+                let rotation = 0;
+                let scaleX = 1;
+                
+                if (boss.direction.x > 0) {
+                    rotation = 0; // Right - face right (default)
+                    scaleX = 1;
+                } else if (boss.direction.x < 0) {
+                    rotation = 0; // Left - flip horizontally
+                    scaleX = -1;
+                } else if (boss.direction.y > 0) {
+                    rotation = 90; // Down - rotate 90 degrees
+                    scaleX = 1;
+                } else if (boss.direction.y < 0) {
+                    rotation = -90; // Up - rotate -90 degrees
+                    scaleX = 1;
+                }
+                
+                boss.gifElement.style.transform = `rotate(${rotation}deg) scaleX(${scaleX})`;
+                boss.gifElement.style.transformOrigin = 'center center';
+            }
+            
+            // Draw placeholder circle and golden aura on canvas
+            pacmanCtx.beginPath();
+            pacmanCtx.arc(boss.x, boss.y, boss.size, 0, Math.PI * 2);
+            pacmanCtx.fillStyle = 'rgba(255, 215, 0, 0.1)';
+            pacmanCtx.fill();
+            pacmanCtx.strokeStyle = 'rgba(255, 215, 0, 0.5)';
+            pacmanCtx.lineWidth = 2;
+            pacmanCtx.stroke();
+            
+            // Boss golden crown indicator above
+            pacmanCtx.font = '20px Arial';
+            pacmanCtx.textAlign = 'center';
+            pacmanCtx.textBaseline = 'middle';
+            pacmanCtx.fillStyle = 'gold';
+            const crownPulse = Math.sin(Date.now() / 200) * 2;
+            pacmanCtx.fillText('👑', boss.x, boss.y - boss.size - 10 + crownPulse);
+            
+            return; // Skip the emoji drawing below
+        }
+        
+        // IN CHICKEN MODE: Draw boss fox with emoji (original code)
         // Draw boss fox glow/aura
         const glowPulse = Math.sin(Date.now() / 150) * 0.2 + 0.8;
         
@@ -1378,37 +2901,39 @@
             pacmanCtx.stroke();
         }
         
-        // Draw health bar
-        const healthBarWidth = boss.size * 3;
-        const healthBarHeight = 8;
-        const healthPercentage = bossHealth / bossMaxHealth;
-        
-        // Health bar background
-        pacmanCtx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-        pacmanCtx.fillRect(
-            boss.x - healthBarWidth/2,
-            boss.y - boss.size - 15,
-            healthBarWidth,
-            healthBarHeight
-        );
-        
-        // Health bar fill - color changes based on health percentage
-        let healthColor;
-        if (healthPercentage > 0.6) {
-            healthColor = 'lime';
-        } else if (healthPercentage > 0.3) {
-            healthColor = 'yellow';
-        } else {
-            healthColor = 'red';
+        // Draw health bar (only in chicken mode when boss is AI)
+        if (playerCharacter === 'chicken') {
+            const healthBarWidth = boss.size * 3;
+            const healthBarHeight = 8;
+            const healthPercentage = bossHealth / bossMaxHealth;
+            
+            // Health bar background
+            pacmanCtx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+            pacmanCtx.fillRect(
+                boss.x - healthBarWidth/2,
+                boss.y - boss.size - 15,
+                healthBarWidth,
+                healthBarHeight
+            );
+            
+            // Health bar fill - color changes based on health percentage
+            let healthColor;
+            if (healthPercentage > 0.6) {
+                healthColor = 'lime';
+            } else if (healthPercentage > 0.3) {
+                healthColor = 'yellow';
+            } else {
+                healthColor = 'red';
+            }
+            
+            pacmanCtx.fillStyle = healthColor;
+            pacmanCtx.fillRect(
+                boss.x - healthBarWidth/2,
+                boss.y - boss.size - 15,
+                healthBarWidth * healthPercentage,
+                healthBarHeight
+            );
         }
-        
-        pacmanCtx.fillStyle = healthColor;
-        pacmanCtx.fillRect(
-            boss.x - healthBarWidth/2,
-            boss.y - boss.size - 15,
-            healthBarWidth * healthPercentage,
-            healthBarHeight
-        );
     }
     
     function createEliminationEffect(x, y) {
@@ -1770,15 +3295,70 @@
     function initPacmanGame(resetScore = true) {
         console.log('Initializing Pac-Man game...');
         
-        // If resetScore is true, reset score, lives, and level
-        if (resetScore) {
-            pacmanScore = 0;
-            pacmanLives = 3;
-            currentLevel = 1;
-            nextLifeAt = 10000; // Reset next life threshold
+        // Clean up any existing ghost and chicken GIF elements
+        const existingGhostGifs = document.querySelectorAll('.pacman-ghost-gif');
+        existingGhostGifs.forEach(element => element.remove());
+        
+        const existingChickenGif = document.querySelector('.pacman-chicken-gif');
+        if (existingChickenGif) {
+            existingChickenGif.remove();
+            pacmanChickenElement = null;
         }
         
-        pacmanPosition = { x: 400, y: 300 }; // Center of the canvas
+        // If resetScore is true, reset score, lives, and level
+        if (resetScore) {
+            if (playerCharacter === 'chicken') {
+                pacmanScore = 0;
+                pacmanLives = 3;
+            } else {
+                // Fox mode: score is based on how fast you catch the chicken
+                pacmanScore = 0;
+                pacmanLives = 1; // Fox has 1 attempt per level
+            }
+            currentLevel = 1;
+            nextLifeAt = 10000; // Reset next life threshold
+            gameTimeRemaining = 120; // Reset timer to 2 minutes
+            gameStartTime = Date.now();
+            lastTimerUpdate = Date.now();
+        }
+        // If not resetting score, just update the timer reference (level transition)
+        else {
+            lastTimerUpdate = Date.now(); // Update timer reference for smooth transition
+        }
+        
+        // Set starting position based on character
+        if (playerCharacter === 'fox') {
+            // In fox mode, chicken starts at a corner FAR from fox spawn
+            // Find a path position in top-left area
+            let chickenStartX = 1;
+            let chickenStartY = 1;
+            
+            // Find first valid path in top-left corner
+            for (let y = 1; y < 5 && chickenStartY === 1; y++) {
+                for (let x = 1; x < 5 && chickenStartX === 1; x++) {
+                    if (maze && maze[y] && maze[y][x] === 0) {
+                        chickenStartX = x;
+                        chickenStartY = y;
+                        break;
+                    }
+                }
+            }
+            
+            pacmanPosition = { 
+                x: chickenStartX * cellSize + cellSize / 2, 
+                y: chickenStartY * cellSize + cellSize / 2 
+            };
+            
+            // Spawn protection - 1 second to prevent instant collision
+            spawnProtectionTime = Date.now() + 1000;
+            
+            console.log('Fox mode initialized. Chicken at:', pacmanPosition, 'Protection until:', new Date(spawnProtectionTime));
+        } else {
+            // In chicken mode, player starts at center
+            pacmanPosition = { x: 400, y: 300 }; // Center of the canvas
+            spawnProtectionTime = 0; // No protection needed in chicken mode
+        }
+        
         pacmanDirection = { x: 0, y: 0 };
         powerMode = false;
         ghostsEaten = 0;
@@ -1803,12 +3383,24 @@
         try {
             createMaze();
             console.log('Maze created:', maze.length, 'rows');
-            createPellets();
-            console.log('Pellets created:', pellets.length, 'regular,', powerPellets.length, 'power');
+            
+            // Only create pellets and power-ups in chicken mode
+            if (playerCharacter === 'chicken') {
+                createPellets();
+                console.log('Pellets created:', pellets.length, 'regular,', powerPellets.length, 'power');
+                createSpecialPowerUps();
+                console.log('Special power-ups created:', specialPowerUps.length);
+            } else {
+                // Fox mode: clear any existing pellets and power-ups
+                pellets = [];
+                powerPellets = [];
+                lifePellets = [];
+                specialPowerUps = [];
+                console.log('Fox mode: No pellets created');
+            }
+            
             createGhosts();
             console.log('Ghosts created:', ghosts.length);
-            createSpecialPowerUps();
-            console.log('Special power-ups created:', specialPowerUps.length);
             console.log("About to check for boss fox at level:", currentLevel);
             createBossFox(); // Add boss fox if it's a boss level
             if (bossActive) {
@@ -1834,6 +3426,12 @@
         pacmanScoreSpan.textContent = pacmanScore;
         pacmanLivesSpan.textContent = pacmanLives;
         
+        // Update timer display
+        const minutes = Math.floor(gameTimeRemaining / 60);
+        const seconds = gameTimeRemaining % 60;
+        pacmanTimerSpan.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        pacmanTimerSpan.style.color = '#ff4500';
+        
         // Display current level with error handling
         try {
             document.getElementById('pacman-level').textContent = currentLevel;
@@ -1843,48 +3441,105 @@
     }
     
     function drawPacman() {
+        // Create or update the chicken GIF DOM element if not already created
+        if (pacmanChickenGifLoaded && !pacmanChickenElement) {
+            pacmanChickenElement = document.createElement('img');
+            pacmanChickenElement.src = pacmanChickenGifUrl;
+            pacmanChickenElement.style.position = 'absolute';
+            pacmanChickenElement.style.width = pacmanChickenSize + 'px';
+            pacmanChickenElement.style.height = pacmanChickenSize + 'px';
+            pacmanChickenElement.style.pointerEvents = 'none';
+            pacmanChickenElement.style.zIndex = '5';
+            pacmanChickenElement.classList.add('pacman-chicken-gif');
+            
+            // Add to canvas container
+            const canvasContainer = pacmanCanvas.parentElement;
+            if (canvasContainer.style.position !== 'relative') {
+                canvasContainer.style.position = 'relative';
+            }
+            canvasContainer.appendChild(pacmanChickenElement);
+        }
+        
+        // Update the chicken GIF element position and rotation if it exists
+        if (pacmanChickenElement && pacmanChickenGifLoaded) {
+            const canvasRect = pacmanCanvas.getBoundingClientRect();
+            const containerRect = pacmanCanvas.parentElement.getBoundingClientRect();
+            
+            const leftPos = canvasRect.left - containerRect.left + pacmanPosition.x - pacmanChickenSize/2;
+            const topPos = canvasRect.top - containerRect.top + pacmanPosition.y - pacmanChickenSize/2;
+            
+            pacmanChickenElement.style.left = leftPos + 'px';
+            pacmanChickenElement.style.top = topPos + 'px';
+            
+            // Calculate rotation based on direction
+            let rotation = 0;
+            if (pacmanDirection.x > 0) rotation = 0; // Right - face right
+            else if (pacmanDirection.x < 0) rotation = 0; // Left - still face right
+            else if (pacmanDirection.y > 0) rotation = Math.PI / 2; // Down - face down
+            else if (pacmanDirection.y < 0) rotation = -Math.PI / 2; // Up - face up
+            
+            pacmanChickenElement.style.transform = `rotate(${rotation}rad)`;
+            pacmanChickenElement.style.transformOrigin = 'center center';
+        }
+        
+        // Draw effects on canvas (shield, speed boost, etc.)
         pacmanCtx.save();
-        
-        // Draw chicken emoji
-        pacmanCtx.font = "30px Arial";
-        pacmanCtx.textAlign = "center";
-        pacmanCtx.textBaseline = "middle";
-        
-        // Determine which chicken emoji to show based on direction
-        let chickenEmoji = '🐔';
-        
-        // Apply rotation for the emoji
         pacmanCtx.translate(pacmanPosition.x, pacmanPosition.y);
         
         // Apply visual effects for active power-ups
         if (invincibilityActive) {
-            // Shield effect for invincibility - simpler, less glowy version
+            // Shield effect for invincibility
             pacmanCtx.beginPath();
-            pacmanCtx.arc(0, 0, pacmanSize * 1.6, 0, Math.PI * 2);
+            pacmanCtx.arc(0, 0, pacmanChickenSize * 1.6, 0, Math.PI * 2);
             pacmanCtx.fillStyle = 'rgba(0, 100, 255, 0.15)';
             pacmanCtx.fill();
             pacmanCtx.strokeStyle = 'rgba(0, 100, 255, 0.5)';
             pacmanCtx.lineWidth = 1;
             pacmanCtx.stroke();
             
-            // Simpler shield outline
+            // Shield outline
             pacmanCtx.beginPath();
             const shieldPulse = Math.sin(Date.now() / 150) * 2;
-            pacmanCtx.arc(0, 0, pacmanSize * 1.3 + shieldPulse, 0, Math.PI * 2);
+            pacmanCtx.arc(0, 0, pacmanChickenSize * 1.3 + shieldPulse, 0, Math.PI * 2);
             pacmanCtx.strokeStyle = 'rgba(100, 200, 255, 0.6)';
             pacmanCtx.stroke();
+        }
+        
+        // Spawn protection effect (Fox mode)
+        if (playerCharacter === 'fox' && Date.now() < spawnProtectionTime) {
+            // Green shield effect during spawn protection
+            pacmanCtx.beginPath();
+            pacmanCtx.arc(0, 0, pacmanChickenSize * 1.6, 0, Math.PI * 2);
+            pacmanCtx.fillStyle = 'rgba(0, 255, 0, 0.15)';
+            pacmanCtx.fill();
+            pacmanCtx.strokeStyle = 'rgba(0, 255, 0, 0.5)';
+            pacmanCtx.lineWidth = 2;
+            pacmanCtx.stroke();
             
-            // No shadow/glow
-        } else {
-            // No glow for normal state either
+            // Pulsing outline
+            pacmanCtx.beginPath();
+            const protectionPulse = Math.sin(Date.now() / 100) * 3;
+            pacmanCtx.arc(0, 0, pacmanChickenSize * 1.3 + protectionPulse, 0, Math.PI * 2);
+            pacmanCtx.strokeStyle = 'rgba(100, 255, 100, 0.7)';
+            pacmanCtx.lineWidth = 2;
+            pacmanCtx.stroke();
+            
+            // "READY!" text
+            pacmanCtx.font = 'bold 14px Arial';
+            pacmanCtx.fillStyle = 'rgba(0, 255, 0, 0.9)';
+            pacmanCtx.textAlign = 'center';
+            pacmanCtx.textBaseline = 'middle';
+            pacmanCtx.fillText('READY!', 0, -30);
         }
         
         // Speed boost effect (simplified)
         if (speedBoostActive) {
-            // Simple speed indicator - just a small symbol next to the chicken
+            // Simple speed indicator
             if (pacmanDirection.x !== 0 || pacmanDirection.y !== 0) {
                 pacmanCtx.font = '12px Arial';
                 pacmanCtx.fillStyle = 'rgba(255, 255, 0, 0.8)';
+                pacmanCtx.textAlign = 'center';
+                pacmanCtx.textBaseline = 'middle';
                 
                 // Place the lightning bolt symbol based on direction
                 if (pacmanDirection.x > 0) { // Moving right
@@ -1899,25 +3554,11 @@
             }
         }
         
-        // No shadow blur for the chicken
-        
-        // Draw the chicken emoji with enhanced size for better visibility
-        pacmanCtx.font = "32px Arial";
-        pacmanCtx.fillText(chickenEmoji, 0, 0);
-        
-        // Add a small indicator for direction
-        const indicatorSize = 5;
-        pacmanCtx.fillStyle = 'rgba(255, 255, 0, 0.7)';
-        
-        if (pacmanDirection.x > 0) {
-            pacmanCtx.fillRect(10, -indicatorSize, indicatorSize * 2, indicatorSize * 2);
-        } else if (pacmanDirection.x < 0) {
-            pacmanCtx.fillRect(-15, -indicatorSize, indicatorSize * 2, indicatorSize * 2);
-        } else if (pacmanDirection.y > 0) {
-            pacmanCtx.fillRect(-indicatorSize, 10, indicatorSize * 2, indicatorSize * 2);
-        } else if (pacmanDirection.y < 0) {
-            pacmanCtx.fillRect(-indicatorSize, -15, indicatorSize * 2, indicatorSize * 2);
-        }
+        // Draw a subtle placeholder circle on canvas where the chicken is
+        pacmanCtx.beginPath();
+        pacmanCtx.arc(0, 0, pacmanChickenSize/2, 0, Math.PI * 2);
+        pacmanCtx.fillStyle = 'rgba(255, 255, 255, 0.05)';
+        pacmanCtx.fill();
         
         pacmanCtx.restore();
     }
@@ -1933,12 +3574,80 @@
                 return;
             }
             
-            // Draw fox emoji
-            pacmanCtx.font = "30px Arial";
+            // Create or update GIF element for this ghost if GIF is loaded and NOT in frightened mode
+            if (pacmanFoxGifLoaded && !ghost.gifElement && !(powerMode && ghost.frightened)) {
+                ghost.gifElement = document.createElement('img');
+                ghost.gifElement.src = pacmanFoxGifUrl;
+                ghost.gifElement.style.position = 'absolute';
+                ghost.gifElement.style.width = pacmanFoxSize + 'px';
+                ghost.gifElement.style.height = pacmanFoxSize + 'px';
+                ghost.gifElement.style.pointerEvents = 'none';
+                ghost.gifElement.style.zIndex = '5';
+                ghost.gifElement.classList.add('pacman-ghost-gif');
+                ghost.gifElement.id = 'ghost_' + ghost.id;
+                
+                // Add to canvas container
+                const canvasContainer = pacmanCanvas.parentElement;
+                if (canvasContainer.style.position !== 'relative') {
+                    canvasContainer.style.position = 'relative';
+                }
+                canvasContainer.appendChild(ghost.gifElement);
+            }
+            
+            // Remove GIF element if ghost becomes frightened
+            if (powerMode && ghost.frightened && ghost.gifElement) {
+                ghost.gifElement.remove();
+                ghost.gifElement = null;
+            }
+            
+            // Update GIF element position if it exists and ghost is not frightened
+            if (ghost.gifElement && pacmanFoxGifLoaded && !(powerMode && ghost.frightened)) {
+                const canvasStyle = window.getComputedStyle(pacmanCanvas);
+                const canvasMarginLeft = parseInt(canvasStyle.marginLeft) || 0;
+                const canvasMarginTop = parseInt(canvasStyle.marginTop) || 0;
+                const canvasBorderLeft = parseInt(canvasStyle.borderLeftWidth) || 0;
+                const canvasBorderTop = parseInt(canvasStyle.borderTopWidth) || 0;
+                const canvasRect = pacmanCanvas.getBoundingClientRect();
+                
+                // Update size if fox has size boost
+                const displaySize = ghost.sizeBoost ? pacmanFoxSize * 1.5 : pacmanFoxSize;
+                ghost.gifElement.style.width = displaySize + 'px';
+                ghost.gifElement.style.height = displaySize + 'px';
+                
+                const leftPos = canvasRect.left - pacmanCanvas.parentElement.getBoundingClientRect().left + ghost.x - displaySize/2;
+                const topPos = canvasRect.top - pacmanCanvas.parentElement.getBoundingClientRect().top + ghost.y - displaySize/2;
+                
+                ghost.gifElement.style.left = leftPos + 'px';
+                ghost.gifElement.style.top = topPos + 'px';
+                
+                // Apply rotation based on movement direction
+                // Fox GIF faces right by default
+                let rotation = 0;
+                let scaleX = 1;
+                
+                if (ghost.vx > 0) {
+                    rotation = 0; // Right - face right (default)
+                    scaleX = 1;
+                } else if (ghost.vx < 0) {
+                    rotation = 0; // Left - flip horizontally
+                    scaleX = -1;
+                } else if (ghost.vy > 0) {
+                    rotation = 90; // Down - rotate 90 degrees
+                    scaleX = 1;
+                } else if (ghost.vy < 0) {
+                    rotation = -90; // Up - rotate -90 degrees
+                    scaleX = 1;
+                }
+                
+                ghost.gifElement.style.transform = `rotate(${rotation}deg) scaleX(${scaleX})`;
+                ghost.gifElement.style.transformOrigin = 'center center';
+            }
+            
+            // Draw fox or placeholder
             pacmanCtx.textAlign = "center";
             pacmanCtx.textBaseline = "middle";
             
-            // Use fox emoji - either normal fox or blue (scared) fox
+            // Use fox GIF - either normal fox or blue (scared) fox
             if (powerMode && ghost.frightened) {
                 // Blue tint effect for frightened foxes
                 pacmanCtx.globalAlpha = 1.0; // Full opacity
@@ -1949,53 +3658,196 @@
                 
                 // Create a pulsing effect for the frightened fox
                 const pulseSize = Math.sin(Date.now() / 200) * 2;
-                pacmanCtx.font = `${30 + pulseSize}px Arial`;
                 
-                // Frightened fox - use normal fox but make it look scared
-                pacmanCtx.fillText('🦊', ghost.x, ghost.y);
+                // Draw static fox GIF (frozen first frame) with canvas drawImage
+                pacmanCtx.translate(ghost.x, ghost.y);
+                if (pacmanFoxGifLoaded) {
+                    // Draw just the first frame of the GIF (static)
+                    pacmanCtx.drawImage(pacmanFoxGif, -pacmanFoxSize/2, -pacmanFoxSize/2 - pulseSize, pacmanFoxSize, pacmanFoxSize);
+                } else {
+                    // Fallback to emoji
+                    pacmanCtx.font = `${30 + pulseSize}px Arial`;
+                    pacmanCtx.fillText('🦊', 0, 0);
+                }
+                pacmanCtx.translate(-ghost.x, -ghost.y);
                 
                 // Add scared expression with animation
                 pacmanCtx.fillStyle = 'white';
                 pacmanCtx.shadowColor = 'red';
                 pacmanCtx.shadowBlur = 5;
+                pacmanCtx.font = '14px Arial';
                 pacmanCtx.fillText('❗', ghost.x, ghost.y - 20 - Math.abs(pulseSize));
             } else {
-                // Regular fox in different variants based on original ghost color
-                // Apply a very slight colorful glow based on the ghost's original color
-                switch(ghost.color) {
-                    case 'red':
-                        pacmanCtx.shadowColor = 'rgba(255, 0, 0, 0.6)';
-                        pacmanCtx.shadowBlur = 10;
-                        pacmanCtx.font = "32px Arial";
-                        pacmanCtx.fillText('🦊', ghost.x, ghost.y);
-                        break;
-                    case 'pink':
-                        pacmanCtx.shadowColor = 'rgba(255, 105, 180, 0.6)';
-                        pacmanCtx.shadowBlur = 10;
-                        pacmanCtx.font = "31px Arial";
-                        pacmanCtx.fillText('🦊', ghost.x, ghost.y);
-                        break;
-                    case 'cyan':
-                        pacmanCtx.shadowColor = 'rgba(0, 255, 255, 0.6)';
-                        pacmanCtx.shadowBlur = 10;
-                        pacmanCtx.font = "33px Arial";
-                        pacmanCtx.fillText('🦊', ghost.x, ghost.y);
-                        break;
-                    case 'orange':
-                        pacmanCtx.shadowColor = 'rgba(255, 165, 0, 0.6)';
-                        pacmanCtx.shadowBlur = 10;
-                        pacmanCtx.font = "32px Arial";
-                        pacmanCtx.fillText('🦊', ghost.x, ghost.y);
-                        break;
-                    default:
-                        pacmanCtx.shadowColor = 'rgba(100, 100, 100, 0.6)';
-                        pacmanCtx.shadowBlur = 10;
-                        pacmanCtx.fillText('🦊', ghost.x, ghost.y);
+                // Draw placeholder circle for regular fox (GIF is handled by DOM element)
+                pacmanCtx.beginPath();
+                pacmanCtx.arc(ghost.x, ghost.y, pacmanFoxSize/2, 0, Math.PI * 2);
+                pacmanCtx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+                pacmanCtx.fill();
+                pacmanCtx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+                pacmanCtx.lineWidth = 1;
+                pacmanCtx.stroke();
+                
+                // Draw extra effect for ghost foxes (ethereal glow)
+                if (ghost.isGhost) {
+                    pacmanCtx.beginPath();
+                    const ghostGlowSize = Math.sin(Date.now() / 200) * 3 + 8;
+                    pacmanCtx.arc(ghost.x, ghost.y, pacmanFoxSize/2 + ghostGlowSize, 0, Math.PI * 2);
+                    pacmanCtx.strokeStyle = 'rgba(200, 100, 255, 0.4)';
+                    pacmanCtx.lineWidth = 2;
+                    pacmanCtx.stroke();
+                }
+                
+                // Draw power-up effects
+                if (ghost.speedBoost) {
+                    // Speed boost - red/orange trail effect
+                    pacmanCtx.beginPath();
+                    const speedGlow = Math.sin(Date.now() / 100) * 5 + 10;
+                    pacmanCtx.arc(ghost.x, ghost.y, (ghost.size || ghostSize) + speedGlow, 0, Math.PI * 2);
+                    pacmanCtx.strokeStyle = 'rgba(255, 69, 0, 0.6)';
+                    pacmanCtx.lineWidth = 3;
+                    pacmanCtx.stroke();
+                    
+                    // Add flame particles
+                    pacmanCtx.fillStyle = 'rgba(255, 100, 0, 0.8)';
+                    pacmanCtx.font = '16px Arial';
+                    const flameOffset = Math.sin(Date.now() / 150) * 3;
+                    pacmanCtx.fillText('🔥', ghost.x - 15, ghost.y - 15 + flameOffset);
+                }
+                
+                if (ghost.sizeBoost) {
+                    // Size boost - pulsing golden aura
+                    pacmanCtx.beginPath();
+                    const sizePulse = Math.sin(Date.now() / 150) * 3 + 8;
+                    pacmanCtx.arc(ghost.x, ghost.y, (ghost.size || ghostSize) + sizePulse, 0, Math.PI * 2);
+                    pacmanCtx.strokeStyle = 'rgba(255, 215, 0, 0.7)';
+                    pacmanCtx.lineWidth = 3;
+                    pacmanCtx.stroke();
+                    
+                    // Add muscle emoji
+                    pacmanCtx.fillStyle = 'rgba(255, 215, 0, 1)';
+                    pacmanCtx.font = '16px Arial';
+                    const muscleOffset = Math.sin(Date.now() / 150) * 2;
+                    pacmanCtx.fillText('💪', ghost.x + 15, ghost.y - 15 + muscleOffset);
+                }
+                
+                if (ghost.rageMode) {
+                    // RAGE MODE - Intense red/black pulsing aura with multiple rings
+                    const rageTime = Date.now() / 100;
+                    
+                    // Inner red ring
+                    pacmanCtx.beginPath();
+                    const ragePulse1 = Math.sin(rageTime) * 5 + 12;
+                    pacmanCtx.arc(ghost.x, ghost.y, (ghost.size || ghostSize) + ragePulse1, 0, Math.PI * 2);
+                    pacmanCtx.strokeStyle = 'rgba(255, 0, 0, 0.9)';
+                    pacmanCtx.lineWidth = 4;
+                    pacmanCtx.stroke();
+                    
+                    // Outer dark ring
+                    pacmanCtx.beginPath();
+                    const ragePulse2 = Math.sin(rageTime + Math.PI) * 5 + 18;
+                    pacmanCtx.arc(ghost.x, ghost.y, (ghost.size || ghostSize) + ragePulse2, 0, Math.PI * 2);
+                    pacmanCtx.strokeStyle = 'rgba(139, 0, 0, 0.8)';
+                    pacmanCtx.lineWidth = 3;
+                    pacmanCtx.stroke();
+                    
+                    // Rage particles
+                    pacmanCtx.fillStyle = 'rgba(255, 0, 0, 1)';
+                    pacmanCtx.font = '18px Arial';
+                    const rage1 = Math.sin(Date.now() / 120) * 4;
+                    const rage2 = Math.cos(Date.now() / 140) * 4;
+                    pacmanCtx.fillText('😈', ghost.x - 18, ghost.y - 18 + rage1);
+                    pacmanCtx.fillText('💢', ghost.x + 18, ghost.y - 18 + rage2);
+                }
+                
+                if (ghost.isClone) {
+                    // Clone indicator - subtle blue shimmer
+                    pacmanCtx.beginPath();
+                    const clonePulse = Math.sin(Date.now() / 200) * 2 + 5;
+                    pacmanCtx.arc(ghost.x, ghost.y, (ghost.size || ghostSize) + clonePulse, 0, Math.PI * 2);
+                    pacmanCtx.strokeStyle = 'rgba(100, 200, 255, 0.5)';
+                    pacmanCtx.lineWidth = 2;
+                    pacmanCtx.stroke();
+                    
+                    // Clone emoji
+                    pacmanCtx.fillStyle = 'rgba(100, 200, 255, 0.9)';
+                    pacmanCtx.font = '14px Arial';
+                    pacmanCtx.fillText('👥', ghost.x + 15, ghost.y + 18);
                 }
             }
             
             pacmanCtx.restore();
         });
+    }
+    
+    function drawMinimap() {
+        // Draw minimap to separate canvas
+        const minimapWidth = pacmanMinimapCanvas.width - 10;
+        const minimapHeight = pacmanMinimapCanvas.height - 50;
+        const minimapX = 5;
+        const minimapY = 5;
+        const minimapCellSize = minimapWidth / maze[0].length;
+        
+        // Clear minimap canvas
+        pacmanMinimapCtx.fillStyle = 'rgba(0, 0, 0, 1)';
+        pacmanMinimapCtx.fillRect(0, 0, pacmanMinimapCanvas.width, pacmanMinimapCanvas.height);
+        
+        // Draw minimap border
+        pacmanMinimapCtx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+        pacmanMinimapCtx.lineWidth = 2;
+        pacmanMinimapCtx.strokeRect(minimapX, minimapY, minimapWidth, minimapHeight);
+        
+        // Draw walls on minimap
+        for (let y = 0; y < maze.length; y++) {
+            for (let x = 0; x < maze[y].length; x++) {
+                if (maze[y][x] === 1) { // Wall
+                    const isGhostPassable = ghostWalls[y] && ghostWalls[y][x] === 1;
+                    
+                    // Ghost-passable walls are purple, regular walls are blue
+                    pacmanMinimapCtx.fillStyle = isGhostPassable ? 'rgba(200, 100, 255, 0.8)' : 'rgba(50, 50, 200, 0.8)';
+                    pacmanMinimapCtx.fillRect(
+                        minimapX + x * minimapCellSize,
+                        minimapY + y * minimapCellSize,
+                        minimapCellSize,
+                        minimapCellSize
+                    );
+                }
+            }
+        }
+        
+        // Draw chicken position on minimap
+        const chickenMiniX = minimapX + (pacmanPosition.x / pacmanCanvas.width) * minimapWidth;
+        const chickenMiniY = minimapY + (pacmanPosition.y / pacmanCanvas.height) * minimapHeight;
+        pacmanMinimapCtx.fillStyle = 'rgba(255, 255, 0, 1)';
+        pacmanMinimapCtx.beginPath();
+        pacmanMinimapCtx.arc(chickenMiniX, chickenMiniY, 3, 0, Math.PI * 2);
+        pacmanMinimapCtx.fill();
+        
+        // Draw foxes on minimap
+        ghosts.forEach(ghost => {
+            const foxMiniX = minimapX + (ghost.x / pacmanCanvas.width) * minimapWidth;
+            const foxMiniY = minimapY + (ghost.y / pacmanCanvas.height) * minimapHeight;
+            pacmanMinimapCtx.fillStyle = ghost.isGhost ? 'rgba(200, 100, 255, 1)' : 'rgba(255, 100, 100, 1)';
+            pacmanMinimapCtx.beginPath();
+            pacmanMinimapCtx.arc(foxMiniX, foxMiniY, 2, 0, Math.PI * 2);
+            pacmanMinimapCtx.fill();
+        });
+        
+        // Draw legend
+        const legendY = minimapHeight + 15;
+        pacmanMinimapCtx.font = '9px Arial';
+        pacmanMinimapCtx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+        pacmanMinimapCtx.textAlign = 'left';
+        pacmanMinimapCtx.fillText('Legend:', minimapX + 5, legendY);
+        
+        pacmanMinimapCtx.fillStyle = 'rgba(200, 100, 255, 0.8)';
+        pacmanMinimapCtx.fillRect(minimapX + 5, legendY + 5, 8, 8);
+        pacmanMinimapCtx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+        pacmanMinimapCtx.fillText('Ghost', minimapX + 17, legendY + 12);
+        
+        pacmanMinimapCtx.fillStyle = 'rgba(50, 50, 200, 0.8)';
+        pacmanMinimapCtx.fillRect(minimapX + 5, legendY + 15, 8, 8);
+        pacmanMinimapCtx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+        pacmanMinimapCtx.fillText('Wall', minimapX + 17, legendY + 22);
     }
     
     function drawMaze() {
@@ -2015,7 +3867,7 @@
         for (let y = 0; y < maze.length; y++) {
             for (let x = 0; x < maze[y].length; x++) {
                 if (maze[y][x] === 1) { // Wall
-                    // Enhanced wall appearance with gradient for depth
+                    // All walls are the same color (classic blue)
                     const gradient = pacmanCtx.createLinearGradient(
                         x * cellSize, y * cellSize,
                         x * cellSize + cellSize, y * cellSize + cellSize
@@ -2131,21 +3983,104 @@
             
             pacmanCtx.restore();
         });
+        
+        // Draw fox power-ups with distinctive red/orange styling
+        foxPowerUps.forEach(powerUp => {
+            // Calculate pulse effect
+            if (!powerUp.pulseOffset) powerUp.pulseOffset = 0;
+            if (!powerUp.pulseDirection) powerUp.pulseDirection = 1;
+            
+            powerUp.pulseOffset += 0.05 * powerUp.pulseDirection;
+            if (powerUp.pulseOffset > 1 || powerUp.pulseOffset < 0) {
+                powerUp.pulseDirection *= -1;
+            }
+            
+            pacmanCtx.save();
+            
+            // Draw a red/orange background circle
+            pacmanCtx.fillStyle = 'rgba(255, 69, 0, 0.4)';
+            pacmanCtx.beginPath();
+            pacmanCtx.arc(powerUp.x, powerUp.y, 14, 0, Math.PI * 2);
+            pacmanCtx.fill();
+            
+            // Add a danger ring
+            pacmanCtx.strokeStyle = 'rgba(255, 0, 0, 0.6)';
+            pacmanCtx.lineWidth = 2;
+            pacmanCtx.beginPath();
+            pacmanCtx.arc(powerUp.x, powerUp.y, 14 + powerUp.pulseOffset * 2, 0, Math.PI * 2);
+            pacmanCtx.stroke();
+            
+            // Draw the emoji
+            pacmanCtx.font = `${22 + powerUp.pulseOffset}px Arial`;
+            pacmanCtx.textAlign = 'center';
+            pacmanCtx.textBaseline = 'middle';
+            pacmanCtx.fillText(powerUp.emoji, powerUp.x, powerUp.y);
+            
+            pacmanCtx.restore();
+        });
     }
     
     function checkCollisions() {
-        // Check if player earned an extra life based on score
-        if (pacmanScore >= nextLifeAt) {
-            pacmanLives++;
-            pacmanLivesSpan.textContent = pacmanLives;
-            nextLifeAt += 10000; // Set next threshold
+        // FOX MODE: Check if ANY player fox caught the chicken
+        if (playerCharacter === 'fox' && ghosts.length > 0 && pacmanGameRunning) {
+            // Check spawn protection - don't detect collision immediately after spawn
+            if (Date.now() < spawnProtectionTime) {
+                return; // Skip all collision detection during spawn protection
+            }
             
-            // Display a message for the extra life
-            createExtraLifeMessage();
+            // Make sure chicken position exists
+            if (!pacmanPosition) {
+                return;
+            }
+            
+            // Check collision with ANY player fox
+            let chickenCaught = false;
+            let catchingFox = null;
+            
+            ghosts.forEach(ghost => {
+                if (ghost.isPlayer && !chickenCaught) {
+                    const distance = Math.sqrt(
+                        Math.pow(pacmanPosition.x - ghost.x, 2) + 
+                        Math.pow(pacmanPosition.y - ghost.y, 2)
+                    );
+                    
+                    const actualFoxSize = ghost.size || ghostSize;
+                    const catchDistance = (pacmanSize + actualFoxSize/2) * 0.7; // 70% of normal collision
+                    
+                    if (distance < catchDistance) {
+                        chickenCaught = true;
+                        catchingFox = ghost;
+                    }
+                }
+            });
+            
+            if (chickenCaught && catchingFox) {
+                console.log('COLLISION! Fox caught chicken! Fox pos:', catchingFox.x, catchingFox.y, 'Chicken pos:', pacmanPosition.x, pacmanPosition.y);
+                
+                // STOP THE GAME IMMEDIATELY
+                pacmanGameRunning = false;
+                
+                // Fox caught the chicken! Level complete!
+                const timeBonus = gameTimeRemaining * 10; // Bonus for speed
+                pacmanScore += 1000 + timeBonus;
+                pacmanScoreSpan.textContent = pacmanScore;
+                
+                // Show victory message
+                pacmanStartButton.textContent = `Chicken Caught! +${1000 + timeBonus} points! Next Level`;
+                pacmanStartButton.style.display = 'block';
+                
+                // Advance to next level
+                currentLevel++;
+                pacmanLevelSpan.textContent = currentLevel;
+                
+                return;
+            }
         }
         
-        // Check for pellet collisions
-        for (let i = pellets.length - 1; i >= 0; i--) {
+        // CHICKEN MODE ONLY - Check for pellet and power-up collisions
+        if (playerCharacter === 'chicken') {
+            // Check for pellet collisions
+            for (let i = pellets.length - 1; i >= 0; i--) {
             const pellet = pellets[i];
             const distance = Math.sqrt(
                 Math.pow(pacmanPosition.x - pellet.x, 2) + 
@@ -2263,6 +4198,7 @@
                 }
             }
         }
+        } // End of CHICKEN MODE ONLY block
         
         // Check for ghost collisions - use a safer method with a flag for ghosts to be removed
         let ghostsToRemove = [];
@@ -2274,7 +4210,10 @@
                 Math.pow(pacmanPosition.y - ghost.y, 2)
             );
             
-            if (distance < pacmanSize + ghostSize/2) {
+            // Use ghost's actual size if it has size boost
+            const actualGhostSize = ghost.size || ghostSize;
+            
+            if (distance < pacmanSize + actualGhostSize/2) {
                 if (powerMode && ghost.frightened) {
                     if (ghost.isBoss) {
                         // Boss takes damage instead of being eliminated immediately
@@ -2460,8 +4399,8 @@
                             });
                         }
                     }
-                } else if (!powerMode && !invincibilityActive) {
-                    // Pac-Man gets caught if not invincible
+                } else if (!powerMode && !invincibilityActive && playerCharacter === 'chicken') {
+                    // Chicken player gets caught if not invincible
                     pacmanLives--;
                     pacmanLivesSpan.textContent = pacmanLives;
                     
@@ -2469,7 +4408,8 @@
                         // Game over
                         pacmanGameRunning = false;
                         pacmanStartButton.style.display = 'block';
-                        pacmanStartButton.textContent = 'Game Over - Try Again';
+                        const levelsCompleted = currentLevel - 1;
+                        pacmanStartButton.textContent = `Game Over! Score: ${pacmanScore} - Levels Completed: ${levelsCompleted}`;
                     } else {
                         // Reset position
                         pacmanPosition = { x: 400, y: 300 };
@@ -2481,11 +4421,20 @@
         
         // Remove ghosts marked for elimination (in reverse order to avoid index issues)
         for (let i = ghostsToRemove.length - 1; i >= 0; i--) {
-            ghosts.splice(ghostsToRemove[i], 1);
+            const ghostIndex = ghostsToRemove[i];
+            const ghostToRemove = ghosts[ghostIndex];
+            
+            // Clean up GIF element if it exists
+            if (ghostToRemove && ghostToRemove.gifElement) {
+                ghostToRemove.gifElement.remove();
+                ghostToRemove.gifElement = null;
+            }
+            
+            ghosts.splice(ghostIndex, 1);
         }
         
-        // Check if all pellets are eaten
-        if (pellets.length === 0 && powerPellets.length === 0) {
+        // CHICKEN MODE ONLY - Check if all pellets are eaten to advance level
+        if (playerCharacter === 'chicken' && pellets.length === 0 && powerPellets.length === 0) {
             pacmanScore += 1000; // Level completion bonus
             pacmanScoreSpan.textContent = pacmanScore;
             
@@ -2512,6 +4461,159 @@
             ghosts.forEach(ghost => {
                 ghost.frightened = false;
             });
+        }
+    }
+    
+    function spawnFoxPowerUp() {
+        // Don't spawn too many at once
+        if (foxPowerUps.length >= 3) return;
+        
+        // Find a random valid path location
+        const validPaths = [];
+        for (let y = 1; y < maze.length - 1; y++) {
+            for (let x = 1; x < maze[y].length - 1; x++) {
+                if (maze[y][x] === 0) {
+                    // Avoid spawning too close to player
+                    const distToPlayer = Math.sqrt(
+                        Math.pow(x * cellSize + cellSize / 2 - pacmanPosition.x, 2) + 
+                        Math.pow(y * cellSize + cellSize / 2 - pacmanPosition.y, 2)
+                    );
+                    if (distToPlayer > 100) {
+                        validPaths.push({ x, y });
+                    }
+                }
+            }
+        }
+        
+        if (validPaths.length === 0) return;
+        
+        const pos = validPaths[Math.floor(Math.random() * validPaths.length)];
+        
+        // Power-up types for foxes - STRONGER versions
+        const types = [
+            { type: 'speed', emoji: '🔥', duration: 15000 },     // Increased from 8s to 15s
+            { type: 'size', emoji: '💪', duration: 18000 },       // Increased from 10s to 18s
+            { type: 'teleport', emoji: '⚡', duration: 0 },       // instant effect
+            { type: 'clone', emoji: '👥', duration: 0 },          // NEW: spawns a clone
+            { type: 'rage', emoji: '😈', duration: 12000 }        // NEW: speed + size combo
+        ];
+        
+        const powerUpType = types[Math.floor(Math.random() * types.length)];
+        
+        foxPowerUps.push({
+            x: pos.x * cellSize + cellSize / 2,
+            y: pos.y * cellSize + cellSize / 2,
+            type: powerUpType.type,
+            emoji: powerUpType.emoji,
+            duration: powerUpType.duration
+        });
+    }
+    
+    function checkFoxPowerUpCollisions() {
+        // Check each fox against fox power-ups
+        for (let i = foxPowerUps.length - 1; i >= 0; i--) {
+            const powerUp = foxPowerUps[i];
+            
+            for (let ghost of ghosts) {
+                const distance = Math.sqrt(
+                    Math.pow(ghost.x - powerUp.x, 2) + 
+                    Math.pow(ghost.y - powerUp.y, 2)
+                );
+                
+                if (distance < ghostSize + 10) {
+                    // Fox collected the power-up!
+                    foxPowerUps.splice(i, 1);
+                    
+                    // Apply power-up effect
+                    switch(powerUp.type) {
+                        case 'speed':
+                            ghost.speedBoost = true;
+                            ghost.speedBoostEnd = Date.now() + powerUp.duration;
+                            ghost.originalSpeed = ghost.speed;
+                            ghost.speed *= 2.5; // Increased from 1.8x to 2.5x (150% faster!)
+                            break;
+                            
+                        case 'size':
+                            ghost.sizeBoost = true;
+                            ghost.sizeBoostEnd = Date.now() + powerUp.duration;
+                            ghost.originalSize = ghost.size || ghostSize;
+                            ghost.size = (ghost.size || ghostSize) * 2.0; // Increased from 1.5x to 2.0x
+                            break;
+                            
+                        case 'teleport':
+                            // Teleport fox VERY close to player (more threatening)
+                            const angle = Math.random() * Math.PI * 2;
+                            const distance = 30 + Math.random() * 30; // Reduced from 60-100 to 30-60
+                            const newX = pacmanPosition.x + Math.cos(angle) * distance;
+                            const newY = pacmanPosition.y + Math.sin(angle) * distance;
+                            
+                            // Check if teleport location is valid
+                            const cellX = Math.floor(newX / cellSize);
+                            const cellY = Math.floor(newY / cellSize);
+                            
+                            if (cellX > 0 && cellX < maze[0].length && cellY > 0 && cellY < maze.length) {
+                                if (maze[cellY][cellX] === 0 || (ghost.isGhost && ghostWalls[cellY][cellX] === 1)) {
+                                    ghost.x = newX;
+                                    ghost.y = newY;
+                                    
+                                    // Visual effect for teleport
+                                    createEliminationEffect(ghost.x, ghost.y);
+                                }
+                            }
+                            break;
+                            
+                        case 'clone':
+                            // Spawn a clone of this fox nearby
+                            const cloneAngle = Math.random() * Math.PI * 2;
+                            const cloneDistance = 40 + Math.random() * 40;
+                            const cloneX = ghost.x + Math.cos(cloneAngle) * cloneDistance;
+                            const cloneY = ghost.y + Math.sin(cloneAngle) * cloneDistance;
+                            
+                            const cloneCellX = Math.floor(cloneX / cellSize);
+                            const cloneCellY = Math.floor(cloneY / cellSize);
+                            
+                            if (cloneCellX > 0 && cloneCellX < maze[0].length && 
+                                cloneCellY > 0 && cloneCellY < maze.length &&
+                                maze[cloneCellY][cloneCellX] === 0) {
+                                
+                                const clone = {
+                                    x: cloneX,
+                                    y: cloneY,
+                                    color: ghost.color,
+                                    direction: { x: 0, y: 0 },
+                                    speed: ghost.speed,
+                                    frightened: false,
+                                    isGhost: ghost.isGhost,
+                                    isClone: true // Mark as clone
+                                };
+                                
+                                ghosts.push(clone);
+                                createEliminationEffect(cloneX, cloneY);
+                            }
+                            break;
+                            
+                        case 'rage':
+                            // RAGE MODE: Both speed AND size boost together!
+                            ghost.rageMode = true;
+                            ghost.rageModeEnd = Date.now() + powerUp.duration;
+                            
+                            if (!ghost.speedBoost) {
+                                ghost.originalSpeed = ghost.speed;
+                                ghost.speed *= 2.2; // 120% faster
+                            }
+                            
+                            if (!ghost.sizeBoost) {
+                                ghost.originalSize = ghost.size || ghostSize;
+                                ghost.size = (ghost.size || ghostSize) * 1.8;
+                            }
+                            break;
+                    }
+                    
+                    // Create visual effect at collection point
+                    createEliminationEffect(powerUp.x, powerUp.y);
+                    break; // Power-up consumed, move to next power-up
+                }
+            }
         }
     }
     
@@ -2545,7 +4647,8 @@
                     if (pacmanLives <= 0) {
                         pacmanGameRunning = false;
                         pacmanStartButton.style.display = 'block';
-                        pacmanStartButton.textContent = 'Game Over - Try Again';
+                        const levelsCompleted = currentLevel - 1;
+                        pacmanStartButton.textContent = `Game Over! Score: ${pacmanScore} - Levels Completed: ${levelsCompleted}`;
                     } else {
                         // Temporarily move player to safe position
                         pacmanPosition = { x: 400, y: 300 };
@@ -2688,13 +4791,307 @@
             return; // Skip ghost movement while frozen
         }
         
-        ghosts.forEach(ghost => {
-            // Determine potential directions
-            const possibleDirections = [];
+        ghosts.forEach((ghost, index) => {
+            // Move ALL player-controlled foxes together (fox pack mode)
+            if (playerCharacter === 'fox' && ghost.isPlayer) {
+                // Move the player fox based on their direction with wall collision detection
+                const speed = ghost.frightened ? ghost.speed * 0.6 : ghost.speed;
+                
+                // Calculate potential new position
+                const newX = ghost.x + ghost.direction.x * speed;
+                const newY = ghost.y + ghost.direction.y * speed;
+                
+                // Check if new position would collide with a wall
+                const cellX = Math.floor(newX / cellSize);
+                const cellY = Math.floor(newY / cellSize);
+                
+                // Only move if the new position is valid (not a wall)
+                if (cellX >= 0 && cellX < maze[0].length && 
+                    cellY >= 0 && cellY < maze.length && 
+                    maze[cellY][cellX] === 0) {
+                    ghost.x = newX;
+                    ghost.y = newY;
+                }
+                
+                // Update vx and vy for rotation (used by GIF drawing)
+                ghost.vx = ghost.direction.x;
+                ghost.vy = ghost.direction.y;
+                
+                // Smooth centering for player fox
+                const centerXPos = Math.floor(ghost.x / cellSize) * cellSize + cellSize / 2;
+                const centerYPos = Math.floor(ghost.y / cellSize) * cellSize + cellSize / 2;
+                
+                if (ghost.direction.x !== 0 && Math.abs(ghost.y - centerYPos) > 2) {
+                    const correction = Math.min(1, Math.abs(ghost.y - centerYPos) / 4);
+                    ghost.y += (centerYPos > ghost.y ? correction : -correction);
+                }
+                if (ghost.direction.y !== 0 && Math.abs(ghost.x - centerXPos) > 2) {
+                    const correction = Math.min(1, Math.abs(ghost.x - centerXPos) / 4);
+                    ghost.x += (centerXPos > ghost.x ? correction : -correction);
+                }
+                
+                return; // Skip the rest of AI logic for player foxes
+            }
+            
             const currentCellX = Math.floor(ghost.x / cellSize);
             const currentCellY = Math.floor(ghost.y / cellSize);
             
-            // Check each direction
+            // Initialize lastCell if not set
+            if (!ghost.lastCell) {
+                ghost.lastCell = { x: currentCellX, y: currentCellY };
+            }
+            
+            // Check if ghost is well-centered in current cell
+            const centerX = currentCellX * cellSize + cellSize / 2;
+            const centerY = currentCellY * cellSize + cellSize / 2;
+            const isWellCentered = Math.abs(ghost.x - centerX) < 3 && Math.abs(ghost.y - centerY) < 3;
+            
+            // Check if ghost has no direction (just spawned)
+            const hasNoDirection = ghost.direction.x === 0 && ghost.direction.y === 0;
+            
+            // Only recalculate direction at intersections (when entering a new cell and well-centered) or if no direction
+            const hasChangedCell = currentCellX !== ghost.lastCell.x || currentCellY !== ghost.lastCell.y;
+            
+            if ((hasChangedCell && isWellCentered) || hasNoDirection) {
+                ghost.lastCell = { x: currentCellX, y: currentCellY };
+                
+                // Determine potential directions
+                const possibleDirections = [];
+                
+                // Check each direction
+                const directions = [
+                    { x: 0, y: -1 }, // Up
+                    { x: 1, y: 0 },  // Right
+                    { x: 0, y: 1 },  // Down
+                    { x: -1, y: 0 }  // Left
+                ];
+                
+                directions.forEach(dir => {
+                    const newX = currentCellX + dir.x;
+                    const newY = currentCellY + dir.y;
+                    
+                    // Ghost foxes can pass through certain walls
+                    if (ghost.isGhost) {
+                        // Ghost foxes can pass through walls marked as ghost-passable (ghostWalls[y][x] === 1)
+                        if (newX >= 0 && newX < maze[0].length && 
+                            newY >= 0 && newY < maze.length) {
+                            
+                            // Allow movement if it's a path OR a ghost-passable wall
+                            const canPass = maze[newY][newX] === 0 || (ghostWalls[newY][newX] === 1);
+                            
+                            if (canPass) {
+                                // Avoid reversing direction unless it's the only option
+                                if (ghost.direction.x !== -dir.x || ghost.direction.y !== -dir.y || possibleDirections.length === 0) {
+                                    possibleDirections.push(dir);
+                                }
+                            }
+                        }
+                    } else {
+                        // Regular foxes must stay on paths
+                        if (newX >= 0 && newX < maze[0].length && 
+                            newY >= 0 && newY < maze.length && 
+                            maze[newY][newX] === 0) {
+                            
+                            // Avoid reversing direction unless it's the only option
+                            if (ghost.direction.x !== -dir.x || ghost.direction.y !== -dir.y || possibleDirections.length === 0) {
+                                possibleDirections.push(dir);
+                            }
+                        }
+                    }
+                });
+                
+                // Choose direction based on mode
+                if (possibleDirections.length > 0) {
+                    let chosenDirection;
+                    
+                    if (powerMode && ghost.frightened) {
+                        // When frightened, choose a random direction away from player
+                        possibleDirections.sort((a, b) => {
+                            const distA = Math.pow(pacmanPosition.x - (ghost.x + a.x * cellSize), 2) + 
+                                         Math.pow(pacmanPosition.y - (ghost.y + a.y * cellSize), 2);
+                            const distB = Math.pow(pacmanPosition.x - (ghost.x + b.x * cellSize), 2) + 
+                                         Math.pow(pacmanPosition.y - (ghost.y + b.y * cellSize), 2);
+                            return distB - distA; // Sort by farthest from Pac-Man
+                        });
+                        // Pick one of the top directions to flee
+                        const topChoices = possibleDirections.slice(0, Math.max(2, Math.ceil(possibleDirections.length / 2)));
+                        chosenDirection = topChoices[Math.floor(Math.random() * topChoices.length)];
+                    } else if (ghost.isBoss && !ghost.dashCooldown) {
+                        // Boss fox has more advanced AI when not dashing
+                        
+                        // When chasing, prefer directions that get closer to Pac-Man
+                        possibleDirections.sort((a, b) => {
+                            const distA = Math.pow(pacmanPosition.x - (ghost.x + a.x * cellSize), 2) + 
+                                         Math.pow(pacmanPosition.y - (ghost.y + a.y * cellSize), 2);
+                            const distB = Math.pow(pacmanPosition.x - (ghost.x + b.x * cellSize), 2) + 
+                                         Math.pow(pacmanPosition.y - (ghost.y + b.y * cellSize), 2);
+                            return distA - distB; // Sort by closest to Pac-Man
+                        });
+                        
+                        // Boss is much more determined to chase the player - less randomness
+                        if (Math.random() < 0.05) { // Only 5% chance to choose randomly
+                            chosenDirection = possibleDirections[Math.floor(Math.random() * possibleDirections.length)];
+                        } else {
+                            chosenDirection = possibleDirections[0]; // Choose closest direction to Pac-Man
+                        }
+                        
+                        // Boss will occasionally perform a predictive movement - anticipating player's move
+                        if (Math.random() < 0.3) {
+                            // Try to predict where player is going based on their direction
+                            const predictedPosition = {
+                                x: pacmanPosition.x + (pacmanDirection.x * 100),
+                                y: pacmanPosition.y + (pacmanDirection.y * 100)
+                            };
+                            
+                            // Sort directions based on predicted position
+                            possibleDirections.sort((a, b) => {
+                                const predDistA = Math.pow(predictedPosition.x - (ghost.x + a.x * cellSize), 2) + 
+                                               Math.pow(predictedPosition.y - (ghost.y + a.y * cellSize), 2);
+                                const predDistB = Math.pow(predictedPosition.x - (ghost.x + b.x * cellSize), 2) + 
+                                               Math.pow(predictedPosition.y - (ghost.y + b.y * cellSize), 2);
+                                return predDistA - predDistB;
+                            });
+                            
+                            chosenDirection = possibleDirections[0];
+                        }
+                    } else {
+                        // Regular fox behavior - smarter chasing with less randomness
+                        // When chasing, prefer directions that get closer to Pac-Man
+                        possibleDirections.sort((a, b) => {
+                            const distA = Math.pow(pacmanPosition.x - (ghost.x + a.x * cellSize), 2) + 
+                                         Math.pow(pacmanPosition.y - (ghost.y + a.y * cellSize), 2);
+                            const distB = Math.pow(pacmanPosition.x - (ghost.x + b.x * cellSize), 2) + 
+                                         Math.pow(pacmanPosition.y - (ghost.y + b.y * cellSize), 2);
+                            return distA - distB; // Sort by closest to Pac-Man
+                        });
+                        
+                        // Reduced randomness - only 10% chance to not chase optimally
+                        if (Math.random() < 0.1) { // 10% chance to choose randomly (reduced from 20%)
+                            chosenDirection = possibleDirections[Math.floor(Math.random() * possibleDirections.length)];
+                        } else {
+                            chosenDirection = possibleDirections[0]; // Choose closest direction to Pac-Man
+                        }
+                    }
+                    
+                    ghost.direction = chosenDirection;
+                }
+            }
+            
+            // Move the ghost smoothly
+            const speed = ghost.frightened ? ghost.speed * 0.6 : ghost.speed; // Slower when frightened
+            ghost.x += ghost.direction.x * speed;
+            ghost.y += ghost.direction.y * speed;
+            
+            // Smooth centering - only apply when moving perpendicular to the offset
+            const centerXPos = Math.floor(ghost.x / cellSize) * cellSize + cellSize / 2;
+            const centerYPos = Math.floor(ghost.y / cellSize) * cellSize + cellSize / 2;
+            
+            // Center vertically when moving horizontally
+            if (ghost.direction.x !== 0 && Math.abs(ghost.y - centerYPos) > 2) {
+                const correction = Math.min(1, Math.abs(ghost.y - centerYPos) / 4);
+                ghost.y += (centerYPos > ghost.y ? correction : -correction);
+            }
+            // Center horizontally when moving vertically
+            if (ghost.direction.y !== 0 && Math.abs(ghost.x - centerXPos) > 2) {
+                const correction = Math.min(1, Math.abs(ghost.x - centerXPos) / 4);
+                ghost.x += (centerXPos > ghost.x ? correction : -correction);
+            }
+            
+            // Check and remove expired power-ups
+            const currentTime = Date.now();
+            
+            if (ghost.speedBoost && currentTime > ghost.speedBoostEnd) {
+                ghost.speedBoost = false;
+                ghost.speed = ghost.originalSpeed;
+                delete ghost.originalSpeed;
+                delete ghost.speedBoostEnd;
+            }
+            
+            if (ghost.sizeBoost && currentTime > ghost.sizeBoostEnd) {
+                ghost.sizeBoost = false;
+                ghost.size = ghost.originalSize;
+                delete ghost.originalSize;
+                delete ghost.sizeBoostEnd;
+            }
+            
+            if (ghost.rageMode && currentTime > ghost.rageModeEnd) {
+                ghost.rageMode = false;
+                // Reset speed and size if not boosted by other power-ups
+                if (!ghost.speedBoost && ghost.originalSpeed) {
+                    ghost.speed = ghost.originalSpeed;
+                    delete ghost.originalSpeed;
+                }
+                if (!ghost.sizeBoost && ghost.originalSize) {
+                    ghost.size = ghost.originalSize;
+                    delete ghost.originalSize;
+                }
+                delete ghost.rageModeEnd;
+            }
+        });
+    }
+    
+    function moveAIChicken() {
+        // AI chicken behavior when player is a fox
+        
+        // Safety check - make sure player fox exists
+        if (!ghosts || ghosts.length === 0) {
+            // No fox yet, just move randomly
+            if (pacmanDirection.x === 0 && pacmanDirection.y === 0) {
+                // Pick a random direction to start
+                const dirs = [{ x: 0, y: -1 }, { x: 1, y: 0 }, { x: 0, y: 1 }, { x: -1, y: 0 }];
+                pacmanDirection = dirs[Math.floor(Math.random() * dirs.length)];
+            }
+        }
+        
+        const currentCellX = Math.floor(pacmanPosition.x / cellSize);
+        const currentCellY = Math.floor(pacmanPosition.y / cellSize);
+        
+        // Initialize lastCell for chicken if not set
+        if (!pacmanPosition.lastCell) {
+            pacmanPosition.lastCell = { x: currentCellX, y: currentCellY };
+        }
+        
+        // Check if centered in current cell
+        const centerX = currentCellX * cellSize + cellSize / 2;
+        const centerY = currentCellY * cellSize + cellSize / 2;
+        const isWellCentered = Math.abs(pacmanPosition.x - centerX) < 3 && Math.abs(pacmanPosition.y - centerY) < 3;
+        
+        // Check if chicken has no direction or entered new cell
+        const hasNoDirection = pacmanDirection.x === 0 && pacmanDirection.y === 0;
+        const hasChangedCell = currentCellX !== pacmanPosition.lastCell.x || currentCellY !== pacmanPosition.lastCell.y;
+        
+        if ((hasChangedCell && isWellCentered) || hasNoDirection) {
+            pacmanPosition.lastCell = { x: currentCellX, y: currentCellY };
+            
+            // IMPROVED AI: Find ALL player foxes and their positions
+            const playerFoxes = ghosts.filter(ghost => ghost.isPlayer);
+            if (!playerFoxes || playerFoxes.length === 0) {
+                // Fallback: move in any valid direction
+                const dirs = [{ x: 0, y: -1 }, { x: 1, y: 0 }, { x: 0, y: 1 }, { x: -1, y: 0 }];
+                pacmanDirection = dirs[Math.floor(Math.random() * dirs.length)];
+                return;
+            }
+            
+            // Find the closest fox
+            let closestFox = playerFoxes[0];
+            let minDistance = Math.sqrt(
+                Math.pow(closestFox.x - pacmanPosition.x, 2) + 
+                Math.pow(closestFox.y - pacmanPosition.y, 2)
+            );
+            
+            playerFoxes.forEach(fox => {
+                const dist = Math.sqrt(
+                    Math.pow(fox.x - pacmanPosition.x, 2) + 
+                    Math.pow(fox.y - pacmanPosition.y, 2)
+                );
+                if (dist < minDistance) {
+                    minDistance = dist;
+                    closestFox = fox;
+                }
+            });
+            
+            // Determine possible directions
+            const possibleDirections = [];
             const directions = [
                 { x: 0, y: -1 }, // Up
                 { x: 1, y: 0 },  // Right
@@ -2706,101 +5103,179 @@
                 const newX = currentCellX + dir.x;
                 const newY = currentCellY + dir.y;
                 
-                // Check if the new position is within bounds and is a path (not a wall)
                 if (newX >= 0 && newX < maze[0].length && 
                     newY >= 0 && newY < maze.length && 
                     maze[newY][newX] === 0) {
                     
                     // Avoid reversing direction unless necessary
-                    if (ghost.direction.x !== -dir.x || ghost.direction.y !== -dir.y || possibleDirections.length === 0) {
+                    if (pacmanDirection.x !== -dir.x || pacmanDirection.y !== -dir.y || possibleDirections.length === 0) {
                         possibleDirections.push(dir);
                     }
                 }
             });
             
-            // Choose direction based on mode
             if (possibleDirections.length > 0) {
-                let chosenDirection;
+                // Increase awareness range based on level (smarter on higher levels)
+                const awarenessRange = 150 + (currentLevel * 20); // Increases with level
                 
-                if (powerMode && ghost.frightened) {
-                    // When frightened, choose a random direction
-                    chosenDirection = possibleDirections[Math.floor(Math.random() * possibleDirections.length)];
-                } else if (ghost.isBoss && !ghost.dashCooldown) {
-                    // Boss fox has more advanced AI when not dashing
+                // Helper function to count available exits from a position (avoid dead ends)
+                const countExits = (cellX, cellY) => {
+                    let exits = 0;
+                    directions.forEach(dir => {
+                        const checkX = cellX + dir.x;
+                        const checkY = cellY + dir.y;
+                        if (checkX >= 0 && checkX < maze[0].length && 
+                            checkY >= 0 && checkY < maze.length && 
+                            maze[checkY][checkX] === 0) {
+                            exits++;
+                        }
+                    });
+                    return exits;
+                };
+                
+                // Helper function to calculate danger score (considers all foxes)
+                const calculateDanger = (posX, posY) => {
+                    let totalDanger = 0;
+                    playerFoxes.forEach(fox => {
+                        const dist = Math.sqrt(
+                            Math.pow(fox.x - posX, 2) + 
+                            Math.pow(fox.y - posY, 2)
+                        );
+                        // Closer foxes contribute more to danger
+                        totalDanger += 1000 / (dist + 1);
+                    });
+                    return totalDanger;
+                };
+                
+                // Different behavior based on distance to closest fox
+                if (minDistance < awarenessRange) {
+                    // SMART FLEE MODE: Fox is close, intelligently escape!
                     
-                    // When chasing, prefer directions that get closer to Pac-Man
-                    possibleDirections.sort((a, b) => {
-                        const distA = Math.pow(pacmanPosition.x - (ghost.x + a.x * cellSize), 2) + 
-                                     Math.pow(pacmanPosition.y - (ghost.y + a.y * cellSize), 2);
-                        const distB = Math.pow(pacmanPosition.x - (ghost.x + b.x * cellSize), 2) + 
-                                     Math.pow(pacmanPosition.y - (ghost.y + b.y * cellSize), 2);
-                        return distA - distB; // Sort by closest to Pac-Man
+                    // Score each direction based on multiple factors
+                    const scoredDirections = possibleDirections.map(dir => {
+                        const nextCellX = currentCellX + dir.x;
+                        const nextCellY = currentCellY + dir.y;
+                        const nextPosX = nextCellX * cellSize + cellSize / 2;
+                        const nextPosY = nextCellY * cellSize + cellSize / 2;
+                        
+                        // Factor 1: Distance from all foxes (higher is better)
+                        const danger = calculateDanger(nextPosX, nextPosY);
+                        const distanceScore = 1 / (danger + 0.1);
+                        
+                        // Factor 2: Number of exits (avoid dead ends)
+                        const exits = countExits(nextCellX, nextCellY);
+                        const exitScore = exits * 50; // Heavily weight open areas
+                        
+                        // Factor 3: Look ahead 2 steps to predict fox movement
+                        const lookAheadCellX = nextCellX + dir.x;
+                        const lookAheadCellY = nextCellY + dir.y;
+                        let lookAheadScore = 0;
+                        if (lookAheadCellX >= 0 && lookAheadCellX < maze[0].length && 
+                            lookAheadCellY >= 0 && lookAheadCellY < maze.length && 
+                            maze[lookAheadCellY][lookAheadCellX] === 0) {
+                            const lookAheadPosX = lookAheadCellX * cellSize + cellSize / 2;
+                            const lookAheadPosY = lookAheadCellY * cellSize + cellSize / 2;
+                            const futureDanger = calculateDanger(lookAheadPosX, lookAheadPosY);
+                            lookAheadScore = 1 / (futureDanger + 0.1) * 30;
+                        }
+                        
+                        // Factor 4: Prefer directions perpendicular to fox approach
+                        let perpendicularBonus = 0;
+                        const foxDx = closestFox.x - pacmanPosition.x;
+                        const foxDy = closestFox.y - pacmanPosition.y;
+                        const dotProduct = (dir.x * foxDx + dir.y * foxDy);
+                        if (dotProduct < 0) {
+                            // Moving away from fox
+                            perpendicularBonus = 100;
+                        } else if (dotProduct === 0) {
+                            // Moving perpendicular
+                            perpendicularBonus = 50;
+                        }
+                        
+                        const totalScore = distanceScore + exitScore + lookAheadScore + perpendicularBonus;
+                        
+                        return { dir, score: totalScore };
                     });
                     
-                    // Boss is much more determined to chase the player - less randomness
-                    if (Math.random() < 0.05) { // Only 5% chance to choose randomly
-                        chosenDirection = possibleDirections[Math.floor(Math.random() * possibleDirections.length)];
-                    } else {
-                        chosenDirection = possibleDirections[0]; // Choose closest direction to Pac-Man
-                    }
+                    // Sort by best score
+                    scoredDirections.sort((a, b) => b.score - a.score);
                     
-                    // Boss will occasionally perform a predictive movement - anticipating player's move
-                    if (Math.random() < 0.3) {
-                        // Try to predict where player is going based on their direction
-                        const predictedPosition = {
-                            x: pacmanPosition.x + (pacmanDirection.x * 100),
-                            y: pacmanPosition.y + (pacmanDirection.y * 100)
-                        };
-                        
-                        // Sort directions based on predicted position
-                        possibleDirections.sort((a, b) => {
-                            const predDistA = Math.pow(predictedPosition.x - (ghost.x + a.x * cellSize), 2) + 
-                                           Math.pow(predictedPosition.y - (ghost.y + a.y * cellSize), 2);
-                            const predDistB = Math.pow(predictedPosition.x - (ghost.x + b.x * cellSize), 2) + 
-                                           Math.pow(predictedPosition.y - (ghost.y + b.y * cellSize), 2);
-                            return predDistA - predDistB;
-                        });
-                        
-                        chosenDirection = possibleDirections[0];
+                    // Choose the best direction, with slight randomness on higher scores to avoid predictability
+                    if (scoredDirections.length > 1 && 
+                        Math.abs(scoredDirections[0].score - scoredDirections[1].score) < 20 && 
+                        Math.random() < 0.2) {
+                        // 20% chance to pick second best if scores are close
+                        pacmanDirection = scoredDirections[1].dir;
+                    } else {
+                        pacmanDirection = scoredDirections[0].dir;
                     }
                 } else {
-                    // Regular fox behavior
-                    // When chasing, prefer directions that get closer to Pac-Man
-                    possibleDirections.sort((a, b) => {
-                        const distA = Math.pow(pacmanPosition.x - (ghost.x + a.x * cellSize), 2) + 
-                                     Math.pow(pacmanPosition.y - (ghost.y + a.y * cellSize), 2);
-                        const distB = Math.pow(pacmanPosition.x - (ghost.x + b.x * cellSize), 2) + 
-                                     Math.pow(pacmanPosition.y - (ghost.y + b.y * cellSize), 2);
-                        return distA - distB; // Sort by closest to Pac-Man
-                    });
+                    // SMART WANDER MODE: Fox is far, explore strategically
+                    const continueStraight = possibleDirections.find(dir => 
+                        dir.x === pacmanDirection.x && dir.y === pacmanDirection.y
+                    );
                     
-                    // Add some randomness to ghost behavior - sometimes choose a random direction
-                    if (Math.random() < 0.2) { // 20% chance to choose randomly
-                        chosenDirection = possibleDirections[Math.floor(Math.random() * possibleDirections.length)];
+                    // Prefer continuing straight, but avoid dead ends
+                    if (continueStraight && Math.random() < 0.7) {
+                        const straightCellX = currentCellX + continueStraight.x;
+                        const straightCellY = currentCellY + continueStraight.y;
+                        const straightExits = countExits(straightCellX, straightCellY);
+                        
+                        if (straightExits >= 2) {
+                            // Safe to continue straight
+                            pacmanDirection = continueStraight;
+                        } else {
+                            // Dead end ahead, pick a direction with more exits
+                            const bestExit = possibleDirections.reduce((best, dir) => {
+                                const cellX = currentCellX + dir.x;
+                                const cellY = currentCellY + dir.y;
+                                const exits = countExits(cellX, cellY);
+                                return exits > best.exits ? { dir, exits } : best;
+                            }, { dir: continueStraight, exits: straightExits });
+                            
+                            pacmanDirection = bestExit.dir;
+                        }
                     } else {
-                        chosenDirection = possibleDirections[0]; // Choose closest direction to Pac-Man
+                        // Pick direction with most exits (stay in open areas)
+                        const scored = possibleDirections.map(dir => {
+                            const cellX = currentCellX + dir.x;
+                            const cellY = currentCellY + dir.y;
+                            return { dir, exits: countExits(cellX, cellY) };
+                        });
+                        scored.sort((a, b) => b.exits - a.exits);
+                        pacmanDirection = scored[0].dir;
                     }
                 }
-                
-                ghost.direction = chosenDirection;
             }
-            
-            // Move the ghost
-            const speed = ghost.frightened ? ghost.speed * 0.6 : ghost.speed; // Slower when frightened
-            ghost.x += ghost.direction.x * speed;
-            ghost.y += ghost.direction.y * speed;
-            
-            // Ensure ghost stays centered in paths
-            const centerX = Math.floor(ghost.x / cellSize) * cellSize + cellSize / 2;
-            const centerY = Math.floor(ghost.y / cellSize) * cellSize + cellSize / 2;
-            
-            if (ghost.direction.y === 0 && Math.abs(ghost.y - centerY) > 1) {
-                ghost.y += (centerY > ghost.y ? 0.5 : -0.5);
-            }
-            if (ghost.direction.x === 0 && Math.abs(ghost.x - centerX) > 1) {
-                ghost.x += (centerX > ghost.x ? 0.5 : -0.5);
-            }
-        });
+        }
+        
+        // Move the AI chicken
+        const speedFactor = 2; // Normal speed
+        const newX = pacmanPosition.x + (pacmanDirection.x * speedFactor);
+        const newY = pacmanPosition.y + (pacmanDirection.y * speedFactor);
+        
+        const targetCellX = Math.floor(newX / cellSize);
+        const targetCellY = Math.floor(newY / cellSize);
+        
+        if (targetCellX >= 0 && targetCellX < maze[0].length && 
+            targetCellY >= 0 && targetCellY < maze.length && 
+            maze[targetCellY][targetCellX] === 0) {
+            pacmanPosition.x = newX;
+            pacmanPosition.y = newY;
+        }
+        
+        // Smooth centering for AI chicken
+        const centerXPos = Math.floor(pacmanPosition.x / cellSize) * cellSize + cellSize / 2;
+        const centerYPos = Math.floor(pacmanPosition.y / cellSize) * cellSize + cellSize / 2;
+        
+        if (pacmanDirection.x !== 0 && Math.abs(pacmanPosition.y - centerYPos) > 2) {
+            const correction = Math.min(1, Math.abs(pacmanPosition.y - centerYPos) / 4);
+            pacmanPosition.y += (centerYPos > pacmanPosition.y ? correction : -correction);
+        }
+        if (pacmanDirection.y !== 0 && Math.abs(pacmanPosition.x - centerXPos) > 2) {
+            const correction = Math.min(1, Math.abs(pacmanPosition.x - centerXPos) / 4);
+            pacmanPosition.x += (centerXPos > pacmanPosition.x ? correction : -correction);
+        }
     }
     
     function movePacman() {
@@ -2874,14 +5349,65 @@
         if (!pacmanGameRunning) return;
         
         try {
+            // Update timer
+            const currentTime = Date.now();
+            const elapsedSeconds = Math.floor((currentTime - lastTimerUpdate) / 1000);
+            
+            if (elapsedSeconds >= 1) {
+                gameTimeRemaining -= elapsedSeconds;
+                lastTimerUpdate = currentTime;
+                
+                // Update timer display
+                const minutes = Math.floor(gameTimeRemaining / 60);
+                const seconds = gameTimeRemaining % 60;
+                pacmanTimerSpan.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                
+                // Change color based on time remaining
+                if (gameTimeRemaining <= 30) {
+                    pacmanTimerSpan.style.color = '#ff0000'; // Red for last 30 seconds
+                } else if (gameTimeRemaining <= 60) {
+                    pacmanTimerSpan.style.color = '#ff8800'; // Orange for last minute
+                } else {
+                    pacmanTimerSpan.style.color = '#ff4500'; // Default orange-red
+                }
+                
+                // Check if time is up
+                if (gameTimeRemaining <= 0) {
+                    gameTimeRemaining = 0;
+                    pacmanTimerSpan.textContent = '0:00';
+                    pacmanGameRunning = false;
+                    pacmanStartButton.style.display = 'block';
+                    const levelsCompleted = currentLevel - 1; // Current level wasn't completed
+                    pacmanStartButton.textContent = `Time's Up! Score: ${pacmanScore} - Levels Completed: ${levelsCompleted}`;
+                    return;
+                }
+            }
+            
+            // Spawn fox power-ups more frequently (every 8-12 seconds, increased from 12-18)
+            foxPowerUpSpawnTimer += (currentTime - (lastTimerUpdate - (elapsedSeconds * 1000))) / 1000;
+            if (foxPowerUpSpawnTimer >= 8 + Math.random() * 4) {
+                foxPowerUpSpawnTimer = 0;
+                spawnFoxPowerUp();
+            }
+            
             pacmanCtx.clearRect(0, 0, pacmanCanvas.width, pacmanCanvas.height);
             drawMaze();
             drawPellets(); // This now includes life pellets and special power-ups
-            movePacman();
-            moveGhosts();
+            
+            // Move entities based on player character
+            if (playerCharacter === 'chicken') {
+                movePacman(); // Player controls chicken
+                moveGhosts(); // AI controls foxes
+            } else {
+                moveAIChicken(); // AI controls chicken
+                moveGhosts(); // Player controls first fox, AI controls others
+            }
+            
             checkCollisions();
+            checkFoxPowerUpCollisions(); // Check if foxes collected their power-ups
             drawPacman();
             drawGhosts();
+            drawMinimap(); // Draw the minimap showing ghost-passable walls
             
             // Draw any active elimination effects (on top of everything else)
             updateEliminationEffects();
@@ -2973,32 +5499,291 @@
         requestAnimationFrame(pacmanGameLoop);
     }
     
+    // Load the Pac-Man GIFs
+    loadPacmanChickenGif();
+    loadPacmanFoxGif();
+    
     pacmanStartButton.addEventListener('click', () => {
         if (!pacmanGameRunning) {
-            pacmanGameRunning = true;
-            pacmanStartButton.style.display = 'none';
-            
-            // Remove next level button if it exists
-            if (nextLevelButton) {
-                try {
-                    document.body.removeChild(nextLevelButton);
-                } catch (e) {
-                    console.error('Error removing next level button:', e);
-                }
-                nextLevelButton = null;
-            }
-            
-            try {
-                currentLevel = 1;
-                allGhostsEliminated = false;
-                initPacmanGame(true); // true means reset score and lives
+            // Check if this is continuing a game or starting fresh
+            if (characterSelected && pacmanStartButton.textContent.includes('Next Level')) {
+                // Continue to next level with same character
+                pacmanGameRunning = true;
+                pacmanStartButton.style.display = 'none';
+                initPacmanGame(false); // false = don't reset score/lives, just continue
                 pacmanGameLoop();
-            } catch (error) {
-                console.error('Error starting game:', error);
-                pacmanGameRunning = false;
-                pacmanStartButton.style.display = 'block';
+            } else {
+                // Show character selection screen for new game
+                characterSelected = false;
+                const characterSelection = document.getElementById('character-selection');
+                characterSelection.style.display = 'block';
+                pacmanStartButton.style.display = 'none';
             }
         }
+    });
+    
+    // Character Selection Handlers
+    document.getElementById('select-chicken').addEventListener('click', () => {
+        playerCharacter = 'chicken';
+        characterSelected = true;
+        startGameWithCharacter();
+    });
+    
+    document.getElementById('select-fox').addEventListener('click', () => {
+        playerCharacter = 'fox';
+        characterSelected = true;
+        startGameWithCharacter();
+    });
+    
+    // Add hover effects for character selection
+    document.getElementById('select-chicken').addEventListener('mouseenter', function() {
+        this.style.transform = 'scale(1.05)';
+        this.style.boxShadow = '0 8px 20px rgba(76, 175, 80, 0.4)';
+    });
+    document.getElementById('select-chicken').addEventListener('mouseleave', function() {
+        this.style.transform = 'scale(1)';
+        this.style.boxShadow = 'none';
+    });
+    
+    document.getElementById('select-fox').addEventListener('mouseenter', function() {
+        this.style.transform = 'scale(1.05)';
+        this.style.boxShadow = '0 8px 20px rgba(255, 107, 53, 0.4)';
+    });
+    document.getElementById('select-fox').addEventListener('mouseleave', function() {
+        this.style.transform = 'scale(1)';
+        this.style.boxShadow = 'none';
+    });
+    
+    // Boss Fox Choice Handlers
+    document.getElementById('select-boss-fox').addEventListener('click', () => {
+        const bossChoice = document.getElementById('boss-fox-choice');
+        bossChoice.style.display = 'none';
+        
+        // Set the fox mode choice to boss
+        foxModeChoice = 'boss';
+        
+        // Remove the 3 regular foxes, keep only the boss
+        ghosts = ghosts.filter(ghost => ghost.isBoss);
+        
+        // Make the boss player-controlled and ensure all properties are set
+        if (ghosts.length > 0) {
+            ghosts[0].isPlayer = true;
+            ghosts[0].id = 'boss_fox_player'; // Give it a unique ID
+            
+            // Make sure direction is initialized if not already
+            if (!ghosts[0].direction) {
+                ghosts[0].direction = { x: 0, y: 0 };
+            }
+            
+            // Initialize vx and vy for rotation (used by GIF drawing)
+            ghosts[0].vx = 0;
+            ghosts[0].vy = 0;
+            
+            console.log('Boss fox selected - playing as boss only', ghosts[0]);
+        }
+        
+        // Resume the game
+        pacmanGameRunning = true;
+    });
+    
+    document.getElementById('select-regular-foxes').addEventListener('click', () => {
+        const bossChoice = document.getElementById('boss-fox-choice');
+        bossChoice.style.display = 'none';
+        
+        // Set the fox mode choice to pack
+        foxModeChoice = 'pack';
+        
+        // Remove the boss fox, keep the 3 regular foxes
+        ghosts = ghosts.filter(ghost => !ghost.isBoss);
+        bossActive = false;
+        bossFox = null;
+        
+        console.log('Regular foxes selected - playing with 3-fox pack');
+        
+        // Resume the game
+        pacmanGameRunning = true;
+    });
+    
+    // Add hover effects for boss fox choice
+    document.getElementById('select-boss-fox').addEventListener('mouseenter', function() {
+        this.style.transform = 'scale(1.05)';
+        this.style.boxShadow = '0 8px 20px rgba(255, 215, 0, 0.5)';
+    });
+    document.getElementById('select-boss-fox').addEventListener('mouseleave', function() {
+        this.style.transform = 'scale(1)';
+        this.style.boxShadow = 'none';
+    });
+    
+    document.getElementById('select-regular-foxes').addEventListener('mouseenter', function() {
+        this.style.transform = 'scale(1.05)';
+        this.style.boxShadow = '0 8px 20px rgba(255, 107, 53, 0.4)';
+    });
+    document.getElementById('select-regular-foxes').addEventListener('mouseleave', function() {
+        this.style.transform = 'scale(1)';
+        this.style.boxShadow = 'none';
+    });
+    
+    function startGameWithCharacter() {
+        const characterSelection = document.getElementById('character-selection');
+        characterSelection.style.display = 'none';
+        
+        // Update game title based on character
+        const gameTitle = document.querySelector('#pacman-container h2');
+        if (playerCharacter === 'fox') {
+            gameTitle.textContent = '🦊 Fox Hunt Mode';
+            gameTitle.style.color = '#ff6b35';
+        } else {
+            gameTitle.textContent = 'Chicken vs. Foxes Maze';
+            gameTitle.style.color = '';
+        }
+        
+        // Remove next level button if it exists
+        if (nextLevelButton) {
+            try {
+                document.body.removeChild(nextLevelButton);
+            } catch (e) {
+                console.error('Error removing next level button:', e);
+            }
+            nextLevelButton = null;
+        }
+        
+        try {
+            pacmanGameRunning = true;
+            currentLevel = 1;
+            allGhostsEliminated = false;
+            initPacmanGame(true); // true means reset score and lives
+            pacmanGameLoop();
+        } catch (error) {
+            console.error('Error starting game:', error);
+            pacmanGameRunning = false;
+            pacmanStartButton.style.display = 'block';
+        }
+    }
+    
+    // Minimap dragging functionality with life cost
+    const minimapWrapper = document.getElementById('minimap-wrapper');
+    let isDragging = false;
+    let offsetX = 0;
+    let offsetY = 0;
+    
+    minimapWrapper.addEventListener('mousedown', (e) => {
+      // Check if game is running and player has lives available
+      if (!pacmanGameRunning) {
+        return;
+      }
+      
+      if (pacmanLives <= 0) {
+        alert('You have no lives left! Game Over.');
+        return;
+      }
+      
+      // Deduct a life for moving the minimap
+      pacmanLives--;
+      pacmanLivesSpan.textContent = pacmanLives;
+      
+      // Check if this caused game over
+      if (pacmanLives <= 0) {
+        pacmanGameRunning = false;
+        pacmanStartButton.style.display = 'block';
+        const levelsCompleted = currentLevel - 1;
+        pacmanStartButton.textContent = `Game Over! Score: ${pacmanScore} - Levels Completed: ${levelsCompleted}`;
+        alert('You sacrificed your last life! Game Over.');
+        return;
+      }
+      
+      isDragging = true;
+      offsetX = e.clientX - minimapWrapper.getBoundingClientRect().left;
+      offsetY = e.clientY - minimapWrapper.getBoundingClientRect().top;
+      minimapWrapper.style.cursor = 'grabbing';
+    });
+    
+    document.addEventListener('mousemove', (e) => {
+      if (isDragging) {
+        const newX = e.clientX - offsetX;
+        const newY = e.clientY - offsetY;
+        minimapWrapper.style.left = newX + 'px';
+        minimapWrapper.style.top = newY + 'px';
+        minimapWrapper.style.right = 'auto';
+        minimapWrapper.style.transform = 'translateY(0)';
+      }
+    });
+    
+    document.addEventListener('mouseup', () => {
+      isDragging = false;
+      minimapWrapper.style.cursor = 'move';
+    });
+    
+    // Pro Tip button functionality
+    const proTipButton = document.getElementById('pro-tip-button');
+    const proTipDisplay = document.getElementById('pro-tip-display');
+    
+    const proTips = [
+      "🎯 Ghost foxes (purple) can pass through purple walls on the minimap!",
+      "⚡ Speed power-ups are placed far from foxes - use them to escape danger!",
+      "🛡️ Shield power-ups are near fox clusters - grab them to fight back!",
+      "❄️ Freeze power-ups are in pellet-rich areas - maximize your collection time!",
+      "👑 Boss foxes appear every 3 levels and have special dash attacks!",
+      "🌾 Power pellets (wheat) let you eat foxes for bonus points - chain them for multipliers!",
+      "💰 You get an extra life at every 10,000 points - high scores = more lives!",
+      "🗺️ The minimap costs 1 life to move - position it strategically at the start!",
+      "🦊 Regular foxes turn blue and run away when you eat a power pellet!",
+      "⏱️ You have 2 minutes for ALL levels - speed is key to beating multiple levels!",
+      "❤️ Heart pellets give you an extra life - they're worth more than points!",
+      "🏃 Corner turns are faster than gradual curves - master sharp movements!",
+      "👁️ Watch the minimap to see fox positions and plan your escape routes!",
+      "🎪 Lead foxes in circles around walls to buy time and collect pellets!",
+      "🌟 Combo kills during power mode give exponential points - 200, 400, 800, 1600!"
+    ];
+    
+    let usedTips = [];
+    
+    proTipButton.addEventListener('click', () => {
+      // Check if game is running
+      if (!pacmanGameRunning) {
+        alert('Start the game first to get Pro Tips!');
+        return;
+      }
+      
+      // Check if player has lives
+      if (pacmanLives <= 0) {
+        alert('You have no lives left!');
+        return;
+      }
+      
+      // Deduct a life
+      pacmanLives--;
+      pacmanLivesSpan.textContent = pacmanLives;
+      
+      // Check if this caused game over
+      if (pacmanLives <= 0) {
+        pacmanGameRunning = false;
+        pacmanStartButton.style.display = 'block';
+        const levelsCompleted = currentLevel - 1;
+        pacmanStartButton.textContent = `Game Over! Score: ${pacmanScore} - Levels Completed: ${levelsCompleted}`;
+        alert('You spent your last life on a tip! Game Over.');
+        return;
+      }
+      
+      // Reset used tips if we've shown them all
+      if (usedTips.length >= proTips.length) {
+        usedTips = [];
+      }
+      
+      // Get a random tip that hasn't been shown recently
+      let availableTips = proTips.filter((tip, index) => !usedTips.includes(index));
+      let randomIndex = Math.floor(Math.random() * availableTips.length);
+      let selectedTip = availableTips[randomIndex];
+      let originalIndex = proTips.indexOf(selectedTip);
+      usedTips.push(originalIndex);
+      
+      // Display the tip
+      proTipDisplay.innerHTML = `<strong>💡 Pro Tip:</strong> ${selectedTip}`;
+      proTipDisplay.style.display = 'block';
+      
+      // Auto-hide after 15 seconds
+      setTimeout(() => {
+        proTipDisplay.style.display = 'none';
+      }, 15000);
     });
     
     // Setup virtual arrow controls for mobile
@@ -3011,19 +5796,50 @@
         // Helper function to handle direction changes
         function handleDirectionChange(direction) {
             if (pacmanContainer.classList.contains('active') && pacmanGameRunning) {
-                switch(direction) {
-                    case 'up':
-                        pacmanDirection = { x: 0, y: -1 }; // Match keyboard speed
-                        break;
-                    case 'down':
-                        pacmanDirection = { x: 0, y: 1 }; // Match keyboard speed
-                        break;
-                    case 'left':
-                        pacmanDirection = { x: -1, y: 0 }; // Match keyboard speed
-                        break;
-                    case 'right':
-                        pacmanDirection = { x: 1, y: 0 }; // Match keyboard speed
-                        break;
+                if (playerCharacter === 'chicken') {
+                    // Control the chicken
+                    switch(direction) {
+                        case 'up':
+                            pacmanDirection = { x: 0, y: -1 };
+                            break;
+                        case 'down':
+                            pacmanDirection = { x: 0, y: 1 };
+                            break;
+                        case 'left':
+                            pacmanDirection = { x: -1, y: 0 };
+                            break;
+                        case 'right':
+                            pacmanDirection = { x: 1, y: 0 };
+                            break;
+                    }
+                } else {
+                    // Control ALL player foxes (entire pack moves together)
+                    if (ghosts.length > 0) {
+                        let newDirection;
+                        switch(direction) {
+                            case 'up':
+                                newDirection = { x: 0, y: -1 };
+                                break;
+                            case 'down':
+                                newDirection = { x: 0, y: 1 };
+                                break;
+                            case 'left':
+                                newDirection = { x: -1, y: 0 };
+                                break;
+                            case 'right':
+                                newDirection = { x: 1, y: 0 };
+                                break;
+                        }
+                        
+                        // Apply direction to ALL player foxes
+                        if (newDirection) {
+                            ghosts.forEach(ghost => {
+                                if (ghost.isPlayer) {
+                                    ghost.direction = { ...newDirection };
+                                }
+                            });
+                        }
+                    }
                 }
             }
         }
@@ -3062,19 +5878,50 @@
     window.addEventListener('keydown', (e) => {
         // Only process keys if the Pac-Man game is active and running
         if (pacmanContainer.classList.contains('active') && pacmanGameRunning) {
-            switch(e.key) {
-                case 'ArrowUp':
-                    pacmanDirection = { x: 0, y: -1 };
-                    break;
-                case 'ArrowDown':
-                    pacmanDirection = { x: 0, y: 1 };
-                    break;
-                case 'ArrowLeft':
-                    pacmanDirection = { x: -1, y: 0 };
-                    break;
-                case 'ArrowRight':
-                    pacmanDirection = { x: 1, y: 0 };
-                    break;
+            if (playerCharacter === 'chicken') {
+                // Control the chicken
+                switch(e.key) {
+                    case 'ArrowUp':
+                        pacmanDirection = { x: 0, y: -1 };
+                        break;
+                    case 'ArrowDown':
+                        pacmanDirection = { x: 0, y: 1 };
+                        break;
+                    case 'ArrowLeft':
+                        pacmanDirection = { x: -1, y: 0 };
+                        break;
+                    case 'ArrowRight':
+                        pacmanDirection = { x: 1, y: 0 };
+                        break;
+                }
+            } else {
+                // Control ALL player foxes (entire pack moves together)
+                if (ghosts.length > 0) {
+                    let newDirection;
+                    switch(e.key) {
+                        case 'ArrowUp':
+                            newDirection = { x: 0, y: -1 };
+                            break;
+                        case 'ArrowDown':
+                            newDirection = { x: 0, y: 1 };
+                            break;
+                        case 'ArrowLeft':
+                            newDirection = { x: -1, y: 0 };
+                            break;
+                        case 'ArrowRight':
+                            newDirection = { x: 1, y: 0 };
+                            break;
+                    }
+                    
+                    // Apply direction to ALL player foxes
+                    if (newDirection) {
+                        ghosts.forEach(ghost => {
+                            if (ghost.isPlayer) {
+                                ghost.direction = { ...newDirection };
+                            }
+                        });
+                    }
+                }
             }
         }
     });
