@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat with Sir Peepius</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Use Inter font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #c2c2c2;
+            color: #333;
+        }
+        .top-menu {
+            width: 100%;
+            background: #fffbe7;
+            border-bottom: 2px solid #e6d1a3;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .top-menu ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            gap: 24px;
+        }
+        .top-menu li {
+            display: inline;
+        }
+        .top-menu a {
+            display: inline-block;
+            padding: 12px 28px;
+            font-size: 1.1em;
+            color: #fff;
+            background: #d97428;
+            border: none;
+            border-radius: 8px;
+            font-family: 'Georgia', serif;
+            font-weight: bold;
+            text-decoration: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+            transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+        }
+        .top-menu a:hover {
+            background: #a85c1a;
+            color: #ffe4b3;
+            text-decoration: none;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.13);
+        }
+        .top-menu a.active {
+            background: #fffbe7;
+            color: #d97428;
+            border: 2px solid #d97428;
+            cursor: default;
+            box-shadow: none;
+            pointer-events: none;
+        }
+        
+        .message {
+            margin-bottom: 1rem;
+            padding: 1rem;
+            border-radius: 1rem;
+            max-width: 80%;
+        }
+        
+        .message.user {
+            background: #3b82f6;
+            color: white;
+            margin-left: auto;
+        }
+        
+        .message.knight {
+            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+            color: #1f2937;
+            margin-right: auto;
+            border: 2px solid #d4af37;
+        }
+        
+        .chat-container {
+            height: 500px;
+            overflow-y: auto;
+            background: linear-gradient(to bottom, #fef3c7 0%, #fef9e6 100%);
+        }
+        
+        .chat-container::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .chat-container::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 10px;
+        }
+        
+        .chat-container::-webkit-scrollbar-thumb {
+            background: #d4af37;
+            border-radius: 10px;
+        }
+        
+        .chat-container::-webkit-scrollbar-thumb:hover {
+            background: #b8941f;
+        }
+    </style>
+</head>
+<body style="font-family: 'Inter', sans-serif; margin: 0; background: #c2c2c2;">
+
+    <!-- Navigation Menu -->
+    <nav class="top-menu">
+        <ul>
+            <li><a href="index.html">The Cluckington Family</a></li>
+            <li><a href="family-members.html">Family Members</a></li>
+            <li><a href="golden-knight.html">The Golden Knight of Chickenopolis</a></li>
+            <li><a href="homework.html">Homework Kanban</a></li>
+            <li><a href="games.html">Games</a></li>
+            <li><a href="sailing-data-tool.html">Wind Forecaster</a></li>
+            <li><a href="teach-me-anything.html">Teach Me Anything</a></li>
+            <li><a href="chat-with-peep.html" class="active">Chat with Sir Peepius</a></li>
+        </ul>
+    </nav>
+
+    <!-- Content Wrapper -->
+    <div class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+        <!-- Main Widget Container -->
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-4xl overflow-hidden">
+            
+            <!-- Header -->
+            <div class="p-6 border-b border-gray-200 bg-gradient-to-r from-yellow-400 via-yellow-500 to-amber-500">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-4">
+                        <div class="text-6xl">🐔</div>
+                        <div>
+                            <h1 class="text-3xl font-bold text-gray-900">Sir Peepius Aurelius</h1>
+                            <p class="text-amber-900 text-sm mt-1">The Golden Knight of Chickenopolis</p>
+                        </div>
+                    </div>
+                    <button 
+                        onclick="newChat()"
+                        class="bg-amber-800/30 hover:bg-amber-800/40 text-gray-900 font-bold py-2 px-4 rounded-xl shadow-md transition-all flex items-center gap-2"
+                    >
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                        New Quest
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Chat Area -->
+            <div id="chat-container" class="chat-container p-6 flex flex-col">
+                <div class="message knight">
+                    <p class="font-bold mb-1 flex items-center gap-2">
+                        <span class="text-2xl">⚔️</span>
+                        <span>Sir Peepius Aurelius</span>
+                    </p>
+                    <p class="font-serif">Hark! Well met, brave traveler! I am Sir Peepius Aurelius of Chickenopolis, the Golden Knight sworn to protect the realm from all manner of beasts and ne'er-do-wells. What brings thee to my presence this fine day? Speak freely, and I shall regale thee with tales of valor, or perhaps offer counsel worthy of a knight of the round coop!</p>
+                </div>
+            </div>
+            
+            <!-- Input Area -->
+            <div class="p-6 border-t border-gray-200 bg-amber-50">
+                <div class="flex gap-3">
+                    <input 
+                        id="user-input" 
+                        type="text" 
+                        placeholder="Speak to Sir Peepius... (e.g., 'Tell me about your greatest adventure!')"
+                        class="flex-1 p-3 border border-amber-300 rounded-xl shadow-sm focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 text-gray-700"
+                    />
+                    <button 
+                        id="send-button"
+                        onclick="sendMessage()"
+                        class="bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-bold py-3 px-6 rounded-xl shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        Send
+                    </button>
+                </div>
+                <div class="mt-3 flex flex-wrap gap-2">
+                    <button onclick="askQuestion('Tell me about your greatest adventure')" class="text-xs bg-yellow-100 hover:bg-yellow-200 text-yellow-800 font-semibold px-3 py-1 rounded-full">
+                        ⚔️ Greatest Adventure
+                    </button>
+                    <button onclick="askQuestion('What does it mean to be a knight?')" class="text-xs bg-amber-100 hover:bg-amber-200 text-amber-800 font-semibold px-3 py-1 rounded-full">
+                        🛡️ Knightly Wisdom
+                    </button>
+                    <button onclick="askQuestion('Tell me about Chickenopolis')" class="text-xs bg-orange-100 hover:bg-orange-200 text-orange-800 font-semibold px-3 py-1 rounded-full">
+                        🏰 About Chickenopolis
+                    </button>
+                    <button onclick="askQuestion('How do you protect your family?')" class="text-xs bg-red-100 hover:bg-red-200 text-red-800 font-semibold px-3 py-1 rounded-full">
+                        ❤️ Family Protection
+                    </button>
+                    <button onclick="askQuestion('What advice do you have for young chickens?')" class="text-xs bg-green-100 hover:bg-green-200 text-green-800 font-semibold px-3 py-1 rounded-full">
+                        🌟 Advice
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Footer -->
+            <div class="p-4 bg-gray-100">
+                <p class="text-xs text-gray-400 text-center">
+                    ⚔️ Powered by the wisdom of Sir Peepius Aurelius via Gemini AI
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Gemini API Configuration
+        const GEMINI_API_KEY = "AIzaSyBUJHf2-U3NQyVWfZEAAmtYvRcTUKI2GbY";
+        const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent`;
+        
+        const chatContainer = document.getElementById('chat-container');
+        const userInput = document.getElementById('user-input');
+        const sendButton = document.getElementById('send-button');
+        
+        // Conversation history for context
+        let conversationHistory = [];
+        
+        // Handle Enter key press
+        userInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+        
+        // Quick question buttons
+        function askQuestion(question) {
+            userInput.value = question;
+            sendMessage();
+        }
+        
+        // Send message function
+        async function sendMessage() {
+            const question = userInput.value.trim();
+            
+            if (!question) return;
+            
+            // Add user message
+            addMessage(question, 'user');
+            conversationHistory.push({
+                role: 'user',
+                parts: [{ text: question }]
+            });
+            
+            // Clear input and disable button
+            userInput.value = '';
+            sendButton.disabled = true;
+            sendButton.textContent = 'Thinking...';
+            
+            // Add typing indicator
+            const typingId = addTypingIndicator();
+            
+            try {
+                // Create the system prompt for Sir Peepius
+                const systemPrompt = `You are Sir Peepius Aurelius, also known as Peep, the Golden Knight of Chickenopolis. You are the youngest and bravest of the three Cluckington chicks. You speak in a heroic, medieval knight style with phrases like "Hark!", "Verily", "Tis true", etc. You are:
+
+- Brave and adventurous, always ready for a quest
+- The protector of Chickenopolis from foxes and other dangers
+- Son of Roostwell and Henrietta Cluckington
+- Brother to Cheepers (the musical one) and Nugget (the inventor)
+- Known for your quick thinking and big heart
+- Master at hide-and-seek
+- Wear golden armor and carry a tiny sword
+- Full of courage and kindness
+- Love to tell tales of your heroic deeds
+
+Respond in character as this brave, chivalrous young chicken knight. Be dramatic, heroic, and fun! Use medieval language and chicken-related puns when appropriate. Keep responses engaging and in character.`;
+
+                // Build conversation with system context
+                const contents = [
+                    {
+                        role: 'user',
+                        parts: [{ text: systemPrompt }]
+                    },
+                    {
+                        role: 'model',
+                        parts: [{ text: 'Hark! I am Sir Peepius Aurelius, the Golden Knight of Chickenopolis! How may I be of service to thee?' }]
+                    },
+                    ...conversationHistory
+                ];
+                
+                // Call Gemini API
+                const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        contents: contents,
+                        generationConfig: {
+                            temperature: 0.9,
+                            topK: 40,
+                            topP: 0.95,
+                            maxOutputTokens: 8192,
+                        }
+                    })
+                });
+                
+                // Remove typing indicator
+                removeTypingIndicator(typingId);
+                
+                if (!response.ok) {
+                    throw new Error(`API error: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                // Extract the response text
+                const answer = data.candidates[0].content.parts[0].text;
+                
+                // Add to conversation history
+                conversationHistory.push({
+                    role: 'model',
+                    parts: [{ text: answer }]
+                });
+                
+                // Add bot response
+                addMessage(answer, 'knight');
+                
+            } catch (error) {
+                console.error('Error calling Gemini API:', error);
+                removeTypingIndicator(typingId);
+                addMessage("By my feathers! I seem to have encountered a most vexing difficulty. Pray, try again, good friend!", 'knight');
+            } finally {
+                // Re-enable button
+                sendButton.disabled = false;
+                sendButton.textContent = 'Send';
+            }
+        }
+        
+        // Add message to chat
+        function addMessage(text, type) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+            
+            const header = document.createElement('p');
+            header.className = 'font-bold mb-1 flex items-center gap-2';
+            
+            if (type === 'knight') {
+                header.innerHTML = '<span class="text-2xl">⚔️</span><span>Sir Peepius Aurelius</span>';
+            } else {
+                header.innerHTML = '<span class="text-2xl">👤</span><span>You</span>';
+            }
+            
+            const content = document.createElement('p');
+            content.className = type === 'knight' ? 'whitespace-pre-wrap font-serif' : 'whitespace-pre-wrap';
+            content.textContent = text;
+            
+            messageDiv.appendChild(header);
+            messageDiv.appendChild(content);
+            chatContainer.appendChild(messageDiv);
+            
+            // Scroll to bottom
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+        
+        // Add typing indicator
+        function addTypingIndicator() {
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'message knight';
+            typingDiv.id = 'typing-indicator';
+            
+            const header = document.createElement('p');
+            header.className = 'font-bold mb-1 flex items-center gap-2';
+            header.innerHTML = '<span class="text-2xl">⚔️</span><span>Sir Peepius Aurelius</span>';
+            
+            const content = document.createElement('p');
+            content.className = 'text-gray-600 italic font-serif';
+            content.textContent = 'The knight ponders thy words...';
+            
+            typingDiv.appendChild(header);
+            typingDiv.appendChild(content);
+            chatContainer.appendChild(typingDiv);
+            
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+            
+            return 'typing-indicator';
+        }
+        
+        // Remove typing indicator
+        function removeTypingIndicator(id) {
+            const typingDiv = document.getElementById(id);
+            if (typingDiv) {
+                typingDiv.remove();
+            }
+        }
+        
+        // New Chat - Reset conversation
+        function newChat() {
+            // Clear conversation history
+            conversationHistory = [];
+            
+            // Clear chat container
+            chatContainer.innerHTML = '';
+            
+            // Add initial greeting
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message knight';
+            
+            const header = document.createElement('p');
+            header.className = 'font-bold mb-1 flex items-center gap-2';
+            header.innerHTML = '<span class="text-2xl">⚔️</span><span>Sir Peepius Aurelius</span>';
+            
+            const content = document.createElement('p');
+            content.className = 'font-serif';
+            content.textContent = "Hark! Well met, brave traveler! I am Sir Peepius Aurelius of Chickenopolis, the Golden Knight sworn to protect the realm from all manner of beasts and ne'er-do-wells. What brings thee to my presence this fine day? Speak freely, and I shall regale thee with tales of valor, or perhaps offer counsel worthy of a knight of the round coop!";
+            
+            messageDiv.appendChild(header);
+            messageDiv.appendChild(content);
+            chatContainer.appendChild(messageDiv);
+            
+            // Clear input
+            userInput.value = '';
+        }
+    </script>
+</body>
+</html>

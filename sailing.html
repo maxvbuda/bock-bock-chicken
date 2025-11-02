@@ -1,0 +1,1143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sailing Wind Conditions</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Use Inter font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #c2c2c2;
+            color: #333;
+        }
+        .top-menu {
+            width: 100%;
+            background: #fffbe7;
+            border-bottom: 2px solid #e6d1a3;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .top-menu ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            gap: 24px;
+        }
+        .top-menu li {
+            display: inline;
+        }
+        .top-menu a {
+            display: inline-block;
+            padding: 12px 28px;
+            font-size: 1.1em;
+            color: #fff;
+            background: #d97428;
+            border: none;
+            border-radius: 8px;
+            font-family: 'Georgia', serif;
+            font-weight: bold;
+            text-decoration: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+            transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+        }
+        .top-menu a:hover {
+            background: #a85c1a;
+            color: #ffe4b3;
+            text-decoration: none;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.13);
+        }
+        .top-menu a.active {
+            background: #fffbe7;
+            color: #d97428;
+            border: 2px solid #d97428;
+            cursor: default;
+            box-shadow: none;
+            pointer-events: none;
+        }
+        /* Custom CSS to define the wind direction variable */
+        :root {
+            --wind-direction: 0deg;
+        }
+
+        /* * The wind-arrow class will apply the rotation.
+         * We point the arrow "up" (0deg) by default in the SVG,
+         * so rotating it by the wind direction (e.g., 180deg) makes it point "from the South".
+        */
+        .wind-arrow {
+            transform: rotate(var(--wind-direction));
+            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        /* Custom scrollbar for the forecast (optional, but looks nice) */
+        .forecast-scrollbar::-webkit-scrollbar {
+            height: 6px;
+        }
+        .forecast-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9; /* gray-100 */
+            border-radius: 10px;
+        }
+        .forecast-scrollbar::-webkit-scrollbar-thumb {
+            background: #94a3b8; /* gray-400 */
+            border-radius: 10px;
+        }
+        .forecast-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #64748b; /* gray-500 */
+        }
+
+        /* Basic styles for the button (improves on default Tailwind) */
+        #refresh-button {
+            transition: all 0.2s;
+        }
+        #refresh-button:active {
+            transform: scale(0.98);
+        }
+
+        /* Modal Styles */
+        .modal {
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        .modal-content {
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+        .modal.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+        .modal.hidden .modal-content {
+            transform: translateY(20px);
+            opacity: 0;
+        }
+
+        /* Map Container Style (Crucial for Google Maps to render correctly) */
+        #map-container {
+            height: 400px; /* Fixed height for the map */
+            width: 100%;
+            border-radius: 0.5rem;
+        }
+        
+    </style>
+</head>
+<body style="font-family: 'Inter', sans-serif; margin: 0; background: #c2c2c2;">
+
+    <!-- Navigation Menu -->
+    <nav class="top-menu">
+        <ul>
+            <li><a href="index.html">The Cluckington Family</a></li>
+            <li><a href="family-members.html">Family Members</a></li>
+            <li><a href="golden-knight.html">The Golden Knight of Chickenopolis</a></li>
+            <li><a href="homework.html">Homework Kanban</a></li>
+            <li><a href="games.html">Games</a></li>
+            <li><a href="sailing-data-tool.html">Wind Forecaster</a></li>
+            <li><a href="sailing.html" class="active">Sailing</a></li>
+        </ul>
+    </nav>
+
+    <!-- Content Wrapper -->
+    <div class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+    <!-- Main Widget Container - CHANGED max-w-lg to max-w-2xl -->
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl overflow-hidden">
+        
+        <!-- Header & Control -->
+        <div class="p-6 border-b border-gray-200">
+            <div class="flex justify-between items-start mb-4">
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-800">Sailing Wind Conditions</h1>
+                    <p class="text-gray-500 text-sm" id="location-coords">Lat: 37.8, Lon: -122.4</p>
+                </div>
+                <!-- Refresh Button -->
+                <button id="refresh-button" 
+                        class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-xl shadow-md flex items-center disabled:opacity-50 flex-shrink-0"
+                        onclick="loadWeatherData(true)">
+                    <svg class="w-5 h-5 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                        <path fill-rule="evenodd" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm3.33 5.48a.75.75 0 011.06 1.06l-4.5 4.5a.75.75 0 01-1.06 0l-4.5-4.5a.75.75 0 011.06-1.06L12 11.94l3.33-3.33a.75.75 0 011.06 0z" clip-rule="evenodd" />
+                    </svg>
+                    Refresh
+                </button>
+            </div>
+
+            <!-- Location Input (Opens Maps Modal) -->
+            <button id="location-name-input"
+                    onclick="openLocationModal()"
+                    class="w-full text-left bg-gray-100 p-3 rounded-xl text-gray-700 hover:bg-gray-200 transition duration-150 focus:ring-2 focus:ring-blue-500 flex items-center shadow-inner">
+                <svg class="w-5 h-5 text-gray-500 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 12a5 5 0 110-10 5 5 0 010 10zM12 14c-4.42 0-8 1.79-8 4v2h16v-2c0-2.21-3.58-4-8-4z"/>
+                </svg>
+                <span id="location-name" class="font-medium">San Francisco Bay</span>
+            </button>
+        </div>
+
+        <!-- Current Conditions -->
+        <div class="p-6">
+            <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">Current Conditions</h2>
+            
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-6">
+
+                <!-- Wind Speed -->
+                <div class="text-center sm:text-left">
+                    <p class="text-lg text-gray-600 mb-1">Wind Speed</p>
+                    <div id="current-speed" class="text-6xl font-bold text-gray-800">
+                        --
+                    </div>
+                    <div id="sailing-condition" class="mt-2 text-lg font-medium text-gray-500">
+                        Loading...
+                    </div>
+                </div>
+
+                <!-- Wind Direction Compass -->
+                <div class="flex flex-col items-center">
+                    <!-- Compass Rose -->
+                    <div class="relative w-40 h-40 bg-gray-50 rounded-full flex items-center justify-center border-4 border-gray-200 shadow-inner">
+                        <!-- Compass markings -->
+                        <span class="absolute top-2 text-xs font-bold text-gray-400">N</span>
+                        <span class="absolute bottom-2 text-xs font-bold text-gray-400">S</span>
+                        <span class="absolute left-2 text-xs font-bold text-gray-400">W</span>
+                        <span class="absolute right-2 text-xs font-bold text-gray-400">E</span>
+                        
+                        <!-- Rotating Arrow -->
+                        <div id="current-arrow" class="wind-arrow w-12 h-12 text-blue-600">
+                            <!-- SVG Arrow Icon (points "up" by default, matching 0deg North) -->
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71L12 2z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    
+                    <!-- Direction Text -->
+                    <div id="current-direction" class="text-center mt-3">
+                        <p class="text-2xl font-bold text-gray-800">---°</p>
+                        <p class="text-lg text-gray-500">(---)</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Wind Oscillation Advisor Section (NEW) -->
+        <div class="p-6 border-t border-gray-200">
+            <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">
+                Wind Oscillation Advisor
+            </h2>
+            <p class="text-gray-600 text-sm mb-3">
+                Determine the best short-term strategy by calculating the median wind direction and advising on how to play the shifts.
+            </p>
+            
+            <button id="oscillation-button" 
+                    onclick="getOscillationAdvice()"
+                    class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 px-4 rounded-xl shadow-lg flex items-center justify-center disabled:opacity-50 transition duration-150">
+                <span id="oscillation-button-text">🔭 Analyze Potential Oscillation</span>
+            </button>
+            
+            <!-- Advice Container -->
+            <div id="oscillation-advice-container" class="mt-4 p-4 bg-teal-50 border border-teal-200 rounded-xl text-gray-700 text-sm italic relative hidden">
+                <!-- Close Button -->
+                <button onclick="closeAdvice('oscillation-advice-container')" class="absolute top-2 right-2 text-teal-700 hover:text-teal-900 focus:outline-none">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+                <!-- Content -->
+                <div id="oscillation-advice-content" class="pr-6">
+                    <p>Press the button to get the definitive strategy for sailing in an oscillating wind pattern based on the current mean wind direction.</p>
+                </div>
+            </div>
+        </div>
+        <!-- END WIND OSCILLATION ADVISOR -->
+
+
+        <!-- LLM Strategy Advisor Section (UPDATED FOR VOICE INPUT) -->
+        <div class="p-6 border-t border-gray-200">
+            <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">
+                Pre-Race Strategy Advisor
+            </h2>
+            
+            <!-- NEW: User Input for Specific Questions -->
+            <div class="relative">
+                <textarea id="strategy-input" rows="3" class="w-full p-3 border border-gray-300 rounded-xl shadow-inner focus:ring-indigo-500 focus:border-indigo-500 text-gray-700 pr-10" placeholder="Ask a specific question (e.g., 'Should I favor the port side on the first beat?'). If left blank, it generates a general briefing."></textarea>
+                <button id="strategy-mic-btn" onclick="startVoiceInput('strategy-input', this)" class="absolute right-2 top-2 p-1 text-gray-400 hover:text-indigo-600 focus:outline-none transition duration-150 rounded-full" title="Speak your question">
+                    <!-- Mic Icon SVG -->
+                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3.93-3.09 7.1-7.3 7.5v3h2v-3c4.71-.39 8.2-4.14 8.2-8.5H17.3zM10 5c0-1.1.9-2 2-2s2 .9 2 2v6c0 1.1-.9 2-2 2s-2-.9-2-2V5z"/></svg>
+                </button>
+            </div>
+            
+            <button id="strategy-button" 
+                    onclick="getSailingAdvice()"
+                    class="mt-3 w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-xl shadow-lg flex items-center justify-center disabled:opacity-50 transition duration-150">
+                <span id="strategy-button-text">✨ Get Expert Strategy Briefing / Answer Question</span>
+            </button>
+            
+            <!-- Advice Container -->
+            <div id="strategy-advice-container" class="mt-4 p-4 bg-indigo-50 border border-indigo-200 rounded-xl text-gray-700 text-sm italic relative hidden">
+                <!-- Close Button -->
+                <button onclick="closeAdvice('strategy-advice-container')" class="absolute top-2 right-2 text-indigo-700 hover:text-indigo-900 focus:outline-none">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+                <!-- Content is now dynamically injected here -->
+                <div id="strategy-advice-content" class="pr-6">
+                    <p>Type a specific question above or press the button for a general tactical overview based on the current weather.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- LLM Debrief Coach Section (UPDATED FOR VOICE INPUT) -->
+        <div class="p-6 border-t border-gray-200 bg-gray-50">
+            <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">
+                Post-Sail Debrief Coach
+            </h2>
+            <div class="relative">
+                <textarea id="debrief-input" rows="3" class="w-full p-3 border border-gray-300 rounded-xl shadow-inner focus:ring-blue-500 focus:border-blue-500 text-gray-700 pr-10" placeholder="e.g., 'I was fast downwind but kept getting rolled on starboard tack upwind. What should I change?'"></textarea>
+                <button id="debrief-mic-btn" onclick="startVoiceInput('debrief-input', this)" class="absolute right-2 top-2 p-1 text-gray-400 hover:text-pink-600 focus:outline-none transition duration-150 rounded-full" title="Speak your debrief">
+                    <!-- Mic Icon SVG -->
+                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3.93-3.09 7.1-7.3 7.5v3h2v-3c4.71-.39 8.2-4.14 8.2-8.5H17.3zM10 5c0-1.1.9-2 2-2s2 .9 2 2v6c0 1.1-.9 2-2 2s-2-.9-2-2V5z"/></svg>
+                </button>
+            </div>
+            
+            <button id="debrief-button" 
+                    onclick="getDebriefFeedback()"
+                    class="mt-3 w-full bg-pink-600 hover:bg-pink-700 text-white font-bold py-3 px-4 rounded-xl shadow-lg flex items-center justify-center disabled:opacity-50 transition duration-150">
+                <span id="debrief-button-text">✨ Analyze Debrief & Get Fixes</span>
+            </button>
+            
+            <!-- Feedback Container -->
+            <div id="debrief-feedback-container" class="mt-4 p-4 bg-pink-50 border border-pink-200 rounded-xl text-gray-700 text-sm italic relative hidden">
+                <!-- Close Button -->
+                <button onclick="closeAdvice('debrief-feedback-container')" class="absolute top-2 right-2 text-pink-700 hover:text-pink-900 focus:outline-none">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+                <!-- Content is now dynamically injected here -->
+                <div id="debrief-feedback-content" class="pr-6">
+                    <p>Enter a specific issue from your sailing session above and the coach will provide targeted performance fixes based on the current wind conditions.</p>
+                </div>
+            </div>
+        </div>
+        <!-- END DEBRIEF COACH -->
+
+
+        <!-- Hourly Forecast -->
+        <div class="p-6 bg-gray-50 border-t border-gray-200">
+            <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">Hourly Forecast</h2>
+            
+            <!-- Forecast Container -->
+            <div id="forecast-container" class="flex space-x-4 overflow-x-auto pb-3 forecast-scrollbar">
+                <!-- Loading State -->
+                <div class="text-center w-full text-gray-500">Loading forecast...</div>
+                
+                <!-- Forecast cards will be injected here by JavaScript. -->
+            </div>
+        </div>
+
+        <!-- Footer Note -->
+        <div class="p-4 bg-gray-100">
+            <p id="footer-note" class="text-xs text-gray-400 text-center">
+                Data is currently **auto-refreshing every 1 minute**. Replace <code>fetchRealTimeData</code> for live data.
+            </p>
+        </div>
+    </div>
+    
+    <!-- Location Selection Modal (Uses Google Maps API) -->
+    <div id="location-modal" class="modal hidden fixed inset-0 bg-gray-900 bg-opacity-70 flex items-center justify-center z-50 p-4">
+        <div class="modal-content bg-white rounded-xl shadow-2xl w-full max-w-xl max-h-[90vh] flex flex-col overflow-hidden">
+            
+            <!-- Modal Header -->
+            <div class="p-4 border-b border-gray-200 flex justify-between items-center">
+                <h3 class="text-xl font-bold text-gray-800">Search or Click to Select Location</h3>
+                <button onclick="closeLocationModal()" class="text-gray-500 hover:text-gray-700">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            
+            <!-- Map Container -->
+            <div class="p-4 flex-grow overflow-y-auto">
+                <!-- Search Input Field -->
+                <div class="mb-4">
+                    <input id="pac-input" 
+                           class="w-full p-3 border border-gray-300 rounded-xl shadow-inner focus:ring-blue-500 focus:border-blue-500 text-gray-700 font-medium" 
+                           type="text" 
+                           placeholder="Search for a location (e.g., 'Sydney Harbour')">
+                </div>
+                <!-- Map -->
+                <div id="map-container" class="rounded-lg shadow-lg">
+                    <!-- Google Map will render here -->
+                </div>
+                
+                <div class="mt-4 p-3 bg-red-100 border border-red-300 rounded-lg">
+                    <p class="text-sm text-red-700 font-medium">
+                        **Important Note:** If the map doesn't load, please ensure the "Maps JavaScript API" and "Places API" are enabled 
+                        and billing is active for this API key in your Google Cloud Console.
+                    </p>
+                </div>
+            </div>
+            
+            <!-- Modal Footer -->
+            <div class="p-4 border-t border-gray-200 flex justify-end">
+                <button onclick="closeLocationModal()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded-xl">
+                    Close Map
+                </button>
+            </div>
+        </div>
+    </div>
+    <!-- End Location Selection Modal -->
+
+    <!-- Google Maps API Loader and Application Logic -->
+    <script>
+        
+        // --- API & State Constants ---
+        // For Google Maps, ensure the key is enabled for Maps JavaScript API and Places API
+        const GOOGLE_MAPS_API_KEY = ""; // Now correctly set to an empty string
+        
+        // Gemini API Constants (Key for AI sailing advisor features)
+        const GEMINI_API_KEY = "AIzaSyBUJHf2-U3NQyVWfZEAAmtYvRcTUKI2GbY"; // ✅ Gemini API Key Added!
+        const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent`;
+
+        let map;
+        let marker;
+        let isFetching = false;
+        let currentConditionsData = null; // Stores the last fetched mock data for LLM use
+        
+        const AUTO_REFRESH_INTERVAL = 60000; 
+        let refreshIntervalId = null;
+        let recognition = null; // Holds the SpeechRecognition instance
+
+        let currentLocation = {
+            name: "San Francisco Bay", // Initial default name
+            lat: 37.8,
+            lon: -122.4,
+        };
+        
+        // --- VOICE INPUT (SPEECH-TO-TEXT) IMPLEMENTATION ---
+
+        /**
+         * Starts the voice recognition service for a specific textarea.
+         * @param {string} inputId The ID of the textarea to populate (e.g., 'strategy-input').
+         * @param {HTMLElement} buttonElement The button element that was clicked.
+         */
+        window.startVoiceInput = function(inputId, buttonElement) {
+            
+            // Check for Web Speech API support
+            if (!('webkitSpeechRecognition' in window)) {
+                // Use a non-modal message box instead of alert()
+                const errorMessage = "Speech recognition is not supported in your browser. Please use Chrome or Edge for this feature.";
+                console.error(errorMessage);
+                return;
+            }
+
+            const inputEl = document.getElementById(inputId);
+            const iconEl = buttonElement.querySelector('svg');
+
+            // If recognition is already active, stop it
+            if (recognition) {
+                recognition.stop();
+                recognition = null;
+                // Reset button visual
+                iconEl.classList.remove('text-red-500');
+                return;
+            }
+
+            // Create a new SpeechRecognition instance
+            recognition = new webkitSpeechRecognition();
+            recognition.continuous = false; // Stop after a single utterance
+            recognition.interimResults = false;
+            recognition.lang = 'en-US'; // Set language
+
+            // --- Event Handlers ---
+            
+            recognition.onstart = function() {
+                iconEl.classList.add('text-red-500', 'animate-pulse'); // Visual feedback: Listening
+                buttonElement.title = "Listening... Click to stop.";
+            };
+
+            recognition.onerror = function(event) {
+                console.error('Speech Recognition Error:', event.error);
+                iconEl.classList.remove('text-red-500', 'animate-pulse');
+                buttonElement.title = "Error, try again or type.";
+                recognition = null;
+            };
+
+            recognition.onend = function() {
+                iconEl.classList.remove('text-red-500', 'animate-pulse');
+                buttonElement.title = "Speak your question";
+                recognition = null;
+            };
+
+            recognition.onresult = function(event) {
+                let finalTranscript = '';
+                for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    if (event.results[i].isFinal) {
+                        finalTranscript += event.results[i][0].transcript;
+                    }
+                }
+                
+                // Append the transcribed text to the textarea
+                const currentText = inputEl.value;
+                const separator = currentText.length > 0 && !currentText.endsWith(' ') ? '. ' : '';
+                inputEl.value = currentText + separator + finalTranscript.trim();
+                inputEl.focus();
+            };
+
+            // Start the recognition
+            recognition.start();
+        };
+
+        // --- GOOGLE MAPS SETUP ---
+
+        // Load the Google Maps API script using the provided API key
+        const mapScript = document.createElement('script');
+        mapScript.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places&callback=initMap`;
+        mapScript.async = true;
+        document.head.appendChild(mapScript);
+
+        // This function is called automatically when the Google Maps script is loaded.
+        window.initMap = function() {
+            // Default position (San Francisco Bay)
+            const defaultPos = { lat: 37.8, lng: -122.4 }; 
+
+            map = new google.maps.Map(document.getElementById('map-container'), {
+                center: defaultPos,
+                zoom: 10,
+                mapTypeId: 'satellite', 
+                minZoom: 3, 
+                fullscreenControl: false,
+                streetViewControl: false,
+                mapTypeControl: true,
+                gestureHandling: "greedy",
+            });
+
+            marker = new google.maps.Marker({
+                position: defaultPos,
+                map: map,
+                title: 'Selected Sailing Location',
+                draggable: true 
+            });
+
+            // --- Autocomplete Search Setup ---
+            const input = document.getElementById("pac-input");
+            const autocomplete = new google.maps.places.Autocomplete(input);
+            autocomplete.bindTo("bounds", map); 
+
+            autocomplete.addListener("place_changed", () => {
+                const place = autocomplete.getPlace();
+
+                if (!place.geometry || !place.geometry.location) {
+                    console.error("No geometry or location found for the selected place.");
+                    return;
+                }
+
+                const lat = place.geometry.location.lat();
+                const lon = place.geometry.location.lng();
+                const name = place.name;
+                
+                // Move map and marker
+                map.setCenter(place.geometry.location);
+                marker.setPosition(place.geometry.location);
+                
+                // Update the main app location data, passing the place name
+                selectLocation(lat, lon, name); 
+                
+                // Close modal after successful selection
+                closeLocationModal(); 
+            });
+            // --- End Autocomplete Search Setup ---
+
+            // Handle map click events
+            map.addListener('click', handleMapClick);
+
+            // Handle marker drag events
+            marker.addListener('dragend', (event) => {
+                const lat = event.latLng.lat();
+                const lon = event.latLng.lng();
+                selectLocation(lat, lon);
+            });
+            
+            // Initial call to ensure the location is set after map loads
+            selectLocation(defaultPos.lat, defaultPos.lng);
+        };
+
+        function handleMapClick(mapsMouseEvent) {
+            const lat = mapsMouseEvent.latLng.lat();
+            const lon = mapsMouseEvent.latLng.lng();
+            
+            // Move the marker to the clicked position
+            marker.setPosition({ lat, lng: lon });
+            
+            // Center the map on the new marker position
+            map.setCenter(marker.getPosition());
+
+            // Select the new location
+            selectLocation(lat, lon);
+        }
+
+        // --- APPLICATION UTILITIES ---
+        
+        function getConditionDetails(kts) {
+            if (kts <= 5) {
+                return { text: "Light Air (1-5 kts)", colorClass: "text-blue-500" };
+            } else if (kts <= 15) {
+                return { text: "Good Breeze (6-15 kts)", colorClass: "text-green-600" };
+            } else if (kts <= 20) {
+                return { text: "Strong Breeze (16-20 kts)", colorClass: "text-yellow-600" };
+            } else {
+                return { text: "High Wind (> 20 kts)", colorClass: "text-red-600" };
+            }
+        }
+
+        function degToCompass(deg) {
+            const directions = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
+            deg = deg % 360;
+            if (deg < 0) deg += 360;
+            const index = Math.round(deg / 22.5) % 16;
+            return directions[index];
+        }
+
+        const arrowSVG = `
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71L12 2z"/>
+            </svg>
+        `;
+
+        // --- MODAL & ADVICE CONTROL FUNCTIONS ---
+
+        function openLocationModal() {
+            document.getElementById('location-modal').classList.remove('hidden');
+            // FIX: Force map resize and recenter on modal open
+            if (map && marker && marker.getPosition) {
+                google.maps.event.trigger(map, 'resize');
+                map.setCenter(marker.getPosition());
+            }
+        }
+
+        function closeLocationModal() {
+            document.getElementById('location-modal').classList.add('hidden');
+        }
+        
+        /**
+         * Hides the AI advice/feedback container when the close button is clicked.
+         * @param {string} elementId The ID of the container element (e.g., 'strategy-advice-container').
+         */
+        function closeAdvice(elementId) {
+            document.getElementById(elementId).classList.add('hidden');
+        }
+
+        function selectLocation(lat, lon, name = null) {
+            const latStr = lat.toFixed(4);
+            const lonStr = lon.toFixed(4);
+            let newName;
+            
+            if (name) {
+                newName = name;
+            } else {
+                newName = `Lat: ${latStr}, Lon: ${lonStr}`;
+                const isDefault = (lat.toFixed(4) === '37.8000' && lon.toFixed(4) === '-122.4000');
+                if (isDefault) {
+                     newName = "San Francisco Bay";
+                }
+            }
+
+            currentLocation = { 
+                name: newName, 
+                lat: lat, 
+                lon: lon 
+            };
+            
+            document.getElementById('location-name').textContent = newName;
+            document.getElementById('location-coords').textContent = `Lat: ${latStr}, Lon: ${lonStr}`;
+            
+            // Hide previous advice when location changes
+            document.getElementById('strategy-advice-container').classList.add('hidden');
+            document.getElementById('debrief-feedback-container').classList.add('hidden'); 
+            document.getElementById('oscillation-advice-container').classList.add('hidden'); // Hide new oscillation advice
+
+            loadWeatherData(true); 
+        }
+
+        // --- DATA FETCHING FUNCTIONS (MOCK DATA) ---
+        
+        function fetchMockWeatherData() {
+            // This mock function simulates fetching wind data based on the selected coordinates.
+            console.log(`Fetching mock weather data for: Lat: ${currentLocation.lat}, Lon: ${currentLocation.lon}`);
+            return new Promise(resolve => {
+                setTimeout(() => {
+                    const latSeed = Math.abs(currentLocation.lat * 100) % 100;
+                    const lonSeed = Math.abs(currentLocation.lon * 100) % 100;
+
+                    const baseSpeed = 5 + (latSeed / 20) + (lonSeed / 30);
+                    
+                    const randomSpeed = baseSpeed + Math.floor(Math.random() * 8) - 4; 
+                    const randomDir = (Math.floor(Math.random() * 360) + latSeed) % 360;
+
+                    const mockData = {
+                        location: currentLocation.name,
+                        current: {
+                            speed_kts: Math.max(1, Math.round(randomSpeed)), 
+                            direction_deg: randomDir
+                        },
+                        forecast: Array.from({ length: 7 }, (_, i) => {
+                            const forecastSpeed = randomSpeed + Math.floor(Math.random() * 4) - 2;
+                            const forecastDir = (randomDir + i * 10 + 20) % 360;
+                            const hour = new Date().getHours() + i + 1;
+                            const timeStr = new Date(0, 0, 0, hour).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+                            return { 
+                                time: timeStr, 
+                                speed_kts: Math.max(1, Math.round(forecastSpeed)), 
+                                direction_deg: forecastDir 
+                            };
+                        })
+                    };
+                    resolve(mockData);
+                }, 1000); 
+            });
+        }
+        
+        async function fetchRealTimeData() {
+            // NOTE: Replace this with your actual external weather API call.
+            return fetchMockWeatherData();
+        }
+
+        async function exponentialBackoffFetch(retries = 3, delay = 1000) {
+            for (let i = 0; i < retries; i++) {
+                try {
+                    const data = await fetchRealTimeData();
+                    return data;
+                } catch (error) {
+                    if (i < retries - 1) {
+                        console.warn(`Fetch attempt ${i + 1} failed. Retrying in ${delay * Math.pow(2, i)}ms...`); 
+                        await new Promise(resolve => setTimeout(resolve, delay * Math.pow(2, i)));
+                    } else {
+                        throw error;
+                    }
+                }
+            }
+        }
+
+
+        // --- UI UPDATE FUNCTIONS ---
+
+        function updateCurrentConditions(current) {
+            const speedEl = document.getElementById('current-speed');
+            const conditionEl = document.getElementById('sailing-condition');
+            const directionEl = document.getElementById('current-direction');
+            
+            const { text, colorClass } = getConditionDetails(current.speed_kts);
+            const compassDir = degToCompass(current.direction_deg);
+
+            speedEl.innerHTML = `
+                <span class="${colorClass}">${current.speed_kts}</span>
+                <span class="text-2xl text-gray-500">kts</span>
+            `;
+            
+            conditionEl.textContent = text;
+            conditionEl.className = `mt-2 text-lg font-medium ${colorClass}`;
+
+            directionEl.innerHTML = `
+                <p class="text-2xl font-bold text-gray-800">${current.direction_deg}°</p>
+                <p class="text-lg text-gray-500">(${compassDir})</p>
+            `;
+            
+            document.documentElement.style.setProperty('--wind-direction', `${current.direction_deg}deg`);
+        }
+
+        function updateForecast(forecast) {
+            const container = document.getElementById('forecast-container');
+            container.innerHTML = ''; 
+
+            forecast.forEach(item => {
+                const compassDir = degToCompass(item.direction_deg);
+                const { colorClass } = getConditionDetails(item.speed_kts);
+                
+                const card = document.createElement('div');
+                card.className = "flex-shrink-0 w-28 bg-white p-4 rounded-xl shadow text-center border border-gray-100";
+                
+                const coloredArrowSVG = arrowSVG.replace('fill="currentColor"', `fill="currentColor" class="${colorClass}"`);
+
+                card.innerHTML = `
+                    <p class="font-bold text-gray-700">${item.time}</p>
+                    <div class="w-8 h-8 mx-auto my-2 text-blue-600" style="transform: rotate(${item.direction_deg}deg);">
+                        ${coloredArrowSVG}
+                    </div>
+                    <p class="text-lg font-bold ${colorClass}">
+                        ${item.speed_kts} <span class="text-sm font-normal text-gray-500">kts</span>
+                    </p>
+                    <p class="text-sm text-gray-500">${compassDir}</p>
+                `;
+                
+                container.appendChild(card);
+            });
+        }
+        
+        function setLoadingState(isLoading) {
+            isFetching = isLoading;
+            const button = document.getElementById('refresh-button');
+
+            if (isLoading) {
+                button.disabled = true;
+                button.innerHTML = '<svg class="w-5 h-5 mr-2 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Refreshing...';
+                document.getElementById('forecast-container').innerHTML = '<div class="text-center w-full text-gray-500">Loading forecast...</div>';
+            } else {
+                button.disabled = false;
+                const refreshIconHtml = `<svg class="w-5 h-5 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm3.33 5.48a.75.75 0 011.06 1.06l-4.5 4.5a.75.75 0 01-1.06 0l-4.5-4.5a.75.75 0 011.06-1.06L12 11.94l3.33-3.33a.75.75 0 011.06 0z" clip-rule="evenodd" /></svg> Refresh`;
+                button.innerHTML = refreshIconHtml;
+            }
+        }
+
+        async function loadWeatherData(isRefresh = false) {
+            if (isFetching) return;
+
+            setLoadingState(true);
+            
+            try {
+                const data = await exponentialBackoffFetch(); 
+                currentConditionsData = data; // Store data for LLM use
+
+                document.getElementById('location-name').textContent = currentLocation.name;
+                updateCurrentConditions(data.current);
+                updateForecast(data.forecast);
+                
+                const now = new Date();
+                const timeString = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                const footerEl = document.getElementById('footer-note');
+                footerEl.innerHTML = `Data is currently **auto-refreshing every 1 minute**. (Last updated: ${timeString}). Replace <code>fetchRealTimeData</code> for live data.`;
+
+            } catch (error) {
+                console.error("Failed to load weather data:", error);
+                document.getElementById('location-name').textContent = "Failed to load data for " + currentLocation.name;
+            } finally {
+                setLoadingState(false);
+            }
+        }
+
+        function startAutoRefresh() {
+            if (refreshIntervalId !== null) {
+                clearInterval(refreshIntervalId);
+            }
+
+            refreshIntervalId = setInterval(() => {
+                console.log('Auto-refreshing data...');
+                loadWeatherData(false); 
+            }, AUTO_REFRESH_INTERVAL);
+        }
+
+        // --- GEMINI API INTEGRATION: WIND OSCILLATION ADVISOR (NEW) ---
+
+        async function getOscillationAdvice() {
+            if (!currentConditionsData) {
+                console.error("No weather data loaded to generate advice.");
+                const adviceContainerEl = document.getElementById('oscillation-advice-container');
+                const adviceContentEl = document.getElementById('oscillation-advice-content');
+                adviceContainerEl.classList.remove('hidden');
+                adviceContentEl.innerHTML = '<p class="text-red-700">Please wait for the weather data to load before requesting oscillation advice.</p>';
+                return;
+            }
+
+            const { current, location } = currentConditionsData;
+            const speedKts = current.speed_kts;
+            const directionDeg = current.direction_deg;
+            const compassDir = degToCompass(directionDeg);
+            
+            const adviceContainerEl = document.getElementById('oscillation-advice-container');
+            const adviceContentEl = document.getElementById('oscillation-advice-content');
+            const buttonEl = document.getElementById('oscillation-button-text');
+            const buttonContainerEl = document.getElementById('oscillation-button');
+
+            // 1. Set Loading State
+            buttonContainerEl.disabled = true;
+            adviceContainerEl.classList.remove('hidden');
+            adviceContentEl.innerHTML = '<div class="flex items-center justify-center text-teal-700"><svg class="w-5 h-5 mr-2 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Calculating oscillation strategy...</div>';
+            buttonEl.textContent = 'Calculating oscillation strategy...';
+
+
+            const userQuery = `Current Median Wind: Location: ${location}, Wind Speed: ${speedKts} knots, Wind Direction: ${directionDeg} degrees (${compassDir}). Assume the wind is **oscillating** around this median direction (e.g., shifting 10 degrees left and 10 degrees right). Provide a detailed, 3-step tactical plan for the upwind leg. Step 1: Explain the optimal starting line strategy. Step 2: Detail the necessary boat-handling technique (tacking on headers/lulls). Step 3: Identify a key landmark or physical object a sailor should use to track the median wind direction on the course.`;
+
+            const systemPrompt = "You are a professional sailing strategist who only advises on oscillating wind patterns. Generate a detailed, three-step tactical plan for the upwind leg of a race, structured as a numbered list. The plan must be highly specific, actionable, and based on the concept of sailing the 'shortest distance on the persistent tack' relative to the median wind provided.";
+
+            const payload = {
+                contents: [{ parts: [{ text: userQuery }] }],
+                systemInstruction: {
+                    parts: [{ text: systemPrompt }]
+                },
+            };
+
+            let advice = "Error generating advice.";
+
+            try {
+                // Use the exponential backoff pattern for the LLM API call
+                let response;
+                let result;
+                for (let i = 0; i < 3; i++) {
+                    try {
+                        response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        });
+
+                        if (response.ok) {
+                            result = await response.json();
+                            advice = result.candidates?.[0]?.content?.parts?.[0]?.text || "Failed to parse advice from AI.";
+                            break; 
+                        } else {
+                             // Retry logic
+                             if (i < 2) { 
+                                await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, i)));
+                             } else {
+                                throw new Error(`API call failed with status: ${response.status}`);
+                             }
+                        }
+                    } catch (fetchError) {
+                        if (i < 2) { 
+                            await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, i)));
+                        } else {
+                            throw fetchError;
+                        }
+                    }
+                }
+                
+                if (advice.includes("Error") || !response.ok) {
+                    throw new Error(advice);
+                }
+
+                // 2. Update Advice
+                adviceContentEl.innerHTML = `<p class="font-bold mb-2 text-teal-800">Oscillation Strategy:</p>${advice}`;
+                
+            } catch (error) {
+                console.error("Gemini API Error:", error);
+                // 2. Update Advice with error message
+                adviceContentEl.innerHTML = `<p class="text-red-700">Error generating advice: ${error.message}. Please check your API key and network connection.</p>`;
+            } finally {
+                // 3. Reset Button State
+                buttonContainerEl.disabled = false;
+                buttonEl.textContent = '🔭 Analyze Potential Oscillation';
+            }
+        }
+        
+        // --- GEMINI API INTEGRATION: PRE-RACE STRATEGY ADVISOR ---
+
+        async function getSailingAdvice() {
+            if (!currentConditionsData) {
+                console.error("No weather data loaded to generate advice.");
+                const adviceContainerEl = document.getElementById('strategy-advice-container');
+                const adviceContentEl = document.getElementById('strategy-advice-content');
+                adviceContainerEl.classList.remove('hidden');
+                adviceContentEl.innerHTML = '<p class="text-red-700">Please wait for the weather data to load before requesting advice.</p>';
+                return;
+            }
+
+            const strategyInputEl = document.getElementById('strategy-input');
+            const userQuestion = strategyInputEl.value.trim();
+
+            const { current, location } = currentConditionsData;
+            const speedKts = current.speed_kts;
+            const directionDeg = current.direction_deg;
+            const compassDir = degToCompass(directionDeg);
+            
+            const adviceContainerEl = document.getElementById('strategy-advice-container');
+            const adviceContentEl = document.getElementById('strategy-advice-content');
+            const buttonEl = document.getElementById('strategy-button-text');
+            const buttonContainerEl = document.getElementById('strategy-button');
+
+            // 1. Set Loading State
+            buttonContainerEl.disabled = true;
+            adviceContainerEl.classList.remove('hidden');
+            adviceContentEl.innerHTML = '<div class="flex items-center justify-center text-indigo-700"><svg class="w-5 h-5 mr-2 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Analyzing conditions...</div>';
+            buttonEl.textContent = 'Analyzing conditions...';
+
+
+            // --- Dynamically set the query and system prompt based on user input ---
+            let userQuery;
+            let systemPrompt;
+            
+            const commonData = `Location: ${location}, Wind Speed: ${speedKts} knots, Wind Direction: ${directionDeg} degrees (${compassDir}).`;
+
+            if (userQuestion) {
+                // If the user asked a specific question
+                userQuery = `Based on these current conditions: ${commonData} Please answer the sailor's specific question: "${userQuestion}"`;
+                systemPrompt = "You are a competitive Optimist dinghy coach. Provide a **direct, expert answer** to the sailor's specific question, immediately integrating the provided wind data into your tactical advice (rig tune, shift anticipation, and boat position). Your response must be concise and actionable.";
+            } else {
+                // If the user wants a general briefing (original behavior)
+                userQuery = `Provide a concise, single-paragraph sailing strategy briefing based on these conditions: ${commonData} Focus on rig tune and tactical advice.`;
+                systemPrompt = "You are a competitive Optimist dinghy coach focused purely on performance. Provide a concise, single-paragraph **racing strategy briefing** specifically for a young Optimist sailor. Your advice must be direct, actionable, limited to one paragraph (maximum 5 sentences), and **exclusively focus on performance-oriented elements** like rig tune, sail trim, body position (hike/sit), and boat handling/rudder technique. Do not include general safety reminders, focus only on speed.";
+            }
+            // --- End dynamic prompt setting ---
+
+
+            const payload = {
+                contents: [{ parts: [{ text: userQuery }] }],
+                systemInstruction: {
+                    parts: [{ text: systemPrompt }]
+                },
+            };
+
+            let advice = "Error generating advice.";
+
+            try {
+                // Use the exponential backoff pattern for the LLM API call too
+                let response;
+                let result;
+                for (let i = 0; i < 3; i++) {
+                    try {
+                        response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        });
+
+                        if (response.ok) {
+                            result = await response.json();
+                            advice = result.candidates?.[0]?.content?.parts?.[0]?.text || "Failed to parse advice from AI.";
+                            break; 
+                        } else {
+                             // Retry logic for failed status codes
+                             if (i < 2) { 
+                                console.warn(`LLM fetch failed. Retrying in ${1000 * Math.pow(2, i)}ms...`); 
+                                await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, i)));
+                             } else {
+                                throw new Error(`API call failed with status: ${response.status}`);
+                             }
+                        }
+                    } catch (fetchError) {
+                        if (i < 2) { 
+                            console.warn(`LLM fetch failed. Retrying in ${1000 * Math.pow(2, i)}ms...`); 
+                            await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, i)));
+                        } else {
+                            throw fetchError;
+                        }
+                    }
+                }
+                
+                if (advice.includes("Error") || !response.ok) {
+                     // Check if an error was caught during the loop
+                    throw new Error(advice);
+                }
+
+                // 2. Update Advice
+                const title = userQuestion ? 'Coach Answer:' : 'Coach Briefing:';
+                adviceContentEl.innerHTML = `<p class="font-bold mb-2 text-indigo-800">${title}</p>${advice}`;
+                
+            } catch (error) {
+                console.error("Gemini API Error:", error);
+                // 2. Update Advice with error message
+                adviceContentEl.innerHTML = `<p class="text-red-700">Error generating advice: ${error.message}. Please check your API key and network connection.</p>`;
+            } finally {
+                // 3. Reset Button State
+                buttonContainerEl.disabled = false;
+                buttonEl.textContent = '✨ Get Expert Strategy Briefing / Answer Question';
+            }
+        }
+
+        // --- GEMINI API INTEGRATION: POST-SAIL DEBRIEF COACH ---
+
+        async function getDebriefFeedback() {
+            const debriefInputEl = document.getElementById('debrief-input');
+            const userDebrief = debriefInputEl.value.trim();
+            const feedbackContainerEl = document.getElementById('debrief-feedback-container');
+            const feedbackContentEl = document.getElementById('debrief-feedback-content');
+            const buttonEl = document.getElementById('debrief-button-text');
+            const buttonContainerEl = document.getElementById('debrief-button');
+
+            if (!userDebrief) {
+                feedbackContainerEl.classList.remove('hidden');
+                feedbackContentEl.innerHTML = '<p class="text-red-700">Please enter a sailing scenario or issue to debrief.</p>';
+                return;
+            }
+
+            if (!currentConditionsData) {
+                feedbackContainerEl.classList.remove('hidden');
+                feedbackContentEl.innerHTML = '<p class="text-red-700">Please wait for the weather data to load before requesting debrief advice.</p>';
+                return;
+            }
+
+            const { current, location } = currentConditionsData;
+            const speedKts = current.speed_kts;
+            const directionDeg = current.direction_deg;
+            const compassDir = degToCompass(directionDeg);
+            
+            // 1. Set Loading State
+            buttonContainerEl.disabled = true;
+            feedbackContainerEl.classList.remove('hidden');
+            feedbackContentEl.innerHTML = '<div class="flex items-center justify-center text-pink-700"><svg class="w-5 h-5 mr-2 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Analyzing debrief...</div>';
+            buttonEl.textContent = 'Analyzing debrief...';
+
+
+            const userQuery = `Current Conditions: Location: ${location}, Wind Speed: ${speedKts} knots, Wind Direction: ${directionDeg} degrees (${compassDir}). Sailor's Issue: "${userDebrief}". Analyze the sailor's issue based on the current weather and provide a clear, 3-point action plan to fix the specific problem they mentioned.`;
+
+            const systemPrompt = "You are a highly experienced and motivational sailing coach. Your goal is to analyze a sailor's self-reported performance issue, relate it to the current wind conditions (Optimist dinghy), and provide a concise, numbered 3-point action plan focusing on immediate fixes (rigging adjustment, technique change, or tactical decision). Be supportive but direct. Do not mention safety, only performance fixes. The final output must be a single response block that uses numbered list markdown (1. 2. 3.)";
+
+            const payload = {
+                contents: [{ parts: [{ text: userQuery }] }],
+                systemInstruction: {
+                    parts: [{ text: systemPrompt }]
+                },
+            };
+
+            let feedback = "Error generating feedback.";
+
+            try {
+                let response;
+                let result;
+                for (let i = 0; i < 3; i++) {
+                    try {
+                        response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        });
+
+                        if (response.ok) {
+                            result = await response.json();
+                            feedback = result.candidates?.[0]?.content?.parts?.[0]?.text || "Failed to parse feedback from AI.";
+                            break; 
+                        } else {
+                             // Retry logic
+                             if (i < 2) { 
+                                await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, i)));
+                             } else {
+                                throw new Error(`API call failed with status: ${response.status}`);
+                             }
+                        }
+                    } catch (fetchError) {
+                        if (i < 2) { 
+                            await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, i)));
+                        } else {
+                            throw fetchError;
+                        }
+                    }
+                }
+                
+                if (feedback.includes("Error") || !response.ok) {
+                    throw new Error(feedback);
+                }
+
+                // 2. Update Feedback
+                feedbackContentEl.innerHTML = `<p class="font-bold mb-2 text-pink-800">Coach Feedback:</p>${feedback}`;
+                
+            } catch (error) {
+                console.error("Gemini API Error:", error);
+                // 2. Update Feedback with error message
+                feedbackContentEl.innerHTML = `<p class="text-red-700">Error generating advice: ${error.message}. Please check your API key and network connection.</p>`;
+            } finally {
+                // 3. Reset Button State
+                buttonContainerEl.disabled = false;
+                buttonEl.textContent = '✨ Analyze Debrief & Get Fixes';
+            }
+        }
+        
+        // --- INITIALIZE ---
+        
+        window.addEventListener('DOMContentLoaded', () => {
+            // initMap is called automatically once the Google Maps script loads (due to callback=initMap in the script URL).
+            loadWeatherData(true); 
+            startAutoRefresh(); 
+        });
+
+    </script>
+</body>
+</html>
