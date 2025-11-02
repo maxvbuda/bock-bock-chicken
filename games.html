@@ -253,6 +253,9 @@
       <li><a href="golden-knight.html">The Golden Knight of Chickenopolis</a></li>
       <li><a href="homework.html">Homework Kanban</a></li>
       <li><a href="games.html" class="active">Games</a></li>
+      <li><a href="sailing-data-tool.html">Wind Forecaster</a></li>
+      <li><a href="teach-me-anything.html">Teach Me Anything</a></li>
+      <li><a href="chat-with-peep.html">Chat with Sir Peepius</a></li>
     </ul>
   </nav>
   <div id="tower-info-bar"></div>
@@ -378,40 +381,6 @@
           </div>
         </div>
         <p style="margin-top: 25px; color: #666; font-size: 13px; font-style: italic;">Click on a character to select</p>
-      </div>
-      
-      <!-- Boss Fox Choice Modal -->
-      <div id="boss-fox-choice" style="display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(255, 255, 255, 0.98); padding: 40px; border-radius: 15px; box-shadow: 0 8px 32px rgba(255, 69, 0, 0.5); text-align: center; z-index: 1001; max-width: 650px; border: 4px solid gold;">
-        <h2 style="margin: 0 0 15px 0; color: #ff4500; font-size: 36px;">👑 BOSS FOX APPEARED! 👑</h2>
-        <p style="font-size: 18px; color: #333; margin-bottom: 25px;">Choose your playstyle for this level:</p>
-        <div style="display: flex; gap: 30px; justify-content: center; margin-top: 20px;">
-          <!-- Boss Fox Option -->
-          <div id="select-boss-fox" style="cursor: pointer; padding: 25px; border: 3px solid gold; border-radius: 12px; background: linear-gradient(135deg, #fff9e6 0%, #ffe9b3 100%); transition: all 0.3s; width: 240px;">
-            <div style="font-size: 80px; margin-bottom: 15px;">👑🦊</div>
-            <h3 style="margin: 10px 0; color: #8b6914; font-size: 24px;">Boss Fox Only</h3>
-            <p style="color: #555; font-size: 14px; line-height: 1.6; margin: 10px 0;">
-              <strong>Play as the powerful Boss Fox!</strong><br>
-              • 1.5x larger size<br>
-              • Faster speed<br>
-              • Special abilities<br>
-              • Solo challenge
-            </p>
-          </div>
-          
-          <!-- Regular Foxes Option -->
-          <div id="select-regular-foxes" style="cursor: pointer; padding: 25px; border: 3px solid #ff6b35; border-radius: 12px; background: linear-gradient(135deg, #ffe4d6 0%, #ffd5ba 100%); transition: all 0.3s; width: 240px;">
-            <div style="font-size: 80px; margin-bottom: 15px;">🦊🦊🦊</div>
-            <h3 style="margin: 10px 0; color: #8b2500; font-size: 24px;">3 Regular Foxes</h3>
-            <p style="color: #555; font-size: 14px; line-height: 1.6; margin: 10px 0;">
-              <strong>Control the 3-fox pack!</strong><br>
-              • All 3 foxes move together<br>
-              • Team strategy<br>
-              • Cover more ground<br>
-              • Classic gameplay
-            </p>
-          </div>
-        </div>
-        <p style="margin-top: 25px; color: #666; font-size: 13px; font-style: italic;">Choose wisely - each has unique advantages!</p>
       </div>
       
       <!-- Virtual Controls for Mobile Devices -->
@@ -2177,7 +2146,6 @@
     let playerCharacter = 'chicken'; // 'chicken' or 'fox'
     let characterSelected = false;
     let spawnProtectionTime = 0; // Time until collision detection is enabled
-    let foxModeChoice = 'pack'; // 'pack' (3 foxes) or 'boss' (boss fox only) - tracks player's choice in fox mode
     
     // Timer variables
     let gameTimeRemaining = 120; // 2 minutes in seconds
@@ -2364,15 +2332,11 @@
         const mazeWidth = maze[0].length;
         const mazeHeight = maze.length;
         
-        console.log("Checking for boss at level:", currentLevel, "foxModeChoice:", foxModeChoice);
+        console.log("Checking for boss at level:", currentLevel);
         
-        // Create boss if:
-        // 1. It's a boss level (every 3 levels starting at level 3) OR
-        // 2. Player chose boss mode in fox mode
-        const isBossLevel = currentLevel >= 3 && (currentLevel % 3) === 0;
-        const shouldCreateBoss = isBossLevel || (playerCharacter === 'fox' && foxModeChoice === 'boss');
-        
-        if (shouldCreateBoss) {
+        // Create boss every 3 levels starting at level 3
+        // Using absolute mod to ensure consistent behavior
+        if (currentLevel >= 3 && (currentLevel % 3) === 0) {
             console.log("Boss condition met! Creating boss for level:", currentLevel);
             bossActive = true;
             
@@ -2501,34 +2465,6 @@
             
             // Add boss to ghosts array
             ghosts.push(bossFox);
-            
-            // IN FOX MODE: Show choice modal ONLY on actual boss levels (not every level if player chose boss)
-            // This is the first time they encounter a boss level
-            const isBossLevel = currentLevel >= 3 && (currentLevel % 3) === 0;
-            if (playerCharacter === 'fox' && isBossLevel && foxModeChoice === 'pack') {
-                // First boss encounter or they previously chose pack - give them the choice
-                // Pause the game
-                pacmanGameRunning = false;
-                
-                // Show the boss fox choice modal
-                const bossChoice = document.getElementById('boss-fox-choice');
-                bossChoice.style.display = 'block';
-                
-                console.log('Boss choice modal shown - game paused');
-            } else if (playerCharacter === 'fox' && foxModeChoice === 'boss') {
-                // Player previously chose boss mode - auto-select boss and make it player-controlled
-                ghosts = ghosts.filter(ghost => ghost.isBoss);
-                if (ghosts.length > 0) {
-                    ghosts[0].isPlayer = true;
-                    ghosts[0].id = 'boss_fox_player';
-                    if (!ghosts[0].direction) {
-                        ghosts[0].direction = { x: 0, y: 0 };
-                    }
-                    ghosts[0].vx = 0;
-                    ghosts[0].vy = 0;
-                }
-                console.log('Boss mode: Auto-selected boss fox (player chose boss previously)');
-            }
             
             // Create a special text announcement
             const bossText = document.createElement('div');
@@ -2768,86 +2704,6 @@
     
     // Draw the boss fox with special effects and health bar
     function drawBossFox(boss) {
-        // IN FOX MODE (player-controlled): Create/update GIF element like regular foxes
-        if (playerCharacter === 'fox' && boss.isPlayer) {
-            console.log('Drawing player-controlled boss fox at:', boss.x, boss.y, 'has GIF:', !!boss.gifElement);
-            
-            // Create or update GIF element for boss fox if not already created
-            if (pacmanFoxGifLoaded && !boss.gifElement) {
-                boss.gifElement = document.createElement('img');
-                boss.gifElement.src = pacmanFoxGifUrl;
-                boss.gifElement.style.position = 'absolute';
-                boss.gifElement.style.width = (pacmanFoxSize * 1.5) + 'px'; // Boss is 1.5x larger
-                boss.gifElement.style.height = (pacmanFoxSize * 1.5) + 'px';
-                boss.gifElement.style.pointerEvents = 'none';
-                boss.gifElement.style.zIndex = '5';
-                boss.gifElement.classList.add('pacman-ghost-gif');
-                boss.gifElement.id = 'boss_fox_gif';
-                
-                // Add to canvas container
-                const canvasContainer = pacmanCanvas.parentElement;
-                if (canvasContainer.style.position !== 'relative') {
-                    canvasContainer.style.position = 'relative';
-                }
-                canvasContainer.appendChild(boss.gifElement);
-                console.log('Boss fox GIF element created');
-            }
-            
-            // Update GIF element position if it exists
-            if (boss.gifElement && pacmanFoxGifLoaded) {
-                const canvasRect = pacmanCanvas.getBoundingClientRect();
-                const displaySize = pacmanFoxSize * 1.5; // Boss is 1.5x size
-                
-                const leftPos = canvasRect.left - pacmanCanvas.parentElement.getBoundingClientRect().left + boss.x - displaySize/2;
-                const topPos = canvasRect.top - pacmanCanvas.parentElement.getBoundingClientRect().top + boss.y - displaySize/2;
-                
-                boss.gifElement.style.left = leftPos + 'px';
-                boss.gifElement.style.top = topPos + 'px';
-                
-                // Apply rotation based on movement direction
-                // Fox GIF faces right by default
-                let rotation = 0;
-                let scaleX = 1;
-                
-                if (boss.direction.x > 0) {
-                    rotation = 0; // Right - face right (default)
-                    scaleX = 1;
-                } else if (boss.direction.x < 0) {
-                    rotation = 0; // Left - flip horizontally
-                    scaleX = -1;
-                } else if (boss.direction.y > 0) {
-                    rotation = 90; // Down - rotate 90 degrees
-                    scaleX = 1;
-                } else if (boss.direction.y < 0) {
-                    rotation = -90; // Up - rotate -90 degrees
-                    scaleX = 1;
-                }
-                
-                boss.gifElement.style.transform = `rotate(${rotation}deg) scaleX(${scaleX})`;
-                boss.gifElement.style.transformOrigin = 'center center';
-            }
-            
-            // Draw placeholder circle and golden aura on canvas
-            pacmanCtx.beginPath();
-            pacmanCtx.arc(boss.x, boss.y, boss.size, 0, Math.PI * 2);
-            pacmanCtx.fillStyle = 'rgba(255, 215, 0, 0.1)';
-            pacmanCtx.fill();
-            pacmanCtx.strokeStyle = 'rgba(255, 215, 0, 0.5)';
-            pacmanCtx.lineWidth = 2;
-            pacmanCtx.stroke();
-            
-            // Boss golden crown indicator above
-            pacmanCtx.font = '20px Arial';
-            pacmanCtx.textAlign = 'center';
-            pacmanCtx.textBaseline = 'middle';
-            pacmanCtx.fillStyle = 'gold';
-            const crownPulse = Math.sin(Date.now() / 200) * 2;
-            pacmanCtx.fillText('👑', boss.x, boss.y - boss.size - 10 + crownPulse);
-            
-            return; // Skip the emoji drawing below
-        }
-        
-        // IN CHICKEN MODE: Draw boss fox with emoji (original code)
         // Draw boss fox glow/aura
         const glowPulse = Math.sin(Date.now() / 150) * 0.2 + 0.8;
         
@@ -2901,39 +2757,37 @@
             pacmanCtx.stroke();
         }
         
-        // Draw health bar (only in chicken mode when boss is AI)
-        if (playerCharacter === 'chicken') {
-            const healthBarWidth = boss.size * 3;
-            const healthBarHeight = 8;
-            const healthPercentage = bossHealth / bossMaxHealth;
-            
-            // Health bar background
-            pacmanCtx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-            pacmanCtx.fillRect(
-                boss.x - healthBarWidth/2,
-                boss.y - boss.size - 15,
-                healthBarWidth,
-                healthBarHeight
-            );
-            
-            // Health bar fill - color changes based on health percentage
-            let healthColor;
-            if (healthPercentage > 0.6) {
-                healthColor = 'lime';
-            } else if (healthPercentage > 0.3) {
-                healthColor = 'yellow';
-            } else {
-                healthColor = 'red';
-            }
-            
-            pacmanCtx.fillStyle = healthColor;
-            pacmanCtx.fillRect(
-                boss.x - healthBarWidth/2,
-                boss.y - boss.size - 15,
-                healthBarWidth * healthPercentage,
-                healthBarHeight
-            );
+        // Draw health bar
+        const healthBarWidth = boss.size * 3;
+        const healthBarHeight = 8;
+        const healthPercentage = bossHealth / bossMaxHealth;
+        
+        // Health bar background
+        pacmanCtx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+        pacmanCtx.fillRect(
+            boss.x - healthBarWidth/2,
+            boss.y - boss.size - 15,
+            healthBarWidth,
+            healthBarHeight
+        );
+        
+        // Health bar fill - color changes based on health percentage
+        let healthColor;
+        if (healthPercentage > 0.6) {
+            healthColor = 'lime';
+        } else if (healthPercentage > 0.3) {
+            healthColor = 'yellow';
+        } else {
+            healthColor = 'red';
         }
+        
+        pacmanCtx.fillStyle = healthColor;
+        pacmanCtx.fillRect(
+            boss.x - healthBarWidth/2,
+            boss.y - boss.size - 15,
+            healthBarWidth * healthPercentage,
+            healthBarHeight
+        );
     }
     
     function createEliminationEffect(x, y) {
@@ -3621,26 +3475,16 @@
                 ghost.gifElement.style.top = topPos + 'px';
                 
                 // Apply rotation based on movement direction
-                // Fox GIF faces right by default
                 let rotation = 0;
-                let scaleX = 1;
+                if (ghost.vx > 0) rotation = 0; // Right - face right
+                else if (ghost.vx < 0) rotation = 0; // Left - still face right
+                else if (ghost.vy > 0) rotation = Math.PI / 2; // Down - face down
+                else if (ghost.vy < 0) rotation = -Math.PI / 2; // Up - face up
                 
-                if (ghost.vx > 0) {
-                    rotation = 0; // Right - face right (default)
-                    scaleX = 1;
-                } else if (ghost.vx < 0) {
-                    rotation = 0; // Left - flip horizontally
-                    scaleX = -1;
-                } else if (ghost.vy > 0) {
-                    rotation = 90; // Down - rotate 90 degrees
-                    scaleX = 1;
-                } else if (ghost.vy < 0) {
-                    rotation = -90; // Up - rotate -90 degrees
-                    scaleX = 1;
+                if (rotation !== 0) {
+                    ghost.gifElement.style.transform = `rotate(${rotation}rad)`;
+                    ghost.gifElement.style.transformOrigin = 'center center';
                 }
-                
-                ghost.gifElement.style.transform = `rotate(${rotation}deg) scaleX(${scaleX})`;
-                ghost.gifElement.style.transformOrigin = 'center center';
             }
             
             // Draw fox or placeholder
@@ -4813,10 +4657,6 @@
                     ghost.y = newY;
                 }
                 
-                // Update vx and vy for rotation (used by GIF drawing)
-                ghost.vx = ghost.direction.x;
-                ghost.vy = ghost.direction.y;
-                
                 // Smooth centering for player fox
                 const centerXPos = Math.floor(ghost.x / cellSize) * cellSize + cellSize / 2;
                 const centerYPos = Math.floor(ghost.y / cellSize) * cellSize + cellSize / 2;
@@ -5063,32 +4903,14 @@
         if ((hasChangedCell && isWellCentered) || hasNoDirection) {
             pacmanPosition.lastCell = { x: currentCellX, y: currentCellY };
             
-            // IMPROVED AI: Find ALL player foxes and their positions
-            const playerFoxes = ghosts.filter(ghost => ghost.isPlayer);
-            if (!playerFoxes || playerFoxes.length === 0) {
+            // Get player fox position (first ghost is the player)
+            const playerFox = ghosts[0];
+            if (!playerFox) {
                 // Fallback: move in any valid direction
                 const dirs = [{ x: 0, y: -1 }, { x: 1, y: 0 }, { x: 0, y: 1 }, { x: -1, y: 0 }];
                 pacmanDirection = dirs[Math.floor(Math.random() * dirs.length)];
                 return;
             }
-            
-            // Find the closest fox
-            let closestFox = playerFoxes[0];
-            let minDistance = Math.sqrt(
-                Math.pow(closestFox.x - pacmanPosition.x, 2) + 
-                Math.pow(closestFox.y - pacmanPosition.y, 2)
-            );
-            
-            playerFoxes.forEach(fox => {
-                const dist = Math.sqrt(
-                    Math.pow(fox.x - pacmanPosition.x, 2) + 
-                    Math.pow(fox.y - pacmanPosition.y, 2)
-                );
-                if (dist < minDistance) {
-                    minDistance = dist;
-                    closestFox = fox;
-                }
-            });
             
             // Determine possible directions
             const possibleDirections = [];
@@ -5115,135 +4937,51 @@
             });
             
             if (possibleDirections.length > 0) {
-                // Increase awareness range based on level (smarter on higher levels)
-                const awarenessRange = 150 + (currentLevel * 20); // Increases with level
+                // Calculate distance to fox
+                const distanceToFox = Math.sqrt(
+                    Math.pow(playerFox.x - pacmanPosition.x, 2) + 
+                    Math.pow(playerFox.y - pacmanPosition.y, 2)
+                );
                 
-                // Helper function to count available exits from a position (avoid dead ends)
-                const countExits = (cellX, cellY) => {
-                    let exits = 0;
-                    directions.forEach(dir => {
-                        const checkX = cellX + dir.x;
-                        const checkY = cellY + dir.y;
-                        if (checkX >= 0 && checkX < maze[0].length && 
-                            checkY >= 0 && checkY < maze.length && 
-                            maze[checkY][checkX] === 0) {
-                            exits++;
-                        }
-                    });
-                    return exits;
-                };
-                
-                // Helper function to calculate danger score (considers all foxes)
-                const calculateDanger = (posX, posY) => {
-                    let totalDanger = 0;
-                    playerFoxes.forEach(fox => {
-                        const dist = Math.sqrt(
-                            Math.pow(fox.x - posX, 2) + 
-                            Math.pow(fox.y - posY, 2)
+                // Different behavior based on distance to fox
+                if (distanceToFox < 150) {
+                    // FLEE MODE: Fox is close, run away!
+                    possibleDirections.sort((a, b) => {
+                        const nextPosA = {
+                            x: pacmanPosition.x + a.x * cellSize,
+                            y: pacmanPosition.y + a.y * cellSize
+                        };
+                        const nextPosB = {
+                            x: pacmanPosition.x + b.x * cellSize,
+                            y: pacmanPosition.y + b.y * cellSize
+                        };
+                        
+                        const distA = Math.sqrt(
+                            Math.pow(playerFox.x - nextPosA.x, 2) + 
+                            Math.pow(playerFox.y - nextPosA.y, 2)
                         );
-                        // Closer foxes contribute more to danger
-                        totalDanger += 1000 / (dist + 1);
-                    });
-                    return totalDanger;
-                };
-                
-                // Different behavior based on distance to closest fox
-                if (minDistance < awarenessRange) {
-                    // SMART FLEE MODE: Fox is close, intelligently escape!
-                    
-                    // Score each direction based on multiple factors
-                    const scoredDirections = possibleDirections.map(dir => {
-                        const nextCellX = currentCellX + dir.x;
-                        const nextCellY = currentCellY + dir.y;
-                        const nextPosX = nextCellX * cellSize + cellSize / 2;
-                        const nextPosY = nextCellY * cellSize + cellSize / 2;
+                        const distB = Math.sqrt(
+                            Math.pow(playerFox.x - nextPosB.x, 2) + 
+                            Math.pow(playerFox.y - nextPosB.y, 2)
+                        );
                         
-                        // Factor 1: Distance from all foxes (higher is better)
-                        const danger = calculateDanger(nextPosX, nextPosY);
-                        const distanceScore = 1 / (danger + 0.1);
-                        
-                        // Factor 2: Number of exits (avoid dead ends)
-                        const exits = countExits(nextCellX, nextCellY);
-                        const exitScore = exits * 50; // Heavily weight open areas
-                        
-                        // Factor 3: Look ahead 2 steps to predict fox movement
-                        const lookAheadCellX = nextCellX + dir.x;
-                        const lookAheadCellY = nextCellY + dir.y;
-                        let lookAheadScore = 0;
-                        if (lookAheadCellX >= 0 && lookAheadCellX < maze[0].length && 
-                            lookAheadCellY >= 0 && lookAheadCellY < maze.length && 
-                            maze[lookAheadCellY][lookAheadCellX] === 0) {
-                            const lookAheadPosX = lookAheadCellX * cellSize + cellSize / 2;
-                            const lookAheadPosY = lookAheadCellY * cellSize + cellSize / 2;
-                            const futureDanger = calculateDanger(lookAheadPosX, lookAheadPosY);
-                            lookAheadScore = 1 / (futureDanger + 0.1) * 30;
-                        }
-                        
-                        // Factor 4: Prefer directions perpendicular to fox approach
-                        let perpendicularBonus = 0;
-                        const foxDx = closestFox.x - pacmanPosition.x;
-                        const foxDy = closestFox.y - pacmanPosition.y;
-                        const dotProduct = (dir.x * foxDx + dir.y * foxDy);
-                        if (dotProduct < 0) {
-                            // Moving away from fox
-                            perpendicularBonus = 100;
-                        } else if (dotProduct === 0) {
-                            // Moving perpendicular
-                            perpendicularBonus = 50;
-                        }
-                        
-                        const totalScore = distanceScore + exitScore + lookAheadScore + perpendicularBonus;
-                        
-                        return { dir, score: totalScore };
+                        return distB - distA; // Sort by farthest from fox
                     });
                     
-                    // Sort by best score
-                    scoredDirections.sort((a, b) => b.score - a.score);
-                    
-                    // Choose the best direction, with slight randomness on higher scores to avoid predictability
-                    if (scoredDirections.length > 1 && 
-                        Math.abs(scoredDirections[0].score - scoredDirections[1].score) < 20 && 
-                        Math.random() < 0.2) {
-                        // 20% chance to pick second best if scores are close
-                        pacmanDirection = scoredDirections[1].dir;
-                    } else {
-                        pacmanDirection = scoredDirections[0].dir;
-                    }
+                    // Choose the direction that maximizes distance from fox
+                    pacmanDirection = possibleDirections[0];
                 } else {
-                    // SMART WANDER MODE: Fox is far, explore strategically
+                    // WANDER MODE: Fox is far, explore randomly but prefer continuing straight
                     const continueStraight = possibleDirections.find(dir => 
                         dir.x === pacmanDirection.x && dir.y === pacmanDirection.y
                     );
                     
-                    // Prefer continuing straight, but avoid dead ends
                     if (continueStraight && Math.random() < 0.7) {
-                        const straightCellX = currentCellX + continueStraight.x;
-                        const straightCellY = currentCellY + continueStraight.y;
-                        const straightExits = countExits(straightCellX, straightCellY);
-                        
-                        if (straightExits >= 2) {
-                            // Safe to continue straight
-                            pacmanDirection = continueStraight;
-                        } else {
-                            // Dead end ahead, pick a direction with more exits
-                            const bestExit = possibleDirections.reduce((best, dir) => {
-                                const cellX = currentCellX + dir.x;
-                                const cellY = currentCellY + dir.y;
-                                const exits = countExits(cellX, cellY);
-                                return exits > best.exits ? { dir, exits } : best;
-                            }, { dir: continueStraight, exits: straightExits });
-                            
-                            pacmanDirection = bestExit.dir;
-                        }
+                        // 70% chance to continue in same direction
+                        pacmanDirection = continueStraight;
                     } else {
-                        // Pick direction with most exits (stay in open areas)
-                        const scored = possibleDirections.map(dir => {
-                            const cellX = currentCellX + dir.x;
-                            const cellY = currentCellY + dir.y;
-                            return { dir, exits: countExits(cellX, cellY) };
-                        });
-                        scored.sort((a, b) => b.exits - a.exits);
-                        pacmanDirection = scored[0].dir;
+                        // Choose a random valid direction
+                        pacmanDirection = possibleDirections[Math.floor(Math.random() * possibleDirections.length)];
                     }
                 }
             }
@@ -5550,75 +5288,6 @@
         this.style.boxShadow = '0 8px 20px rgba(255, 107, 53, 0.4)';
     });
     document.getElementById('select-fox').addEventListener('mouseleave', function() {
-        this.style.transform = 'scale(1)';
-        this.style.boxShadow = 'none';
-    });
-    
-    // Boss Fox Choice Handlers
-    document.getElementById('select-boss-fox').addEventListener('click', () => {
-        const bossChoice = document.getElementById('boss-fox-choice');
-        bossChoice.style.display = 'none';
-        
-        // Set the fox mode choice to boss
-        foxModeChoice = 'boss';
-        
-        // Remove the 3 regular foxes, keep only the boss
-        ghosts = ghosts.filter(ghost => ghost.isBoss);
-        
-        // Make the boss player-controlled and ensure all properties are set
-        if (ghosts.length > 0) {
-            ghosts[0].isPlayer = true;
-            ghosts[0].id = 'boss_fox_player'; // Give it a unique ID
-            
-            // Make sure direction is initialized if not already
-            if (!ghosts[0].direction) {
-                ghosts[0].direction = { x: 0, y: 0 };
-            }
-            
-            // Initialize vx and vy for rotation (used by GIF drawing)
-            ghosts[0].vx = 0;
-            ghosts[0].vy = 0;
-            
-            console.log('Boss fox selected - playing as boss only', ghosts[0]);
-        }
-        
-        // Resume the game
-        pacmanGameRunning = true;
-    });
-    
-    document.getElementById('select-regular-foxes').addEventListener('click', () => {
-        const bossChoice = document.getElementById('boss-fox-choice');
-        bossChoice.style.display = 'none';
-        
-        // Set the fox mode choice to pack
-        foxModeChoice = 'pack';
-        
-        // Remove the boss fox, keep the 3 regular foxes
-        ghosts = ghosts.filter(ghost => !ghost.isBoss);
-        bossActive = false;
-        bossFox = null;
-        
-        console.log('Regular foxes selected - playing with 3-fox pack');
-        
-        // Resume the game
-        pacmanGameRunning = true;
-    });
-    
-    // Add hover effects for boss fox choice
-    document.getElementById('select-boss-fox').addEventListener('mouseenter', function() {
-        this.style.transform = 'scale(1.05)';
-        this.style.boxShadow = '0 8px 20px rgba(255, 215, 0, 0.5)';
-    });
-    document.getElementById('select-boss-fox').addEventListener('mouseleave', function() {
-        this.style.transform = 'scale(1)';
-        this.style.boxShadow = 'none';
-    });
-    
-    document.getElementById('select-regular-foxes').addEventListener('mouseenter', function() {
-        this.style.transform = 'scale(1.05)';
-        this.style.boxShadow = '0 8px 20px rgba(255, 107, 53, 0.4)';
-    });
-    document.getElementById('select-regular-foxes').addEventListener('mouseleave', function() {
         this.style.transform = 'scale(1)';
         this.style.boxShadow = 'none';
     });

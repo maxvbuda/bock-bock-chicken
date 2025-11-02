@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teach Me Anything Bot</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Use Inter font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #c2c2c2;
+            color: #333;
+        }
+        .top-menu {
+            width: 100%;
+            background: #fffbe7;
+            border-bottom: 2px solid #e6d1a3;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .top-menu ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            gap: 24px;
+        }
+        .top-menu li {
+            display: inline;
+        }
+        .top-menu a {
+            display: inline-block;
+            padding: 12px 28px;
+            font-size: 1.1em;
+            color: #fff;
+            background: #d97428;
+            border: none;
+            border-radius: 8px;
+            font-family: 'Georgia', serif;
+            font-weight: bold;
+            text-decoration: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+            transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+        }
+        .top-menu a:hover {
+            background: #a85c1a;
+            color: #ffe4b3;
+            text-decoration: none;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.13);
+        }
+        .top-menu a.active {
+            background: #fffbe7;
+            color: #d97428;
+            border: 2px solid #d97428;
+            cursor: default;
+            box-shadow: none;
+            pointer-events: none;
+        }
+        
+        .message {
+            margin-bottom: 1rem;
+            padding: 1rem;
+            border-radius: 1rem;
+            max-width: 80%;
+        }
+        
+        .message.user {
+            background: #3b82f6;
+            color: white;
+            margin-left: auto;
+        }
+        
+        .message.bot {
+            background: #f3f4f6;
+            color: #1f2937;
+            margin-right: auto;
+        }
+        
+        .chat-container {
+            height: 500px;
+            overflow-y: auto;
+        }
+        
+        .chat-container::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .chat-container::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 10px;
+        }
+        
+        .chat-container::-webkit-scrollbar-thumb {
+            background: #94a3b8;
+            border-radius: 10px;
+        }
+        
+        .chat-container::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+        }
+    </style>
+</head>
+<body style="font-family: 'Inter', sans-serif; margin: 0; background: #c2c2c2;">
+
+    <!-- Navigation Menu -->
+    <nav class="top-menu">
+        <ul>
+            <li><a href="index.html">The Cluckington Family</a></li>
+            <li><a href="family-members.html">Family Members</a></li>
+            <li><a href="golden-knight.html">The Golden Knight of Chickenopolis</a></li>
+            <li><a href="homework.html">Homework Kanban</a></li>
+            <li><a href="games.html">Games</a></li>
+            <li><a href="sailing-data-tool.html">Wind Forecaster</a></li>
+            <li><a href="teach-me-anything.html" class="active">Teach Me Anything</a></li>
+            <li><a href="chat-with-peep.html">Chat with Sir Peepius</a></li>
+        </ul>
+    </nav>
+
+    <!-- Content Wrapper -->
+    <div class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+        <!-- Main Widget Container -->
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-4xl overflow-hidden">
+            
+            <!-- Header -->
+            <div class="p-6 border-b border-gray-200 bg-gradient-to-r from-purple-600 to-indigo-600">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h1 class="text-3xl font-bold text-white">🎓 Teach Me Anything Bot</h1>
+                        <p class="text-purple-100 text-sm mt-2">Ask me anything and I'll explain it to you!</p>
+                    </div>
+                    <button 
+                        onclick="newChat()"
+                        class="bg-white/20 hover:bg-white/30 text-white font-semibold py-2 px-4 rounded-xl shadow-md transition-all flex items-center gap-2"
+                    >
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                        New Chat
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Chat Area -->
+            <div id="chat-container" class="chat-container p-6 flex flex-col">
+                <div class="message bot">
+                    <p class="font-semibold mb-1">🤖 AI Teacher</p>
+                    <p>Hello! I'm your AI teacher powered by Gemini. Ask me anything you'd like to learn about - science, history, math, coding, or any topic you're curious about!</p>
+                </div>
+            </div>
+            
+            <!-- Input Area -->
+            <div class="p-6 border-t border-gray-200 bg-gray-50">
+                <div class="flex gap-3">
+                    <input 
+                        id="user-input" 
+                        type="text" 
+                        placeholder="Ask me anything... (e.g., 'How does photosynthesis work?')"
+                        class="flex-1 p-3 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-gray-700"
+                    />
+                    <button 
+                        id="send-button"
+                        onclick="sendMessage()"
+                        class="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 px-6 rounded-xl shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        Send
+                    </button>
+                </div>
+                <div class="mt-3 flex flex-wrap gap-2">
+                    <button onclick="askQuestion('How does photosynthesis work?')" class="text-xs bg-purple-100 hover:bg-purple-200 text-purple-700 px-3 py-1 rounded-full">
+                        🌱 Photosynthesis
+                    </button>
+                    <button onclick="askQuestion('Explain quantum physics simply')" class="text-xs bg-indigo-100 hover:bg-indigo-200 text-indigo-700 px-3 py-1 rounded-full">
+                        ⚛️ Quantum Physics
+                    </button>
+                    <button onclick="askQuestion('What is machine learning?')" class="text-xs bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-1 rounded-full">
+                        🤖 Machine Learning
+                    </button>
+                    <button onclick="askQuestion('How did World War 2 start?')" class="text-xs bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1 rounded-full">
+                        📚 History
+                    </button>
+                    <button onclick="askQuestion('Explain calculus to a beginner')" class="text-xs bg-green-100 hover:bg-green-200 text-green-700 px-3 py-1 rounded-full">
+                        📐 Calculus
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Footer -->
+            <div class="p-4 bg-gray-100">
+                <p class="text-xs text-gray-400 text-center">
+                    🧠 Powered by Google Gemini AI • Ask me anything!
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Gemini API Configuration
+        const GEMINI_API_KEY = "AIzaSyBUJHf2-U3NQyVWfZEAAmtYvRcTUKI2GbY";
+        const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent`;
+        
+        const chatContainer = document.getElementById('chat-container');
+        const userInput = document.getElementById('user-input');
+        const sendButton = document.getElementById('send-button');
+        
+        // Conversation history for context
+        let conversationHistory = [];
+        
+        // Handle Enter key press
+        userInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+        
+        // Quick question buttons
+        function askQuestion(question) {
+            userInput.value = question;
+            sendMessage();
+        }
+        
+        // Send message function
+        async function sendMessage() {
+            const question = userInput.value.trim();
+            
+            if (!question) return;
+            
+            // Add user message
+            addMessage(question, 'user');
+            conversationHistory.push({
+                role: 'user',
+                parts: [{ text: question }]
+            });
+            
+            // Clear input and disable button
+            userInput.value = '';
+            sendButton.disabled = true;
+            sendButton.textContent = 'Thinking...';
+            
+            // Add typing indicator
+            const typingId = addTypingIndicator();
+            
+            try {
+                // Create the system prompt
+                const systemPrompt = `You are a friendly and knowledgeable teacher. Explain topics in a clear, engaging way that's easy to understand. Use examples where helpful and break down complex concepts into simpler parts. Remember the conversation context and refer back to previous topics when relevant.`;
+
+                // Build conversation with system context
+                const contents = [
+                    {
+                        role: 'user',
+                        parts: [{ text: systemPrompt }]
+                    },
+                    {
+                        role: 'model',
+                        parts: [{ text: 'Hello! I\'m your AI teacher. Ask me anything you\'d like to learn about, and I\'ll explain it clearly!' }]
+                    },
+                    ...conversationHistory
+                ];
+                
+                // Call Gemini API
+                const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        contents: contents,
+                        generationConfig: {
+                            temperature: 0.7,
+                            topK: 40,
+                            topP: 0.95,
+                            maxOutputTokens: 8192,
+                        }
+                    })
+                });
+                
+                // Remove typing indicator
+                removeTypingIndicator(typingId);
+                
+                if (!response.ok) {
+                    throw new Error(`API error: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                // Extract the response text
+                const answer = data.candidates[0].content.parts[0].text;
+                
+                // Add to conversation history
+                conversationHistory.push({
+                    role: 'model',
+                    parts: [{ text: answer }]
+                });
+                
+                // Add bot response
+                addMessage(answer, 'bot');
+                
+            } catch (error) {
+                console.error('Error calling Gemini API:', error);
+                removeTypingIndicator(typingId);
+                addMessage("I'm sorry, I encountered an error. Please try again or check your internet connection.", 'bot');
+            } finally {
+                // Re-enable button
+                sendButton.disabled = false;
+                sendButton.textContent = 'Send';
+            }
+        }
+        
+        // Add message to chat
+        function addMessage(text, type) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+            
+            const header = document.createElement('p');
+            header.className = 'font-semibold mb-1';
+            header.textContent = type === 'user' ? '👤 You' : '🤖 AI Teacher';
+            
+            const content = document.createElement('p');
+            content.className = 'whitespace-pre-wrap';
+            content.textContent = text;
+            
+            messageDiv.appendChild(header);
+            messageDiv.appendChild(content);
+            chatContainer.appendChild(messageDiv);
+            
+            // Scroll to bottom
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+        
+        // Add typing indicator
+        function addTypingIndicator() {
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'message bot';
+            typingDiv.id = 'typing-indicator';
+            
+            const header = document.createElement('p');
+            header.className = 'font-semibold mb-1';
+            header.textContent = '🤖 AI Teacher';
+            
+            const content = document.createElement('p');
+            content.className = 'text-gray-500 italic';
+            content.textContent = 'Typing...';
+            
+            typingDiv.appendChild(header);
+            typingDiv.appendChild(content);
+            chatContainer.appendChild(typingDiv);
+            
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+            
+            return 'typing-indicator';
+        }
+        
+        // Remove typing indicator
+        function removeTypingIndicator(id) {
+            const typingDiv = document.getElementById(id);
+            if (typingDiv) {
+                typingDiv.remove();
+            }
+        }
+        
+        // New Chat - Reset conversation
+        function newChat() {
+            // Clear conversation history
+            conversationHistory = [];
+            
+            // Clear chat container
+            chatContainer.innerHTML = '';
+            
+            // Add initial greeting
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message bot';
+            
+            const header = document.createElement('p');
+            header.className = 'font-semibold mb-1';
+            header.textContent = '🤖 AI Teacher';
+            
+            const content = document.createElement('p');
+            content.textContent = "Hello! I'm your AI teacher powered by Gemini. Ask me anything you'd like to learn about - science, history, math, coding, or any topic you're curious about!";
+            
+            messageDiv.appendChild(header);
+            messageDiv.appendChild(content);
+            chatContainer.appendChild(messageDiv);
+            
+            // Clear input
+            userInput.value = '';
+        }
+    </script>
+</body>
+</html>
