@@ -10,17 +10,27 @@
     posthog.init('phc_sloVEwzIB8ds3BbJpYmgxRj36tofr4gVi4YcMnqikco',{api_host:'https://us.i.posthog.com'})
   </script>
   
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  
   <style>
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes slideIn {
+      from { transform: translateX(-20px); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
     body {
       margin: 0;
-      font-family: 'Segoe UI', Arial, sans-serif;
-      background: #f7f6f2;
+      font-family: 'Poppins', 'Segoe UI', Arial, sans-serif;
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
       color: #333;
     }
     .top-menu {
       width: 100%;
-      background: #fffbe7;
-      border-bottom: 2px solid #e6d1a3;
+      background: linear-gradient(to right, #fffdf7, #fff5e1);
+      border-bottom: 3px solid #e6d1a3;
       display: flex;
       justify-content: center;
       align-items: center;
@@ -28,44 +38,64 @@
       position: sticky;
       top: 0;
       z-index: 100;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      backdrop-filter: blur(10px);
     }
     .top-menu ul {
       list-style: none;
       margin: 0;
-      padding: 0;
+      padding: 8px 0;
       display: flex;
-      gap: 24px;
+      gap: 16px;
+      flex-wrap: wrap;
+      justify-content: center;
     }
     .top-menu li {
       display: inline;
     }
     .top-menu a {
       display: inline-block;
-      padding: 12px 28px;
-      font-size: 1.1em;
+      padding: 12px 24px;
+      font-size: 1em;
       color: #fff;
-      background: #d97428;
+      background: linear-gradient(135deg, #d97428 0%, #c96620 100%);
       border: none;
-      border-radius: 8px;
-      font-family: 'Georgia', serif;
-      font-weight: bold;
+      border-radius: 12px;
+      font-family: 'Quicksand', 'Georgia', serif;
+      font-weight: 600;
       text-decoration: none;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.07);
-      transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+      box-shadow: 0 4px 15px rgba(217, 116, 40, 0.3);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+    .top-menu a::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+      transition: left 0.5s;
+    }
+    .top-menu a:hover::before {
+      left: 100%;
     }
     .top-menu a:hover {
-      background: #a85c1a;
+      background: linear-gradient(135deg, #a85c1a 0%, #8a4a15 100%);
       color: #ffe4b3;
       text-decoration: none;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.13);
+      box-shadow: 0 6px 25px rgba(217, 116, 40, 0.4);
+      transform: translateY(-2px);
     }
     .top-menu a.active {
-      background: #fffbe7;
+      background: linear-gradient(135deg, #fffbe7 0%, #fff5d6 100%);
       color: #d97428;
       border: 2px solid #d97428;
       cursor: default;
-      box-shadow: none;
+      box-shadow: 0 4px 15px rgba(217, 116, 40, 0.2);
       pointer-events: none;
     }
     .kanban-board {
@@ -80,17 +110,23 @@
       min-height: 70vh;
     }
     .kanban-column {
-      background: #fffbe7;
+      background: linear-gradient(135deg, #ffffff 0%, #fffef9 100%);
       border: 2px solid #e6d1a3;
-      border-radius: 16px;
-      min-width: 280px;
-      max-width: 320px;
+      border-radius: 20px;
+      min-width: 300px;
+      max-width: 340px;
       flex-shrink: 0;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.07);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.12);
       display: flex;
       flex-direction: column;
       gap: 16px;
-      padding: 12px;
+      padding: 16px;
+      animation: slideIn 0.5s ease-out;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .kanban-column:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 15px 40px rgba(0,0,0,0.15);
     }
     .kanban-column-header {
         display: flex;
@@ -100,24 +136,34 @@
     }
     .kanban-column-header h2 {
       text-align: center;
-      color: #d97428;
-      font-family: 'Georgia', serif;
-      font-size: 1.3em;
+      background: linear-gradient(135deg, #d97428 0%, #e88e3f 50%, #d97428 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      font-family: 'Quicksand', 'Georgia', serif;
+      font-size: 1.4em;
+      font-weight: 700;
       margin: 0;
       flex-grow: 1;
       cursor: pointer;
     }
     .kanban-column-header h2:focus {
-        outline: 1px solid #d97428;
-        border-radius: 4px;
+        outline: 2px solid #d97428;
+        border-radius: 6px;
     }
     .delete-column-btn {
         background: none;
         border: none;
-        color: #a00;
-        font-size: 1.2em;
+        color: #c74444;
+        font-size: 1.3em;
         cursor: pointer;
-        padding: 4px;
+        padding: 4px 8px;
+        border-radius: 6px;
+        transition: all 0.3s ease;
+    }
+    .delete-column-btn:hover {
+        background: rgba(199, 68, 68, 0.1);
+        transform: scale(1.1);
     }
     .kanban-tasks {
       flex: 1;
@@ -145,9 +191,17 @@
       align-items: center;
       justify-content: center;
       text-align: center;
-      font-weight: bold;
+      font-weight: 600;
+      font-family: 'Quicksand', sans-serif;
       position: relative;
       overflow: hidden;
+      transition: all 0.3s ease;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+      animation: fadeInUp 0.5s ease-out;
+    }
+    .kanban-task:hover {
+      transform: scale(1.05) rotate(2deg);
+      box-shadow: 0 12px 30px rgba(0,0,0,0.2);
     }
     .kanban-task:not(:first-child) {
       margin-top: -4.2cm;
@@ -202,20 +256,21 @@
   </style>
 </head>
 <body>
-  <nav class="top-menu">
-    <ul>
-      <li><a href="index.html">The Cluckington Family</a></li>
-      <li><a href="family-members.html">Family Members</a></li>
-      <li><a href="golden-knight.html">The Golden Knight of Chickenopolis</a></li>
-      <li><a href="homework.html" class="active">Homework Kanban</a></li>
-      <li><a href="games.html">Games</a></li>
-      <li><a href="sailing-data-tool.html">Wind Forecaster</a></li>
-      <li><a href="teach-me-anything.html">Teach Me Anything</a></li>
-      <li><a href="chat-with-peep.html">Chat with Sir Peepius</a></li>
-    </ul>
-  </nav>
+    <nav class="top-menu">
+        <ul>
+            <li><a href="index.html">The Cluckington Family</a></li>
+            <li><a href="family-members.html">Family Members</a></li>
+            <li><a href="golden-knight.html">The Golden Knight of Chickenopolis</a></li>
+            <li><a href="homework.html" class="active">Homework Kanban</a></li>
+            <li><a href="games.html">Games</a></li>
+            <li><a href="sailing-data-tool.html">Wind Forecaster</a></li>
+            <li><a href="teach-me-anything.html">Teach Me Anything</a></li>
+            <li><a href="chat-with-peep.html">Chat with Sir Peepius</a></li>
+            <li><a href="bedtime-stories.html">Bedtime Stories</a></li>
+        </ul>
+    </nav>
   <div id="add-column-container" style="text-align: center; padding: 20px 0; background: #f7f6f2;">
-    <button id="add-column-btn" style="background: #5a9a5a; color: #fff; border: none; border-radius: 8px; font-size: 1.1em; padding: 10px 20px; cursor: pointer; transition: background 0.2s;">+ Add Column</button>
+    <button id="add-column-btn" style="background: linear-gradient(135deg, #5a9a5a 0%, #4a8a4a 100%); color: #fff; border: none; border-radius: 12px; font-size: 1.15em; padding: 14px 28px; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 6px 20px rgba(90, 154, 90, 0.3); font-family: 'Quicksand', sans-serif; font-weight: 600;">+ Add Column</button>
     <div id="add-column-form" style="display: none; gap: 8px; justify-content: center;">
       <input type="text" id="new-column-title" placeholder="Enter column name..." style="padding: 8px 12px; border-radius: 5px; border: 1px solid #e6d1a3; font-size: 1em;">
       <button id="save-column-btn" style="background: #5a9a5a; color: #fff; border: none; border-radius: 5px; padding: 8px 16px; cursor: pointer;">Save</button>
