@@ -11,17 +11,59 @@
     posthog.init('phc_sloVEwzIB8ds3BbJpYmgxRj36tofr4gVi4YcMnqikco',{api_host:'https://us.i.posthog.com'})
   </script>
   
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  
   <style>
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    @keyframes float {
+      0%, 100% {
+        transform: translateY(0px);
+      }
+      50% {
+        transform: translateY(-10px);
+      }
+    }
+    
+    @keyframes shimmer {
+      0% {
+        background-position: -1000px 0;
+      }
+      100% {
+        background-position: 1000px 0;
+      }
+    }
+    
+    @keyframes pulse {
+      0%, 100% {
+        transform: scale(1);
+      }
+      50% {
+        transform: scale(1.05);
+      }
+    }
+    
     body {
       margin: 0;
-      font-family: 'Segoe UI', Arial, sans-serif;
-      background: #c2c2c2;
+      font-family: 'Poppins', 'Segoe UI', Arial, sans-serif;
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
       color: #333;
+      overflow-x: hidden;
     }
+    
     .top-menu {
       width: 100%;
-      background: #fffbe7;
-      border-bottom: 2px solid #e6d1a3;
+      background: linear-gradient(to right, #fffdf7, #fff5e1);
+      border-bottom: 3px solid #e6d1a3;
       display: flex;
       justify-content: center;
       align-items: center;
@@ -29,81 +71,134 @@
       position: sticky;
       top: 0;
       z-index: 100;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      backdrop-filter: blur(10px);
     }
+    
     .top-menu ul {
       list-style: none;
       margin: 0;
-      padding: 0;
+      padding: 8px 0;
       display: flex;
-      gap: 24px;
+      gap: 16px;
+      flex-wrap: wrap;
+      justify-content: center;
     }
+    
     .top-menu li {
       display: inline;
     }
+    
     .top-menu a {
       display: inline-block;
-      padding: 12px 28px;
-      font-size: 1.1em;
+      padding: 12px 24px;
+      font-size: 1em;
       color: #fff;
-      background: #d97428;
+      background: linear-gradient(135deg, #d97428 0%, #c96620 100%);
       border: none;
-      border-radius: 8px;
-      font-family: 'Georgia', serif;
-      font-weight: bold;
+      border-radius: 12px;
+      font-family: 'Quicksand', 'Georgia', serif;
+      font-weight: 600;
       text-decoration: none;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.07);
-      transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+      box-shadow: 0 4px 15px rgba(217, 116, 40, 0.3);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       cursor: pointer;
+      position: relative;
+      overflow: hidden;
     }
+    
+    .top-menu a::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+      transition: left 0.5s;
+    }
+    
+    .top-menu a:hover::before {
+      left: 100%;
+    }
+    
     .top-menu a:hover {
-      background: #a85c1a;
+      background: linear-gradient(135deg, #a85c1a 0%, #8a4a15 100%);
       color: #ffe4b3;
       text-decoration: none;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.13);
+      box-shadow: 0 6px 25px rgba(217, 116, 40, 0.4);
+      transform: translateY(-2px);
     }
+    
     .top-menu a.active {
-      background: #fffbe7;
+      background: linear-gradient(135deg, #fffbe7 0%, #fff5d6 100%);
       color: #d97428;
       border: 2px solid #d97428;
       cursor: default;
-      box-shadow: none;
+      box-shadow: 0 4px 15px rgba(217, 116, 40, 0.2);
       pointer-events: none;
     }
+    
     .section {
       width: 100%;
-      background: #fffbe7;
-      padding: 64px 0 48px 0;
+      background: linear-gradient(to bottom, #fffdf7, #fff5e1);
+      padding: 80px 20px 60px 20px;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: flex-start;
       min-height: 100vh;
-      border-bottom: 2px solid #e6d1a3;
+      border-bottom: 3px solid #e6d1a3;
+      animation: fadeInUp 0.8s ease-out;
     }
+    
     .section img {
-      max-width: 80%;
-      max-height: 80vh;
-      border-radius: 20px;
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-      margin-bottom: 32px;
+      max-width: 85%;
+      max-height: 75vh;
+      border-radius: 24px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+      margin-bottom: 40px;
+      transition: transform 0.4s ease, box-shadow 0.4s ease;
+      animation: float 6s ease-in-out infinite;
     }
+    
+    .section img:hover {
+      transform: scale(1.02) translateY(-5px);
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.25);
+    }
+    
     .family-title {
-      font-size: 2.5em;
-      color: #d97428;
-      margin-bottom: 24px;
-      font-family: 'Georgia', serif;
-      font-weight: bold;
-      margin-top: 32px;
+      font-size: 3em;
+      background: linear-gradient(135deg, #d97428 0%, #e88e3f 50%, #d97428 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 32px;
+      font-family: 'Quicksand', 'Georgia', serif;
+      font-weight: 700;
+      margin-top: 40px;
       text-align: center;
+      animation: fadeInUp 1s ease-out 0.2s both;
+      text-shadow: 2px 2px 4px rgba(217, 116, 40, 0.1);
+      letter-spacing: 1px;
     }
+    
     .story {
-      font-size: 1.2em;
-      line-height: 1.7;
-      background: #fffbe7;
-      padding: 22px;
-      border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
-      max-width: 700px;
+      font-size: 1.15em;
+      line-height: 1.8;
+      background: linear-gradient(135deg, #ffffff 0%, #fffef9 100%);
+      padding: 32px;
+      border-radius: 20px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+      max-width: 750px;
+      border: 2px solid #f5ead0;
+      animation: fadeInUp 1s ease-out 0.4s both;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .story:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 15px 50px rgba(0, 0, 0, 0.15);
     }
   </style>
 </head>
@@ -142,15 +237,15 @@
       From that day on, the Cluckingtons became legends in Chickenopolis, proving that with family, friendship, and a
       little bit of cluck, anything is possible!
     </div>
-    <div style="text-align:center; margin: 18px 0;">
-      <button id="autoread-toggle-btn" style="font-size:1.1em; padding: 10px 22px; background: #ffe4b3; color: #7a4a13; border: 1px solid #e6d1a3; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.07); cursor: pointer; font-family: 'Georgia', serif;">🔊 Read Story</button>
+    <div style="text-align:center; margin: 24px 0;">
+      <button id="autoread-toggle-btn" style="font-size:1.15em; padding: 14px 32px; background: linear-gradient(135deg, #ffe4b3 0%, #ffd99e 100%); color: #7a4a13; border: 2px solid #e6d1a3; border-radius: 12px; box-shadow: 0 6px 20px rgba(217, 116, 40, 0.25); cursor: pointer; font-family: 'Quicksand', 'Georgia', serif; font-weight: 600; transition: all 0.3s ease; animation: pulse 2s ease-in-out infinite;">🔊 Read Story</button>
     </div>
   </section>
 
   <!-- Audio Play Button -->
-  <div id="audio-fallback-btn-container" style="text-align:center; margin: 32px 0;">
-    <button id="audio-fallback-btn" style="font-size:1.2em; padding: 12px 28px; background: #ffe4b3; color: #7a4a13; border: none; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.07); cursor: pointer; font-family: 'Georgia', serif;">Play Theme Audio</button>
-    <div style="color:#a00; font-size:0.95em; margin-top:8px;">If you don't hear music, click the button above.</div>
+  <div id="audio-fallback-btn-container" style="text-align:center; margin: 40px 0;">
+    <button id="audio-fallback-btn" style="font-size:1.2em; padding: 16px 36px; background: linear-gradient(135deg, #ffe4b3 0%, #ffd99e 100%); color: #7a4a13; border: 2px solid #e6d1a3; border-radius: 14px; box-shadow: 0 8px 25px rgba(217, 116, 40, 0.3); cursor: pointer; font-family: 'Quicksand', 'Georgia', serif; font-weight: 600; transition: all 0.3s ease;">🎵 Play Theme Audio</button>
+    <div style="color:#c74444; font-size:0.95em; margin-top:12px; font-family: 'Poppins', sans-serif;">If you don't hear music, click the button above.</div>
   </div>
   <!-- Hidden YouTube iframe for audio -->
   <div style="position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden;">
@@ -343,27 +438,30 @@
           position: fixed;
           bottom: 32px;
           right: 32px;
-          width: 340px;
+          width: 360px;
           max-width: 92vw;
-          background: #fffbe7;
-          border: 2px solid #e6d1a3;
-          border-radius: 18px;
-          box-shadow: 0 6px 32px rgba(0,0,0,0.18);
+          background: linear-gradient(135deg, #fffef9 0%, #fff5e1 100%);
+          border: 3px solid #e6d1a3;
+          border-radius: 24px;
+          box-shadow: 0 15px 50px rgba(0,0,0,0.25);
           z-index: 2147483647;
           display: flex;
           flex-direction: column;
-          font-family: 'Segoe UI', Arial, sans-serif;
-          transition: box-shadow 0.2s;
+          font-family: 'Poppins', 'Segoe UI', Arial, sans-serif;
+          transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .chicken-chatbot:hover {
+          box-shadow: 0 20px 60px rgba(0,0,0,0.3);
         }
         .chicken-chatbot.minimized {
-          width: 72px !important;
-          height: 72px !important;
+          width: 80px !important;
+          height: 80px !important;
           min-width: 0 !important;
           min-height: 0 !important;
           overflow: visible !important;
-          background: #fffbe7 !important;
+          background: linear-gradient(135deg, #fffbe7 0%, #ffe4b3 100%) !important;
           border: 4px solid #d97428 !important;
-          box-shadow: none !important;
+          box-shadow: 0 10px 30px rgba(217, 116, 40, 0.4) !important;
           display: flex !important;
           align-items: center !important;
           justify-content: center !important;
@@ -371,124 +469,137 @@
           border-radius: 50% !important;
           cursor: pointer !important;
           z-index: 99999 !important;
+          animation: pulse 2s ease-in-out infinite;
+        }
+        .chicken-chatbot.minimized:hover {
+          transform: scale(1.1);
+          box-shadow: 0 15px 40px rgba(217, 116, 40, 0.5) !important;
         }
         .chicken-chatbot-header {
           display: flex;
           align-items: center;
-          background: #ffe4b3;
-          border-bottom: 1px solid #e6d1a3;
-          border-radius: 16px 16px 0 0;
-          padding: 8px 12px 8px 10px;
-          gap: 10px;
+          background: linear-gradient(135deg, #ffe4b3 0%, #ffd99e 100%);
+          border-bottom: 2px solid #e6d1a3;
+          border-radius: 20px 20px 0 0;
+          padding: 12px 14px 12px 12px;
+          gap: 12px;
         }
         .chicken-face {
-          width: 36px;
-          height: 36px;
+          width: 42px;
+          height: 42px;
           border-radius: 50%;
-          background: #fffbe7;
-          border: 2px solid #d97428;
+          background: linear-gradient(135deg, #fffbe7 0%, #fff5d6 100%);
+          border: 3px solid #d97428;
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 1.7em;
-          margin-right: 2px;
+          font-size: 1.9em;
+          margin-right: 4px;
+          transition: transform 0.3s ease;
+          cursor: pointer;
+        }
+        .chicken-face:hover {
+          transform: rotate(10deg) scale(1.1);
         }
         .chicken-chatbot-title {
-          font-weight: bold;
+          font-weight: 700;
           color: #d97428;
-          font-size: 1.1em;
+          font-size: 1.15em;
           flex: 1;
+          font-family: 'Quicksand', sans-serif;
         }
         .chicken-chatbot-btn {
           background: none;
           border: none;
           color: #d97428;
-          font-size: 1.3em;
+          font-size: 1.4em;
           cursor: pointer;
           margin-left: 4px;
-          transition: color 0.2s;
+          transition: all 0.3s ease;
+          padding: 4px;
+          border-radius: 8px;
         }
         .chicken-chatbot-btn:hover {
           color: #a85c1a;
+          background: rgba(217, 116, 40, 0.1);
+          transform: scale(1.15);
         }
         .chicken-chatbot-body {
-          padding: 16px 14px 12px 14px;
+          padding: 18px 16px 14px 16px;
           flex: 1;
           overflow-y: auto;
-          background: #fffbe7;
-          min-height: 120px;
-          max-height: 260px;
+          background: linear-gradient(to bottom, #fffef9, #fff5e1);
+          min-height: 140px;
+          max-height: 300px;
         }
         .chicken-chatbot-messages {
           display: flex;
           flex-direction: column;
-          gap: 10px;
+          gap: 12px;
         }
         .chicken-chatbot-message {
-          background: #ffe4b3;
-          border-radius: 10px;
-          padding: 8px 12px;
-          max-width: 80%;
-          font-size: 1em;
+          border-radius: 16px;
+          padding: 10px 14px;
+          max-width: 82%;
+          font-size: 0.95em;
           word-break: break-word;
+          animation: fadeInUp 0.3s ease-out;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+          transition: transform 0.2s ease;
+        }
+        .chicken-chatbot-message:hover {
+          transform: translateX(3px);
         }
         .chicken-chatbot-message.user {
           align-self: flex-end;
-          background: #d97428;
+          background: linear-gradient(135deg, #d97428 0%, #c96620 100%);
           color: #fffbe7;
         }
         .chicken-chatbot-message.bot {
           align-self: flex-start;
-          background: #fffbe7;
+          background: linear-gradient(135deg, #ffffff 0%, #fffef9 100%);
           color: #a85c1a;
-          border: 1px solid #e6d1a3;
+          border: 2px solid #e6d1a3;
         }
         .chicken-chatbot-footer {
           display: flex;
           align-items: center;
-          padding: 10px 12px 12px 12px;
-          border-radius: 0 0 16px 16px;
-          background: #fffbe7;
-          border-top: 1px solid #e6d1a3;
+          padding: 12px 14px 14px 14px;
+          border-radius: 0 0 20px 20px;
+          background: linear-gradient(to bottom, #fff5e1, #fffbe7);
+          border-top: 2px solid #e6d1a3;
         }
         .chicken-chatbot-input {
           flex: 1;
-          padding: 7px 12px;
-          border-radius: 8px;
-          border: 1px solid #e6d1a3;
+          padding: 10px 14px;
+          border-radius: 12px;
+          border: 2px solid #e6d1a3;
           font-size: 1em;
           outline: none;
+          font-family: 'Poppins', sans-serif;
+          transition: all 0.3s ease;
+        }
+        .chicken-chatbot-input:focus {
+          border-color: #d97428;
+          box-shadow: 0 0 0 3px rgba(217, 116, 40, 0.1);
         }
         .chicken-chatbot-send-btn {
-          background: #d97428;
+          background: linear-gradient(135deg, #d97428 0%, #c96620 100%);
           color: #fffbe7;
           border: none;
-          border-radius: 8px;
+          border-radius: 12px;
           font-size: 1.1em;
-          padding: 7px 16px;
-          margin-left: 8px;
+          padding: 10px 18px;
+          margin-left: 10px;
           cursor: pointer;
-          transition: background 0.2s;
+          transition: all 0.3s ease;
+          box-shadow: 0 4px 12px rgba(217, 116, 40, 0.3);
+          font-weight: 600;
         }
         .chicken-chatbot-send-btn:hover {
-          background: #a85c1a;
-        }
-        .chicken-chatbot.minimized {
-          width: 72px !important;
-          height: 72px !important;
-          min-width: 0 !important;
-          min-height: 0 !important;
-          overflow: visible !important;
-          background: #fffbe7 !important;
-          border: 4px solid #d97428 !important;
-          box-shadow: none !important;
-          display: flex !important;
-          align-items: center !important;
-          justify-content: center !important;
-          padding: 0 !important;
-          border-radius: 50% !important;
-          cursor: pointer !important;
-          z-index: 99999 !important;
+          background: linear-gradient(135deg, #a85c1a 0%, #8a4a15 100%);
+          transform: translateY(-2px);
+          box-shadow: 0 6px 16px rgba(217, 116, 40, 0.4);
         }
         .chicken-chatbot.minimized .chicken-chatbot-header {
           border-radius: 50%;
@@ -496,8 +607,8 @@
           border: none;
           padding: 0;
           justify-content: center;
-          width: 72px;
-          height: 72px;
+          width: 80px;
+          height: 80px;
           align-items: center;
           display: flex;
           visibility: visible !important;
@@ -505,9 +616,9 @@
         }
         .chicken-chatbot.minimized .chicken-face {
           margin: 0;
-          width: 54px;
-          height: 54px;
-          font-size: 2.7em;
+          width: 60px;
+          height: 60px;
+          font-size: 3em;
           border: none;
           background: transparent;
           display: flex;
@@ -693,6 +804,19 @@
       });
     })();
     // --- End Chicken Chatbot ---
+    
+    // --- Enhanced Button Hover Effects ---
+    document.addEventListener('DOMContentLoaded', function() {
+      const buttons = document.querySelectorAll('button');
+      buttons.forEach(btn => {
+        btn.addEventListener('mouseenter', function() {
+          this.style.transform = 'translateY(-2px) scale(1.02)';
+        });
+        btn.addEventListener('mouseleave', function() {
+          this.style.transform = 'translateY(0) scale(1)';
+        });
+      });
+    });
   </script>
 </body>
 </html>
