@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bedtime Story API Test</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        
+        button {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        button:hover {
+            transform: scale(1.02);
+        }
+        
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        #result {
+            margin-top: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            white-space: pre-wrap;
+            line-height: 1.6;
+            display: none;
+        }
+        
+        .error {
+            background: rgba(255, 0, 0, 0.2);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        
+        .success {
+            background: rgba(0, 255, 0, 0.2);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌙 Bedtime Story API Test</h1>
+        
+        <div class="form-group">
+            <label for="apiUrl">API URL:</label>
+            <input type="text" id="apiUrl" value="http://localhost:3000/api/generate-story" placeholder="http://localhost:3000/api/generate-story">
+        </div>
+        
+        <div class="form-group">
+            <label for="apiKey">API Key:</label>
+            <input type="text" id="apiKey" placeholder="bs_your_api_key_here">
+        </div>
+        
+        <div class="form-group">
+            <label for="childName">Child's Name:</label>
+            <input type="text" id="childName" placeholder="Emma" value="Emma">
+        </div>
+        
+        <div class="form-group">
+            <label for="theme">Story Theme:</label>
+            <input type="text" id="theme" placeholder="Space Adventure" value="Space Adventure">
+        </div>
+        
+        <div class="form-group">
+            <label for="length">Story Length:</label>
+            <select id="length">
+                <option value="short">Short (2-3 minutes)</option>
+                <option value="medium" selected>Medium (5-7 minutes)</option>
+                <option value="long">Long (10-15 minutes)</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="moral">Moral/Lesson:</label>
+            <input type="text" id="moral" placeholder="Courage and curiosity" value="Courage and curiosity">
+        </div>
+        
+        <button id="generateBtn" onclick="testAPI()">Generate Story</button>
+        
+        <div id="result"></div>
+    </div>
+    
+    <script>
+        async function testAPI() {
+            const resultDiv = document.getElementById('result');
+            const generateBtn = document.getElementById('generateBtn');
+            
+            // Get values
+            const apiUrl = document.getElementById('apiUrl').value;
+            const apiKey = document.getElementById('apiKey').value;
+            const childName = document.getElementById('childName').value;
+            const theme = document.getElementById('theme').value;
+            const length = document.getElementById('length').value;
+            const moral = document.getElementById('moral').value;
+            
+            // Validation
+            if (!apiKey) {
+                resultDiv.innerHTML = '<div class="error">❌ Please enter your API key</div>';
+                resultDiv.style.display = 'block';
+                return;
+            }
+            
+            if (!childName || !theme || !moral) {
+                resultDiv.innerHTML = '<div class="error">❌ Please fill in all fields</div>';
+                resultDiv.style.display = 'block';
+                return;
+            }
+            
+            // Show loading
+            resultDiv.innerHTML = '<div class="loading">⏳ Generating your bedtime story...</div>';
+            resultDiv.style.display = 'block';
+            generateBtn.disabled = true;
+            
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-API-Key': apiKey
+                    },
+                    body: JSON.stringify({
+                        childName,
+                        theme,
+                        length,
+                        moral
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    resultDiv.innerHTML = `
+                        <div class="success">✅ Story generated successfully!</div>
+                        <h2>📖 Your Bedtime Story:</h2>
+                        <div style="margin-top: 20px; font-size: 16px; line-height: 1.8;">
+                            ${data.story}
+                        </div>
+                        <div style="margin-top: 20px; font-size: 14px; opacity: 0.8;">
+                            Generated at: ${new Date(data.metadata.generatedAt).toLocaleString()}
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="error">
+                            ❌ Error: ${data.error || 'Unknown error'}<br>
+                            ${data.message || ''}
+                        </div>
+                    `;
+                }
+                
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        ❌ Network Error: ${error.message}<br>
+                        Make sure the API server is running at ${apiUrl}
+                    </div>
+                `;
+            } finally {
+                generateBtn.disabled = false;
+            }
+        }
+        
+        // Allow Enter key to submit
+        document.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                testAPI();
+            }
+        });
+    </script>
+</body>
+</html>

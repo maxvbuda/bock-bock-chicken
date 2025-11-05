@@ -1,0 +1,21 @@
+{
+  "name": "bedtime-story-api",
+  "version": "1.0.0",
+  "description": "Secure API for Bedtime Story Generator",
+  "main": "bedtime-story-api.js",
+  "type": "module",
+  "scripts": {
+    "start": "node bedtime-story-api.js",
+    "dev": "node --watch bedtime-story-api.js"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.17.1",
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "uuid": "^9.0.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
