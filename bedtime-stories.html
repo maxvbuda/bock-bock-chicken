@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="dark">
     <title>Bedtime Story Generator</title>
     
     <!-- PostHog Analytics -->
@@ -503,6 +504,11 @@
     </div>
     
     <script>
+        // Force blue background to stay
+        document.documentElement.style.background = 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)';
+        document.body.style.background = 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)';
+        document.body.style.backgroundAttachment = 'fixed';
+        
         // Create starry background
         function createStars() {
             const starsContainer = document.getElementById('stars');
