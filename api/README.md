@@ -220,16 +220,57 @@ async function generateBedtimeStory() {
 - Rate limit window: 60 seconds
 - Exceeding the limit returns a 429 status code
 
-## Deployment
+## Deployment to Render
 
-For production deployment:
+### Quick Deploy (Recommended)
 
-1. Use environment variables for all secrets
-2. Deploy to a service like Vercel, Railway, or Render
-3. Enable HTTPS
-4. Consider using Redis for rate limiting
-5. Use a database to store API keys and usage data
-6. Set up monitoring and logging
+1. **Push to GitHub:**
+   ```bash
+   git add .
+   git commit -m "Prepare for Render deployment"
+   git push origin main
+   ```
+
+2. **Deploy on Render:**
+   - Go to [render.com](https://render.com) and sign up/login
+   - Click "New +" → "Web Service"
+   - Connect your GitHub account
+   - Select your `bock-bock-chicken` repository
+   - Configure:
+     - **Root Directory:** `api`
+     - **Build Command:** `npm install`
+     - **Start Command:** `node bedtime-story-api.js`
+   
+3. **Add Environment Variables:**
+   In Render dashboard, add these environment variables:
+   - `GEMINI_API_KEY` = `AIzaSyBUJHf2-U3NQyVWfZEAAmtYvRcTUKI2GbY`
+   - `BEDTIME_STORY_API_KEY` = `bs_11afe5bbc0142701392a9a5b71c559072923c68fbf2f3000`
+   - `MASTER_API_KEY` = `master_780f1dd43edf00f354c3b8d26c5f1ed36971a74410b40f6c6319558d057d869b`
+   - `NODE_ENV` = `production`
+
+4. **Deploy!** 
+   - Click "Create Web Service"
+   - Wait 2-3 minutes for deployment
+   - Your API will be live at: `https://your-service-name.onrender.com`
+
+### Alternative: Blueprint Deploy
+
+The included `render.yaml` file allows one-click deployment:
+1. Go to [render.com/deploy](https://render.com/deploy)
+2. Enter your repository URL
+3. Add environment variables
+4. Click "Apply"
+
+### After Deployment
+
+Your API will be available at:
+```
+https://bedtime-story-api.onrender.com/api/health
+```
+
+Update your frontend to use this URL instead of `localhost:3000`!
+
+**Note:** Free tier spins down after 15 minutes of inactivity. First request after inactivity may take 30-60 seconds.
 
 ## License
 

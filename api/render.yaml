@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: bedtime-story-api
+    env: node
+    region: oregon
+    plan: free
+    buildCommand: npm install
+    startCommand: node bedtime-story-api.js
+    envVars:
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: BEDTIME_STORY_API_KEY
+        sync: false
+      - key: MASTER_API_KEY
+        sync: false
+      - key: NODE_ENV
+        value: production
