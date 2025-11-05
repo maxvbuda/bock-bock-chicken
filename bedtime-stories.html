@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bedtime Story Generator</title>
+    
+    <!-- PostHog Analytics -->
+    <script>
+        !function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.async=!0,p.src=s.api_host+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="capture identify alias people.set people.set_once set_config register register_once unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled onFeatureFlags getFeatureFlag getFeatureFlagPayload reloadFeatureFlags group updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures getActiveMatchingSurveys getSurveys onSessionId".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
+        posthog.init('phc_sloVEwzIB8ds3BbJpYmgxRj36tofr4gVi4YcMnqikco',{api_host:'https://us.i.posthog.com'})
+    </script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        @keyframes twinkle {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+        
+        body {
+            margin: 0;
+            font-family: 'Poppins', 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            color: #fff;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+        
+        .stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        .star {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle 3s ease-in-out infinite;
+        }
+        
+        .top-menu {
+            width: 100%;
+            background: linear-gradient(to right, rgba(255, 253, 247, 0.95), rgba(255, 245, 225, 0.95));
+            border-bottom: 3px solid #e6d1a3;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+        }
+        
+        .top-menu ul {
+            list-style: none;
+            margin: 0;
+            padding: 8px 0;
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .top-menu li {
+            display: inline;
+        }
+        
+        .top-menu a {
+            display: inline-block;
+            padding: 12px 24px;
+            font-size: 1em;
+            color: #fff;
+            background: linear-gradient(135deg, #d97428 0%, #c96620 100%);
+            border: none;
+            border-radius: 12px;
+            font-family: 'Quicksand', 'Georgia', serif;
+            font-weight: 600;
+            text-decoration: none;
+            box-shadow: 0 4px 15px rgba(217, 116, 40, 0.3);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .top-menu a::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.5s;
+        }
+        
+        .top-menu a:hover::before {
+            left: 100%;
+        }
+        
+        .top-menu a:hover {
+            background: linear-gradient(135deg, #a85c1a 0%, #8a4a15 100%);
+            color: #ffe4b3;
+            box-shadow: 0 6px 25px rgba(217, 116, 40, 0.4);
+            transform: translateY(-2px);
+        }
+        
+        .top-menu a.active {
+            background: linear-gradient(135deg, #fffbe7 0%, #fff5d6 100%);
+            color: #d97428;
+            border: 2px solid #d97428;
+            cursor: default;
+            box-shadow: 0 4px 15px rgba(217, 116, 40, 0.2);
+            pointer-events: none;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 60px 20px;
+            position: relative;
+            z-index: 1;
+            animation: fadeInUp 0.8s ease-out;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+        
+        .moon {
+            font-size: 80px;
+            margin-bottom: 20px;
+            animation: float 4s ease-in-out infinite;
+        }
+        
+        .title {
+            font-size: 3.5em;
+            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 50%, #ffd700 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-family: 'Quicksand', 'Georgia', serif;
+            font-weight: 700;
+            margin-bottom: 15px;
+            text-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
+        }
+        
+        .subtitle {
+            font-size: 1.3em;
+            color: #b8d4ff;
+            font-family: 'Poppins', sans-serif;
+            margin-bottom: 10px;
+        }
+        
+        .input-section {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+            border-radius: 24px;
+            padding: 40px;
+            margin-bottom: 30px;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+        
+        .input-group {
+            margin-bottom: 25px;
+        }
+        
+        .input-group label {
+            display: block;
+            font-size: 1.1em;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #ffd700;
+            font-family: 'Quicksand', sans-serif;
+        }
+        
+        .input-group input,
+        .input-group select {
+            width: 100%;
+            padding: 14px 18px;
+            font-size: 1.05em;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            font-family: 'Poppins', sans-serif;
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+        }
+        
+        .input-group input:focus,
+        .input-group select:focus {
+            outline: none;
+            border-color: #ffd700;
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+        }
+        
+        .input-group select option {
+            background: #1a1a2e;
+            color: #fff;
+        }
+        
+        .quick-themes {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 12px;
+        }
+        
+        .theme-btn {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, rgba(217, 116, 40, 0.6) 0%, rgba(201, 102, 32, 0.6) 100%);
+            border: 2px solid rgba(217, 116, 40, 0.5);
+            border-radius: 10px;
+            color: #fff;
+            font-size: 0.95em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Quicksand', sans-serif;
+            font-weight: 600;
+        }
+        
+        .theme-btn:hover {
+            background: linear-gradient(135deg, #d97428 0%, #c96620 100%);
+            border-color: #d97428;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(217, 116, 40, 0.4);
+        }
+        
+        .generate-btn {
+            width: 100%;
+            padding: 18px 40px;
+            font-size: 1.3em;
+            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+            color: #1a1a2e;
+            border: none;
+            border-radius: 16px;
+            font-family: 'Quicksand', sans-serif;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 30px rgba(255, 215, 0, 0.4);
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        .generate-btn:hover {
+            background: linear-gradient(135deg, #ffed4e 0%, #ffd700 100%);
+            transform: translateY(-3px);
+            box-shadow: 0 12px 40px rgba(255, 215, 0, 0.6);
+        }
+        
+        .generate-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            animation: none;
+        }
+        
+        .story-section {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.08) 100%);
+            border-radius: 24px;
+            padding: 40px;
+            margin-bottom: 30px;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            display: none;
+            animation: fadeInUp 0.8s ease-out;
+        }
+        
+        .story-section.active {
+            display: block;
+        }
+        
+        .story-title {
+            font-size: 2em;
+            color: #ffd700;
+            font-family: 'Quicksand', sans-serif;
+            font-weight: 700;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+        
+        .story-content {
+            font-size: 1.2em;
+            line-height: 2;
+            color: #e8f4ff;
+            font-family: 'Poppins', sans-serif;
+            white-space: pre-wrap;
+        }
+        
+        .story-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .action-btn {
+            flex: 1;
+            min-width: 150px;
+            padding: 14px 28px;
+            font-size: 1.1em;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            font-family: 'Quicksand', sans-serif;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .action-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: #ffd700;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 215, 0, 0.3);
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            font-size: 1.3em;
+            color: #ffd700;
+        }
+        
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-top: 4px solid #ffd700;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        @media (max-width: 768px) {
+            .title {
+                font-size: 2.5em;
+            }
+            .input-section {
+                padding: 25px;
+            }
+            .story-section {
+                padding: 25px;
+            }
+            .story-content {
+                font-size: 1.1em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="stars" id="stars"></div>
+    
+    <nav class="top-menu">
+        <ul>
+            <li><a href="index.html">The Cluckington Family</a></li>
+            <li><a href="family-members.html">Family Members</a></li>
+            <li><a href="golden-knight.html">The Golden Knight of Chickenopolis</a></li>
+            <li><a href="homework.html">Homework Kanban</a></li>
+            <li><a href="games.html">Games</a></li>
+            <li><a href="sailing-data-tool.html">Wind Forecaster</a></li>
+            <li><a href="teach-me-anything.html">Teach Me Anything</a></li>
+            <li><a href="chat-with-peep.html">Chat with Sir Peepius</a></li>
+            <li><a href="bedtime-stories.html" class="active">Bedtime Stories</a></li>
+        </ul>
+    </nav>
+    
+    <div class="container">
+        <div class="header">
+            <div class="moon">🌙</div>
+            <h1 class="title">Bedtime Story Generator</h1>
+            <p class="subtitle">Create magical tales from Chickenopolis for sweet dreams</p>
+        </div>
+        
+        <div class="input-section">
+            <div class="input-group">
+                <label for="child-name">Child's Name (optional)</label>
+                <input type="text" id="child-name" placeholder="e.g., Emma, Liam, or leave blank">
+            </div>
+            
+            <div class="input-group">
+                <label for="story-theme">Story Theme</label>
+                <input type="text" id="story-theme" placeholder="e.g., brave knight, magical forest, space adventure">
+                <div class="quick-themes">
+                    <button class="theme-btn" onclick="setTheme('brave knight rescuing the kingdom')">🛡️ Brave Knight</button>
+                    <button class="theme-btn" onclick="setTheme('magical forest adventure')">🌲 Magical Forest</button>
+                    <button class="theme-btn" onclick="setTheme('space exploration')">🚀 Space Adventure</button>
+                    <button class="theme-btn" onclick="setTheme('underwater treasure hunt')">🌊 Ocean Quest</button>
+                    <button class="theme-btn" onclick="setTheme('friendly dragons and castles')">🐉 Dragons</button>
+                </div>
+            </div>
+            
+            <div class="input-group">
+                <label for="story-length">Story Length</label>
+                <select id="story-length">
+                    <option value="short">Short (2-3 minutes)</option>
+                    <option value="medium" selected>Medium (4-5 minutes)</option>
+                    <option value="long">Long (6-8 minutes)</option>
+                </select>
+            </div>
+            
+            <div class="input-group">
+                <label for="moral">Include a Moral/Lesson? (optional)</label>
+                <input type="text" id="moral" placeholder="e.g., kindness, bravery, friendship">
+            </div>
+            
+            <button class="generate-btn" id="generate-btn" onclick="generateStory()">✨ Generate Bedtime Story</button>
+        </div>
+        
+        <div class="story-section" id="story-section">
+            <h2 class="story-title" id="story-title">Your Bedtime Story</h2>
+            <div class="story-content" id="story-content"></div>
+            <div class="story-actions">
+                <button class="action-btn" onclick="readStory()">🔊 Read Aloud</button>
+                <button class="action-btn" onclick="stopReading()">⏹️ Stop Reading</button>
+                <button class="action-btn" onclick="newStory()">🔄 New Story</button>
+                <button class="action-btn" onclick="saveStory()">💾 Save Story</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Create starry background
+        function createStars() {
+            const starsContainer = document.getElementById('stars');
+            for (let i = 0; i < 150; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                star.style.animationDelay = Math.random() * 3 + 's';
+                starsContainer.appendChild(star);
+            }
+        }
+        createStars();
+        
+        let currentUtterance = null;
+        let currentStory = '';
+        
+        function setTheme(theme) {
+            document.getElementById('story-theme').value = theme;
+        }
+        
+        async function generateStory() {
+            const childName = document.getElementById('child-name').value.trim();
+            const theme = document.getElementById('story-theme').value.trim();
+            const length = document.getElementById('story-length').value;
+            const moral = document.getElementById('moral').value.trim();
+            
+            if (!theme) {
+                alert('Please enter a story theme!');
+                return;
+            }
+            
+            const generateBtn = document.getElementById('generate-btn');
+            const storySection = document.getElementById('story-section');
+            const storyContent = document.getElementById('story-content');
+            
+            // Show loading
+            generateBtn.disabled = true;
+            generateBtn.textContent = 'Creating your story...';
+            storySection.classList.add('active');
+            storyContent.innerHTML = '<div class="loading"><div class="spinner"></div>Weaving a magical tale from Chickenopolis...</div>';
+            
+            // Determine word count based on length
+            let wordCount;
+            if (length === 'short') wordCount = '200-300';
+            else if (length === 'long') wordCount = '500-700';
+            else wordCount = '350-450';
+            
+            // Build prompt
+            let prompt = `Write a gentle, calming bedtime story suitable for children aged 4-8. `;
+            
+            if (childName) {
+                prompt += `The main character should be named ${childName}. `;
+            } else {
+                prompt += `The main character should be a brave young chicken from Chickenopolis. `;
+            }
+            
+            prompt += `The story theme is: ${theme}. `;
+            prompt += `The story should be ${wordCount} words long. `;
+            
+            if (moral) {
+                prompt += `Include a gentle lesson about ${moral}. `;
+            }
+            
+            prompt += `The story should be:
+- Calming and peaceful, perfect for bedtime
+- Use gentle, soothing language
+- Have a happy, comforting ending
+- Include vivid but peaceful imagery
+- Be appropriate for young children
+- Set in the magical world of Chickenopolis with chicken characters
+- Include elements of wonder and gentle adventure
+
+Format the story with clear paragraphs. Make it enchanting and help children drift off to sleep with pleasant dreams.`;
+            
+            try {
+                const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=AIzaSyBUJHf2-U3NQyVWfZEAAmtYvRcTUKI2GbY', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        contents: [{
+                            parts: [{
+                                text: prompt
+                            }]
+                        }],
+                        generationConfig: {
+                            temperature: 0.9,
+                            topK: 40,
+                            topP: 0.95,
+                            maxOutputTokens: 2048,
+                        }
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.candidates && data.candidates[0] && data.candidates[0].content) {
+                    currentStory = data.candidates[0].content.parts[0].text;
+                    storyContent.textContent = currentStory;
+                    
+                    // Auto-read if it's evening/night
+                    const hour = new Date().getHours();
+                    if (hour >= 18 || hour <= 6) {
+                        setTimeout(() => readStory(), 1000);
+                    }
+                } else {
+                    throw new Error('Invalid response from API');
+                }
+            } catch (error) {
+                console.error('Error generating story:', error);
+                storyContent.innerHTML = '<p style="color: #ff6b6b;">Oops! Something went wrong while creating your story. Please try again.</p>';
+            } finally {
+                generateBtn.disabled = false;
+                generateBtn.textContent = '✨ Generate Bedtime Story';
+            }
+        }
+        
+        function readStory() {
+            if (!currentStory) return;
+            
+            stopReading();
+            
+            if (!('speechSynthesis' in window)) {
+                alert('Sorry, your browser doesn\'t support text-to-speech.');
+                return;
+            }
+            
+            currentUtterance = new SpeechSynthesisUtterance(currentStory);
+            currentUtterance.rate = 0.85; // Slower for bedtime
+            currentUtterance.pitch = 1.0;
+            currentUtterance.volume = 0.8; // Slightly quieter
+            
+            // Try to use a soothing voice
+            const voices = window.speechSynthesis.getVoices();
+            const preferredVoice = voices.find(v => v.name.includes('Female') || v.name.includes('Samantha'));
+            if (preferredVoice) {
+                currentUtterance.voice = preferredVoice;
+            }
+            
+            window.speechSynthesis.speak(currentUtterance);
+        }
+        
+        function stopReading() {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+            }
+            currentUtterance = null;
+        }
+        
+        function newStory() {
+            stopReading();
+            document.getElementById('story-section').classList.remove('active');
+            document.getElementById('child-name').value = '';
+            document.getElementById('story-theme').value = '';
+            document.getElementById('moral').value = '';
+            currentStory = '';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        
+        function saveStory() {
+            if (!currentStory) return;
+            
+            const childName = document.getElementById('child-name').value.trim() || 'Story';
+            const blob = new Blob([currentStory], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${childName}_Bedtime_Story.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+        
+        // Load voices when available
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.onvoiceschanged = () => {
+                window.speechSynthesis.getVoices();
+            };
+        }
+        
+        // Allow Enter key to generate story
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !document.getElementById('generate-btn').disabled) {
+                if (document.activeElement.id !== 'story-content') {
+                    generateStory();
+                }
+            }
+        });
+    </script>
+</body>
+</html>
