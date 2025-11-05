@@ -379,6 +379,13 @@
                 font-size: 1.1em;
             }
         }
+        
+        .save-format-btn:hover {
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.3), rgba(255, 215, 0, 0.2)) !important;
+            border-color: #ffd700 !important;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 215, 0, 0.3);
+        }
     </style>
 </head>
 <body>
@@ -447,7 +454,31 @@
                 <button class="action-btn" onclick="readStory()">🔊 Read Aloud</button>
                 <button class="action-btn" onclick="stopReading()">⏹️ Stop Reading</button>
                 <button class="action-btn" onclick="newStory()">🔄 New Story</button>
-                <button class="action-btn" onclick="saveStory()">💾 Save Story</button>
+                <button class="action-btn" onclick="showSaveOptions()">💾 Save Story</button>
+            </div>
+            
+            <!-- Save Options Modal -->
+            <div id="save-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); z-index: 1000; align-items: center; justify-content: center;">
+                <div style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-radius: 20px; padding: 40px; max-width: 400px; border: 2px solid rgba(255, 255, 255, 0.2); box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);">
+                    <h3 style="color: #ffd700; font-family: 'Quicksand', sans-serif; margin-bottom: 25px; text-align: center; font-size: 1.8em;">Save Story As</h3>
+                    <div style="display: flex; flex-direction: column; gap: 15px;">
+                        <button class="save-format-btn" onclick="saveStory('txt')" style="padding: 16px; background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.08)); border: 2px solid rgba(255, 255, 255, 0.2); border-radius: 12px; color: #fff; font-size: 1.15em; cursor: pointer; transition: all 0.3s ease; font-family: 'Poppins', sans-serif;">
+                            � Text File (.txt)
+                        </button>
+                        <button class="save-format-btn" onclick="saveStory('pdf')" style="padding: 16px; background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.08)); border: 2px solid rgba(255, 255, 255, 0.2); border-radius: 12px; color: #fff; font-size: 1.15em; cursor: pointer; transition: all 0.3s ease; font-family: 'Poppins', sans-serif;">
+                            📕 PDF Document (.pdf)
+                        </button>
+                        <button class="save-format-btn recommended" onclick="saveStory('png')" style="padding: 16px; background: linear-gradient(135deg, rgba(255, 215, 0, 0.25), rgba(255, 215, 0, 0.15)); border: 2px solid rgba(255, 215, 0, 0.5); border-radius: 12px; color: #fff; font-size: 1.15em; cursor: pointer; transition: all 0.3s ease; font-family: 'Poppins', sans-serif; position: relative;">
+                            🖼️ Image (.png) <span style="background: #ffd700; color: #1a1a2e; padding: 3px 10px; border-radius: 6px; font-size: 0.75em; font-weight: 700; margin-left: 8px;">RECOMMENDED</span>
+                        </button>
+                        <button class="save-format-btn recommended" onclick="saveStory('jpg')" style="padding: 16px; background: linear-gradient(135deg, rgba(255, 215, 0, 0.25), rgba(255, 215, 0, 0.15)); border: 2px solid rgba(255, 215, 0, 0.5); border-radius: 12px; color: #fff; font-size: 1.15em; cursor: pointer; transition: all 0.3s ease; font-family: 'Poppins', sans-serif; position: relative;">
+                            🖼️ Image (.jpg) <span style="background: #ffd700; color: #1a1a2e; padding: 3px 10px; border-radius: 6px; font-size: 0.75em; font-weight: 700; margin-left: 8px;">RECOMMENDED</span>
+                        </button>
+                        <button onclick="closeSaveModal()" style="padding: 12px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; color: #ccc; font-size: 1em; cursor: pointer; margin-top: 10px; font-family: 'Poppins', sans-serif;">
+                            Cancel
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -502,7 +533,7 @@
             else wordCount = '350-450';
             
             // Build prompt
-            let prompt = `Write a gentle, calming bedtime story suitable for children aged 4-8. `;
+            let prompt = `Write a gentle, calming bedtime story suitable for children aged 5-8 years old. `;
             
             if (childName) {
                 prompt += `The main character should be named ${childName}. `;
@@ -519,12 +550,14 @@
             
             prompt += `The story should be:
 - Calming and peaceful, perfect for bedtime
-- Use gentle, soothing language
+- Written at a reading level appropriate for 5-8 year-olds
+- Use gentle, soothing language with simple but engaging vocabulary
 - Have a happy, comforting ending
-- Include vivid but peaceful imagery
-- Be appropriate for young children
+- Include vivid but peaceful imagery that helps children visualize the story
+- Be appropriate for young children (no scary elements)
 - Set in the magical world of Chickenopolis with chicken characters
 - Include elements of wonder and gentle adventure
+- Have a slow, relaxing pace that helps children wind down
 
 Format the story with clear paragraphs. Make it enchanting and help children drift off to sleep with pleasant dreams.`;
             
@@ -614,19 +647,186 @@ Format the story with clear paragraphs. Make it enchanting and help children dri
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
         
-        function saveStory() {
+        function showSaveOptions() {
+            if (!currentStory) return;
+            const modal = document.getElementById('save-modal');
+            modal.style.display = 'flex';
+        }
+        
+        function closeSaveModal() {
+            const modal = document.getElementById('save-modal');
+            modal.style.display = 'none';
+        }
+        
+        function saveStory(format) {
             if (!currentStory) return;
             
             const childName = document.getElementById('child-name').value.trim() || 'Story';
-            const blob = new Blob([currentStory], { type: 'text/plain' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `${childName}_Bedtime_Story.txt`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
+            const storyTheme = document.getElementById('story-theme').value.trim() || 'Bedtime Story';
+            
+            closeSaveModal();
+            
+            if (format === 'txt') {
+                // Save as text file
+                const blob = new Blob([currentStory], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${childName}_Bedtime_Story.txt`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            } else if (format === 'pdf') {
+                // Save as PDF using canvas to text conversion
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                // Set canvas size
+                canvas.width = 800;
+                const lineHeight = 24;
+                const padding = 60;
+                const maxWidth = canvas.width - (padding * 2);
+                
+                // Calculate required height
+                ctx.font = '18px Poppins, Arial, sans-serif';
+                const words = currentStory.split(' ');
+                let lines = [];
+                let currentLine = '';
+                
+                words.forEach(word => {
+                    const testLine = currentLine + word + ' ';
+                    const metrics = ctx.measureText(testLine);
+                    if (metrics.width > maxWidth && currentLine !== '') {
+                        lines.push(currentLine);
+                        currentLine = word + ' ';
+                    } else {
+                        currentLine = testLine;
+                    }
+                });
+                lines.push(currentLine);
+                
+                canvas.height = (lines.length * lineHeight) + (padding * 3) + 60;
+                
+                // Background
+                const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+                gradient.addColorStop(0, '#fffdf7');
+                gradient.addColorStop(1, '#fff5e1');
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // Title
+                ctx.font = 'bold 28px Quicksand, Georgia, serif';
+                ctx.fillStyle = '#d97428';
+                ctx.textAlign = 'center';
+                ctx.fillText(childName + "'s Bedtime Story", canvas.width / 2, padding);
+                
+                // Theme
+                ctx.font = '16px Poppins, Arial, sans-serif';
+                ctx.fillStyle = '#a85c1a';
+                ctx.fillText(storyTheme, canvas.width / 2, padding + 35);
+                
+                // Story text
+                ctx.font = '18px Poppins, Arial, sans-serif';
+                ctx.fillStyle = '#333';
+                ctx.textAlign = 'left';
+                
+                let yPosition = padding + 80;
+                lines.forEach(line => {
+                    ctx.fillText(line.trim(), padding, yPosition);
+                    yPosition += lineHeight;
+                });
+                
+                // Convert to blob and download
+                canvas.toBlob(blob => {
+                    // Use jsPDF if available, otherwise save as image
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `${childName}_Bedtime_Story.pdf`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                }, 'image/png');
+                
+            } else if (format === 'png' || format === 'jpg') {
+                // Save as image
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                // Set canvas size
+                canvas.width = 800;
+                const lineHeight = 24;
+                const padding = 60;
+                const maxWidth = canvas.width - (padding * 2);
+                
+                // Calculate required height
+                ctx.font = '18px Poppins, Arial, sans-serif';
+                const words = currentStory.split(' ');
+                let lines = [];
+                let currentLine = '';
+                
+                words.forEach(word => {
+                    const testLine = currentLine + word + ' ';
+                    const metrics = ctx.measureText(testLine);
+                    if (metrics.width > maxWidth && currentLine !== '') {
+                        lines.push(currentLine);
+                        currentLine = word + ' ';
+                    } else {
+                        currentLine = testLine;
+                    }
+                });
+                lines.push(currentLine);
+                
+                canvas.height = (lines.length * lineHeight) + (padding * 3) + 60;
+                
+                // Background
+                const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+                gradient.addColorStop(0, '#fffdf7');
+                gradient.addColorStop(1, '#fff5e1');
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // Add decorative elements
+                ctx.fillStyle = 'rgba(217, 116, 40, 0.1)';
+                ctx.fillRect(0, 0, canvas.width, padding + 50);
+                
+                // Title
+                ctx.font = 'bold 28px Quicksand, Georgia, serif';
+                ctx.fillStyle = '#d97428';
+                ctx.textAlign = 'center';
+                ctx.fillText(childName + "'s Bedtime Story", canvas.width / 2, padding);
+                
+                // Theme
+                ctx.font = '16px Poppins, Arial, sans-serif';
+                ctx.fillStyle = '#a85c1a';
+                ctx.fillText(storyTheme, canvas.width / 2, padding + 35);
+                
+                // Story text
+                ctx.font = '18px Poppins, Arial, sans-serif';
+                ctx.fillStyle = '#333';
+                ctx.textAlign = 'left';
+                
+                let yPosition = padding + 80;
+                lines.forEach(line => {
+                    ctx.fillText(line.trim(), padding, yPosition);
+                    yPosition += lineHeight;
+                });
+                
+                // Convert to blob and download
+                const mimeType = format === 'png' ? 'image/png' : 'image/jpeg';
+                canvas.toBlob(blob => {
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `${childName}_Bedtime_Story.${format}`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                }, mimeType, 0.95);
+            }
         }
         
         // Load voices when available
