@@ -23,8 +23,8 @@ const validApiKeys = new Set([
 
 // Rate limiting storage (simple in-memory, use Redis in production)
 const rateLimits = new Map();
-const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute
-const MAX_REQUESTS_PER_WINDOW = 10;
+const RATE_LIMIT_WINDOW = 1000; // 1 second
+const MAX_REQUESTS_PER_WINDOW = 1000;
 
 // Middleware to validate API key
 function validateApiKey(req, res, next) {
@@ -52,7 +52,7 @@ function validateApiKey(req, res, next) {
   if (recentRequests.length >= MAX_REQUESTS_PER_WINDOW) {
     return res.status(429).json({ 
       error: 'Rate limit exceeded',
-      message: `Maximum ${MAX_REQUESTS_PER_WINDOW} requests per minute allowed`
+      message: `Maximum ${MAX_REQUESTS_PER_WINDOW} requests per second allowed`
     });
   }
   
