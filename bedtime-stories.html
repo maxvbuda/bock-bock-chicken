@@ -30,6 +30,24 @@
             0%, 100% { opacity: 1; }
             50% { opacity: 0.3; }
         }
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+            }
+            to {
+                opacity: 0;
+            }
+        }
         
         body {
             margin: 0;
@@ -666,167 +684,202 @@ Format the story with clear paragraphs. Make it enchanting and help children dri
             
             closeSaveModal();
             
+            // Check if File System Access API is supported
+            if ('showSaveFilePicker' in window) {
+                saveWithFilePicker(format, childName, storyTheme);
+            } else {
+                // Fallback to regular download
+                saveWithDownload(format, childName, storyTheme);
+            }
+        }
+        
+        async function saveWithFilePicker(format, childName, storyTheme) {
+            try {
+                let fileExtension = format;
+                let mimeType;
+                let description;
+                
+                if (format === 'txt') {
+                    mimeType = 'text/plain';
+                    description = 'Text Files';
+                } else if (format === 'pdf') {
+                    mimeType = 'image/png'; // PDF saved as PNG image
+                    description = 'PNG Images';
+                    fileExtension = 'png';
+                } else if (format === 'png') {
+                    mimeType = 'image/png';
+                    description = 'PNG Images';
+                } else if (format === 'jpg') {
+                    mimeType = 'image/jpeg';
+                    description = 'JPEG Images';
+                }
+                
+                // Show save file picker
+                const handle = await window.showSaveFilePicker({
+                    suggestedName: `${childName}_Bedtime_Story.${fileExtension}`,
+                    types: [{
+                        description: description,
+                        accept: { [mimeType]: [`.${fileExtension}`] }
+                    }]
+                });
+                
+                // Create a writable stream
+                const writable = await handle.createWritable();
+                
+                if (format === 'txt') {
+                    // Write text file
+                    await writable.write(currentStory);
+                } else {
+                    // Create and write image
+                    const blob = await new Promise((resolve) => {
+                        createImageFromStory(childName, storyTheme, resolve, mimeType);
+                    });
+                    await writable.write(blob);
+                }
+                
+                // Close the file
+                await writable.close();
+                
+                // Show success message
+                showNotification('✅ Story saved successfully!', 'success');
+                
+            } catch (err) {
+                if (err.name !== 'AbortError') {
+                    console.error('Error saving file:', err);
+                    // Fallback to regular download
+                    saveWithDownload(format, childName, storyTheme);
+                }
+            }
+        }
+        
+        function saveWithDownload(format, childName, storyTheme) {
             if (format === 'txt') {
-                // Save as text file
                 const blob = new Blob([currentStory], { type: 'text/plain' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `${childName}_Bedtime_Story.txt`;
+                downloadFile(blob, `${childName}_Bedtime_Story.txt`);
+            } else if (format === 'pdf') {
+                createImageFromStory(childName, storyTheme, (blob) => {
+                    downloadFile(blob, `${childName}_Bedtime_Story.pdf`);
+                }, 'image/png');
+            } else if (format === 'png' || format === 'jpg') {
+                const mimeType = format === 'png' ? 'image/png' : 'image/jpeg';
+                createImageFromStory(childName, storyTheme, (blob) => {
+                    downloadFile(blob, `${childName}_Bedtime_Story.${format}`);
+                }, mimeType);
+            }
+        }
+        
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.textContent = message;
+            notification.style.cssText = `
+                position: fixed;
+                top: 100px;
+                right: 30px;
+                padding: 16px 24px;
+                background: ${type === 'success' ? 'linear-gradient(135deg, #4caf50, #45a049)' : 'linear-gradient(135deg, #f44336, #e53935)'};
+                color: white;
+                border-radius: 12px;
+                font-size: 1.1em;
+                font-family: 'Poppins', sans-serif;
+                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+                z-index: 10000;
+                animation: slideIn 0.3s ease-out;
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.animation = 'fadeOut 0.3s ease-out';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+        
+        function downloadFile(blob, filename) {
+            // Create a temporary link element
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            
+            // For browsers that support the download attribute
+            if ('download' in a) {
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-            } else if (format === 'pdf') {
-                // Save as PDF using canvas to text conversion
-                const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d');
-                
-                // Set canvas size
-                canvas.width = 800;
-                const lineHeight = 24;
-                const padding = 60;
-                const maxWidth = canvas.width - (padding * 2);
-                
-                // Calculate required height
-                ctx.font = '18px Poppins, Arial, sans-serif';
-                const words = currentStory.split(' ');
-                let lines = [];
-                let currentLine = '';
-                
-                words.forEach(word => {
-                    const testLine = currentLine + word + ' ';
-                    const metrics = ctx.measureText(testLine);
-                    if (metrics.width > maxWidth && currentLine !== '') {
-                        lines.push(currentLine);
-                        currentLine = word + ' ';
-                    } else {
-                        currentLine = testLine;
-                    }
-                });
-                lines.push(currentLine);
-                
-                canvas.height = (lines.length * lineHeight) + (padding * 3) + 60;
-                
-                // Background
-                const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-                gradient.addColorStop(0, '#fffdf7');
-                gradient.addColorStop(1, '#fff5e1');
-                ctx.fillStyle = gradient;
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-                
-                // Title
-                ctx.font = 'bold 28px Quicksand, Georgia, serif';
-                ctx.fillStyle = '#d97428';
-                ctx.textAlign = 'center';
-                ctx.fillText(childName + "'s Bedtime Story", canvas.width / 2, padding);
-                
-                // Theme
-                ctx.font = '16px Poppins, Arial, sans-serif';
-                ctx.fillStyle = '#a85c1a';
-                ctx.fillText(storyTheme, canvas.width / 2, padding + 35);
-                
-                // Story text
-                ctx.font = '18px Poppins, Arial, sans-serif';
-                ctx.fillStyle = '#333';
-                ctx.textAlign = 'left';
-                
-                let yPosition = padding + 80;
-                lines.forEach(line => {
-                    ctx.fillText(line.trim(), padding, yPosition);
-                    yPosition += lineHeight;
-                });
-                
-                // Convert to blob and download
-                canvas.toBlob(blob => {
-                    // Use jsPDF if available, otherwise save as image
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = `${childName}_Bedtime_Story.pdf`;
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    URL.revokeObjectURL(url);
-                }, 'image/png');
-                
-            } else if (format === 'png' || format === 'jpg') {
-                // Save as image
-                const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d');
-                
-                // Set canvas size
-                canvas.width = 800;
-                const lineHeight = 24;
-                const padding = 60;
-                const maxWidth = canvas.width - (padding * 2);
-                
-                // Calculate required height
-                ctx.font = '18px Poppins, Arial, sans-serif';
-                const words = currentStory.split(' ');
-                let lines = [];
-                let currentLine = '';
-                
-                words.forEach(word => {
-                    const testLine = currentLine + word + ' ';
-                    const metrics = ctx.measureText(testLine);
-                    if (metrics.width > maxWidth && currentLine !== '') {
-                        lines.push(currentLine);
-                        currentLine = word + ' ';
-                    } else {
-                        currentLine = testLine;
-                    }
-                });
-                lines.push(currentLine);
-                
-                canvas.height = (lines.length * lineHeight) + (padding * 3) + 60;
-                
-                // Background
-                const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-                gradient.addColorStop(0, '#fffdf7');
-                gradient.addColorStop(1, '#fff5e1');
-                ctx.fillStyle = gradient;
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-                
-                // Add decorative elements
-                ctx.fillStyle = 'rgba(217, 116, 40, 0.1)';
-                ctx.fillRect(0, 0, canvas.width, padding + 50);
-                
-                // Title
-                ctx.font = 'bold 28px Quicksand, Georgia, serif';
-                ctx.fillStyle = '#d97428';
-                ctx.textAlign = 'center';
-                ctx.fillText(childName + "'s Bedtime Story", canvas.width / 2, padding);
-                
-                // Theme
-                ctx.font = '16px Poppins, Arial, sans-serif';
-                ctx.fillStyle = '#a85c1a';
-                ctx.fillText(storyTheme, canvas.width / 2, padding + 35);
-                
-                // Story text
-                ctx.font = '18px Poppins, Arial, sans-serif';
-                ctx.fillStyle = '#333';
-                ctx.textAlign = 'left';
-                
-                let yPosition = padding + 80;
-                lines.forEach(line => {
-                    ctx.fillText(line.trim(), padding, yPosition);
-                    yPosition += lineHeight;
-                });
-                
-                // Convert to blob and download
-                const mimeType = format === 'png' ? 'image/png' : 'image/jpeg';
-                canvas.toBlob(blob => {
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = `${childName}_Bedtime_Story.${format}`;
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    URL.revokeObjectURL(url);
-                }, mimeType, 0.95);
+            } else {
+                // Fallback for browsers that don't support download attribute
+                window.open(url, '_blank');
             }
+            
+            // Clean up
+            setTimeout(() => URL.revokeObjectURL(url), 100);
+        }
+        
+        function createImageFromStory(childName, storyTheme, callback, mimeType) {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Set canvas size
+            canvas.width = 800;
+            const lineHeight = 24;
+            const padding = 60;
+            const maxWidth = canvas.width - (padding * 2);
+            
+            // Calculate required height
+            ctx.font = '18px Poppins, Arial, sans-serif';
+            const words = currentStory.split(' ');
+            let lines = [];
+            let currentLine = '';
+            
+            words.forEach(word => {
+                const testLine = currentLine + word + ' ';
+                const metrics = ctx.measureText(testLine);
+                if (metrics.width > maxWidth && currentLine !== '') {
+                    lines.push(currentLine);
+                    currentLine = word + ' ';
+                } else {
+                    currentLine = testLine;
+                }
+            });
+            lines.push(currentLine);
+            
+            canvas.height = (lines.length * lineHeight) + (padding * 3) + 60;
+            
+            // Background
+            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            gradient.addColorStop(0, '#fffdf7');
+            gradient.addColorStop(1, '#fff5e1');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Add decorative elements
+            ctx.fillStyle = 'rgba(217, 116, 40, 0.1)';
+            ctx.fillRect(0, 0, canvas.width, padding + 50);
+            
+            // Title
+            ctx.font = 'bold 28px Quicksand, Georgia, serif';
+            ctx.fillStyle = '#d97428';
+            ctx.textAlign = 'center';
+            ctx.fillText(childName + "'s Bedtime Story", canvas.width / 2, padding);
+            
+            // Theme
+            ctx.font = '16px Poppins, Arial, sans-serif';
+            ctx.fillStyle = '#a85c1a';
+            ctx.fillText(storyTheme, canvas.width / 2, padding + 35);
+            
+            // Story text
+            ctx.font = '18px Poppins, Arial, sans-serif';
+            ctx.fillStyle = '#333';
+            ctx.textAlign = 'left';
+            
+            let yPosition = padding + 80;
+            lines.forEach(line => {
+                ctx.fillText(line.trim(), padding, yPosition);
+                yPosition += lineHeight;
+            });
+            
+            // Convert to blob and callback
+            canvas.toBlob(callback, mimeType, 0.95);
         }
         
         // Load voices when available
