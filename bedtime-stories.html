@@ -603,6 +603,10 @@ Format the story with clear paragraphs. Make it enchanting and help children dri
                 
                 const data = await response.json();
                 
+                if (!response.ok) {
+                    throw new Error(data.message || `API returned status ${response.status}`);
+                }
+                
                 if (data.success && data.story) {
                     currentStory = data.story;
                     storyContent.textContent = currentStory;
@@ -617,7 +621,8 @@ Format the story with clear paragraphs. Make it enchanting and help children dri
                 }
             } catch (error) {
                 console.error('Error generating story:', error);
-                storyContent.innerHTML = '<p style="color: #ff6b6b;">Oops! Something went wrong while creating your story. Please try again.</p>';
+                storyContent.innerHTML = `<p style="color: #ff6b6b;">❌ Error: ${error.message || 'Something went wrong'}. Please try again.</p>
+                <p style="color: #fff; margin-top: 10px; font-size: 0.9em;">💡 Tip: If this is the first request in a while, the API may take 30-60 seconds to wake up. Please wait and try again.</p>`;
             } finally {
                 generateBtn.disabled = false;
                 generateBtn.textContent = '✨ Generate Bedtime Story';
