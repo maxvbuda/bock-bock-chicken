@@ -549,7 +549,7 @@
             generateBtn.disabled = true;
             generateBtn.textContent = 'Creating your story...';
             storySection.classList.add('active');
-            storyContent.innerHTML = '<div class="loading"><div class="spinner"></div>Weaving a magical tale from Chickenopolis...</div>';
+            storyContent.innerHTML = '<div class="loading"><div class="spinner"></div>Weaving a magical tale from Chickenopolis... 🐔</div>';
             
             // Determine word count based on length
             let wordCount;
@@ -557,34 +557,56 @@
             else if (length === 'long') wordCount = '500-700';
             else wordCount = '350-450';
             
-            // Build prompt
-            let prompt = `Write a gentle, calming bedtime story suitable for children aged 5-8 years old. `;
-            
-            if (childName) {
-                prompt += `The main character should be named ${childName}. `;
-            } else {
-                prompt += `The main character should be a brave young chicken from Chickenopolis. `;
-            }
-            
-            prompt += `The story theme is: ${theme}. `;
-            prompt += `The story should be ${wordCount} words long. `;
-            
-            if (moral) {
-                prompt += `Include a gentle lesson about ${moral}. `;
-            }
-            
-            prompt += `The story should be:
-- Calming and peaceful, perfect for bedtime
-- Written at a reading level appropriate for 5-8 year-olds
-- Use gentle, soothing language with simple but engaging vocabulary
-- Have a happy, comforting ending
-- Include vivid but peaceful imagery that helps children visualize the story
-- Be appropriate for young children (no scary elements)
-- Set in the magical world of Chickenopolis with chicken characters
-- Include elements of wonder and gentle adventure
-- Have a slow, relaxing pace that helps children wind down
+            // Build the ULTIMATE Chickenopolis prompt
+            const prompt = `🐔🐔🐔 ABSOLUTE CRITICAL REQUIREMENT: You MUST write this story ENTIRELY about CHICKENS in CHICKENOPOLIS! 🐔🐔🐔
 
-Format the story with clear paragraphs. Make it enchanting and help children drift off to sleep with pleasant dreams.`;
+Write a gentle, calming bedtime story for children aged 5-8 years old.
+
+🚨🚨🚨 MANDATORY CHICKENOPOLIS RULES - YOU MUST FOLLOW THESE: 🚨🚨🚨
+1. The ENTIRE story takes place in Chickenopolis (a magical chicken kingdom)
+2. EVERY SINGLE CHARACTER is a chicken (rooster, hen, or chick) - NO HUMANS! NO OTHER ANIMALS! ONLY CHICKENS!
+3. Main character: ${childName ? `A young chicken named ${childName}` : 'A brave young chicken'} who lives in Chickenopolis
+4. Give ALL characters chicken-themed names like: Sir Cluckington, Lady Featherbottom, Captain Peepers, Dame Pecksworth, Baron Wingflap, etc.
+5. Characters MUST cluck, peck, scratch ground, flap wings, ruffle feathers
+6. Story Theme: ${theme} (but done with CHICKENS in CHICKENOPOLIS!)
+7. Story Length: ${wordCount} words
+${moral ? `8. Moral/Lesson: ${moral} (taught through chicken experiences in Chickenopolis)` : ''}
+
+🐔 REQUIRED CHICKENOPOLIS ELEMENTS (You MUST include at least 5 of these):
+- The Great Coop (the royal palace where King Clucksworth rules)
+- Feather Plaza (the bustling town square where chickens gather)
+- Egg Market (where chickens trade golden eggs and grain)
+- Golden Grain Fields (the farmland surrounding Chickenopolis)
+- The Roost Library (where wise chickens keep knowledge)
+- Cluck Cathedral (the spiritual center with beautiful perches)
+- Nest Park (playground where chicks play and learn to fly)
+- Perch Academy (the school for young chicks)
+- The Henhouse Commons (community gathering space)
+- Peckington Bridge (crosses the Feather River)
+
+🐔 CHICKEN BEHAVIORS YOU MUST INCLUDE:
+- Characters saying "Bock bock!" or "Cluck cluck!" or "Bawk bawk!"
+- Detailed descriptions of colorful feathers, beaks, wings, talons
+- Chickens roosting on perches at night
+- Nesting in cozy hay-filled nests
+- Pecking at grain or bugs
+- Scratching the ground with talons
+- Flapping wings when excited or scared
+- Ruffling feathers when comfortable
+
+STORY REQUIREMENTS:
+- Start with "In the magical kingdom of Chickenopolis..."
+- Every character name MUST sound like a chicken name
+- Include chicken sounds and behaviors in EVERY paragraph
+- Calming and peaceful, perfect for bedtime
+- Simple, gentle language appropriate for 5-8 year-olds
+- Happy ending where ${childName || 'the brave chicken'} returns to their cozy coop and settles into a soft nest filled with warm hay
+- Vivid but peaceful imagery of Chickenopolis
+- NO scary elements - keep it gentle and calming
+- Slow, relaxing pace that helps children wind down for sleep
+- End with the main character yawning, closing their eyes in their nest, and drifting to peaceful sleep
+
+🚨 FINAL WARNING: If ANY character is not a chicken, or if the story is not OBVIOUSLY set in Chickenopolis with chicken details throughout, you have COMPLETELY FAILED! Every sentence should make it clear this is about CHICKENS in a CHICKEN KINGDOM! 🚨`;
             
             try {
                 const response = await fetch('https://bock-bock-chicken.onrender.com/api/generate-story', {
@@ -594,10 +616,7 @@ Format the story with clear paragraphs. Make it enchanting and help children dri
                         'X-API-Key': 'bs_11afe5bbc0142701392a9a5b71c559072923c68fbf2f3000'
                     },
                     body: JSON.stringify({
-                        childName: childName,
-                        theme: theme,
-                        length: length,
-                        moral: moral
+                        prompt: prompt
                     })
                 });
                 

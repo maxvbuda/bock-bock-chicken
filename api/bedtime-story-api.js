@@ -73,35 +73,15 @@ app.get('/api/health', (req, res) => {
 // Generate story endpoint
 app.post('/api/generate-story', validateApiKey, async (req, res) => {
   try {
-    const { childName, theme, length, moral } = req.body;
+    const { prompt } = req.body;
     
     // Validation
-    if (!childName || !theme || !length || !moral) {
+    if (!prompt) {
       return res.status(400).json({ 
-        error: 'Missing required fields',
-        message: 'childName, theme, length, and moral are required'
+        error: 'Missing required field',
+        message: 'prompt is required'
       });
     }
-    
-    // Generate story using OpenAI
-    const prompt = `Create a heartwarming bedtime story for a child named ${childName}.
-
-Theme: ${theme}
-Story Length: ${length}
-Moral/Lesson: ${moral}
-
-Requirements:
-- Appropriate for children ages 5-8
-- Gentle, calming tone perfect for bedtime
-- Include ${childName} as the main character
-- Incorporate the theme: ${theme}
-- Story should be ${length} in length
-- Teach the moral: ${moral}
-- End with a peaceful, sleepy conclusion
-- Use simple, age-appropriate language
-- Include descriptive but soothing imagery
-
-Please write a complete bedtime story that will help a child drift off to sleep peacefully.`;
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -114,7 +94,7 @@ Please write a complete bedtime story that will help a child drift off to sleep 
         messages: [
           {
             role: 'system',
-            content: 'You are a creative bedtime story writer who creates gentle, calming stories for children aged 5-8.'
+            content: '🐔 You are a creative bedtime story writer for children aged 5-8. YOUR ONLY JOB: Write stories about CHICKENS in CHICKENOPOLIS! Every story MUST be set in the magical chicken kingdom of Chickenopolis where EVERYONE is a chicken - roosters, hens, and chicks. NO HUMANS! NO OTHER ANIMALS! Only chickens! You LOVE including chicken names (Sir Cluckington, Lady Featherbottom, etc), chicken sounds (cluck, bock bock), chicken behaviors (pecking, scratching, flapping wings), and Chickenopolis landmarks (Great Coop, Feather Plaza, Egg Market). If a story is not OBVIOUSLY about chickens, you have FAILED! Make every story dripping with chicken-themed details! 🐔'
           },
           {
             role: 'user',
@@ -135,14 +115,7 @@ Please write a complete bedtime story that will help a child drift off to sleep 
     
     res.json({
       success: true,
-      story: story,
-      metadata: {
-        childName,
-        theme,
-        length,
-        moral,
-        generatedAt: new Date().toISOString()
-      }
+      story: story
     });
     
   } catch (error) {
