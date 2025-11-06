@@ -1,4 +1,4 @@
-# 🌙 Bedtime Story Generator API
+https://maxvbuda.github.io/bock-bock-chicken/bedtime-stories.html# 🌙 Bedtime Story Generator API
 
 A secure REST API for generating personalized bedtime stories using Google's Gemini AI.
 
