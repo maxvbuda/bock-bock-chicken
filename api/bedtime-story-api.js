@@ -1,7 +1,6 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import { GoogleGenerativeAI } from '@google/generative-ai';
 import { v4 as uuidv4 } from 'uuid';
 
 dotenv.config();
@@ -13,8 +12,8 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-// Initialize Gemini AI
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+// OpenAI API configuration
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
 // Simple API key storage (in production, use a database)
 const validApiKeys = new Set([
@@ -84,9 +83,7 @@ app.post('/api/generate-story', validateApiKey, async (req, res) => {
       });
     }
     
-    // Generate story using Gemini
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
-    
+    // Generate story using OpenAI
     const prompt = `Create a heartwarming bedtime story for a child named ${childName}.
 
 Theme: ${theme}
@@ -106,8 +103,35 @@ Requirements:
 
 Please write a complete bedtime story that will help a child drift off to sleep peacefully.`;
 
-    const result = await model.generateContent(prompt);
-    const story = result.response.text();
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${OPENAI_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages: [
+          {
+            role: 'system',
+            content: 'You are a creative bedtime story writer who creates gentle, calming stories for children aged 5-8.'
+          },
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
+        temperature: 0.9,
+        max_tokens: 2000
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`OpenAI API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const story = data.choices[0].message.content;
     
     res.json({
       success: true,
