@@ -127,6 +127,216 @@ app.post('/api/generate-story', validateApiKey, async (req, res) => {
   }
 });
 
+// Generate image endpoint (DALL-E 3)
+app.post('/api/generate-image', validateApiKey, async (req, res) => {
+  try {
+    const { prompt, model = 'dall-e-3', size = '1024x1024', quality = 'standard' } = req.body;
+    
+    // Validation
+    if (!prompt) {
+      return res.status(400).json({ 
+        error: 'Missing required field',
+        message: 'prompt is required'
+      });
+    }
+
+    // Validate model
+    const validModels = ['dall-e-3', 'dall-e-2'];
+    if (!validModels.includes(model)) {
+      return res.status(400).json({ 
+        error: 'Invalid model',
+        message: `Model must be one of: ${validModels.join(', ')}`
+      });
+    }
+
+    // Validate size based on model
+    let validSizes = ['1024x1024'];
+    if (model === 'dall-e-3') {
+      validSizes = ['1024x1024', '1024x1792', '1792x1024'];
+    } else if (model === 'dall-e-2') {
+      validSizes = ['256x256', '512x512', '1024x1024'];
+    }
+    
+    if (!validSizes.includes(size)) {
+      return res.status(400).json({ 
+        error: 'Invalid size',
+        message: `Size must be one of: ${validSizes.join(', ')} for ${model}`
+      });
+    }
+
+    // Build request body
+    const requestBody = {
+      model: model,
+      prompt: prompt,
+      n: 1,
+      size: size
+    };
+
+    // Quality only supported for DALL-E 3
+    if (model === 'dall-e-3' && ['standard', 'hd'].includes(quality)) {
+      requestBody.quality = quality;
+    }
+
+    const response = await fetch('https://api.openai.com/v1/images/generations', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${OPENAI_API_KEY}`
+      },
+      body: JSON.stringify(requestBody)
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(`OpenAI API error: ${errorData.error?.message || response.statusText}`);
+    }
+
+    const data = await response.json();
+    const imageUrl = data.data[0].url;
+    
+    res.json({
+      success: true,
+      imageUrl: imageUrl,
+      model: model,
+      size: size,
+      quality: quality
+    });
+    
+  } catch (error) {
+    console.error('Error generating image:', error);
+    res.status(500).json({ 
+      error: 'Failed to generate image',
+      message: error.message
+    });
+  }
+});
+
+// Generate image endpoint (Hugging Face - FREE!)
+app.post('/api/generate-image-huggingface', validateApiKey, async (req, res) => {
+  try {
+    const { prompt } = req.body;
+    
+    if (!prompt) {
+      return res.status(400).json({ 
+        error: 'Missing required field',
+        message: 'prompt is required'
+      });
+    }
+
+    // Use Hugging Face Inference API with Stable Diffusion XL
+    const HF_API_KEY = process.env.HUGGINGFACE_API_KEY;
+    const model = 'stabilityai/stable-diffusion-xl-base-1.0';
+    
+    const response = await fetch(
+      `https://api-inference.huggingface.co/models/${model}`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${HF_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          inputs: prompt,
+          parameters: {
+            num_inference_steps: 30,
+            guidance_scale: 7.5,
+          }
+        })
+      }
+    );
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Hugging Face API error: ${errorText}`);
+    }
+
+    // Response is binary image data
+    const imageBuffer = await response.arrayBuffer();
+    const base64Image = Buffer.from(imageBuffer).toString('base64');
+    const imageUrl = `data:image/png;base64,${base64Image}`;
+    
+    res.json({
+      success: true,
+      imageUrl: imageUrl,
+      model: 'stable-diffusion-xl',
+      provider: 'huggingface',
+      cost: 0
+    });
+    
+  } catch (error) {
+    console.error('Error generating image with Hugging Face:', error);
+    res.status(500).json({ 
+      error: 'Failed to generate image',
+      message: error.message
+    });
+  }
+});
+
+// Generate image endpoint (Stability AI - Very Cheap!)
+app.post('/api/generate-image-stability', validateApiKey, async (req, res) => {
+  try {
+    const { prompt } = req.body;
+    
+    if (!prompt) {
+      return res.status(400).json({ 
+        error: 'Missing required field',
+        message: 'prompt is required'
+      });
+    }
+
+    const STABILITY_API_KEY = process.env.STABILITY_API_KEY;
+    
+    const response = await fetch(
+      'https://api.stability.ai/v1/generation/stable-diffusion-xl-1024-v1-0/text-to-image',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${STABILITY_API_KEY}`,
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({
+          text_prompts: [
+            {
+              text: prompt,
+              weight: 1
+            }
+          ],
+          cfg_scale: 7,
+          height: 1024,
+          width: 1024,
+          steps: 30,
+          samples: 1,
+        })
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(`Stability AI error: ${errorData.message || response.statusText}`);
+    }
+
+    const data = await response.json();
+    const base64Image = data.artifacts[0].base64;
+    const imageUrl = `data:image/png;base64,${base64Image}`;
+    
+    res.json({
+      success: true,
+      imageUrl: imageUrl,
+      model: 'stable-diffusion-xl-1024-v1-0',
+      provider: 'stability-ai',
+      cost: 0.002
+    });
+    
+  } catch (error) {
+    console.error('Error generating image with Stability AI:', error);
+    res.status(500).json({ 
+      error: 'Failed to generate image',
+      message: error.message
+    });
+  }
+});
+
 // Generate new API key endpoint (protected by master key)
 app.post('/api/generate-key', (req, res) => {
   const masterKey = req.headers['x-master-key'];
@@ -178,6 +388,9 @@ app.listen(PORT, () => {
   console.log(`\nEndpoints:`);
   console.log(`  GET  /api/health - Health check`);
   console.log(`  POST /api/generate-story - Generate bedtime story (requires API key)`);
+  console.log(`  POST /api/generate-image - Generate image with DALL-E (requires API key)`);
+  console.log(`  POST /api/generate-image-huggingface - Generate image FREE with HF (requires API key)`);
+  console.log(`  POST /api/generate-image-stability - Generate image cheap with Stability AI (requires API key)`);
   console.log(`  POST /api/generate-key - Generate new API key (requires master key)`);
   console.log(`  GET  /api/stats - View usage statistics (requires master key)`);
 });

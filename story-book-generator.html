@@ -245,6 +245,14 @@
             <h1 class="title">Chickenopolis Story Book Generator</h1>
             <p class="subtitle">Generate 100-1000 bedtime stories for your book!</p>
             <p class="subtitle" style="font-size: 0.9em; margin-top: 10px;">💾 Auto-saves every 10 stories • Resume anytime!</p>
+            <div id="saved-indicator" style="display: none; background: rgba(76, 175, 80, 0.2); border: 2px solid #4CAF50; border-radius: 10px; padding: 15px; margin-top: 15px; max-width: 500px; margin-left: auto; margin-right: auto;">
+                <p style="color: #4CAF50; font-weight: 700; margin: 0; font-size: 1.1em;">
+                    💾 <span id="saved-count">0</span> stories saved in browser!
+                </p>
+                <p style="color: #b8d4ff; margin: 5px 0 0 0; font-size: 0.9em;">
+                    Continue generating or download what you have
+                </p>
+            </div>
         </div>
         
         <div class="controls">
@@ -342,6 +350,10 @@
                 if (saved) {
                     generatedStories = JSON.parse(saved);
                     if (generatedStories.length > 0) {
+                        // Show saved indicator
+                        document.getElementById('saved-indicator').style.display = 'block';
+                        document.getElementById('saved-count').textContent = generatedStories.length;
+                        
                         document.getElementById('stories-preview').style.display = 'block';
                         document.getElementById('download-section').style.display = 'block';
                         
@@ -355,8 +367,6 @@
                         const estimatedPages = Math.round(totalWords / 250);
                         document.getElementById('book-stats').textContent = 
                             `${generatedStories.length} stories | ~${totalWords.toLocaleString()} words | ~${estimatedPages.toLocaleString()} pages`;
-                        
-                        alert(`📚 Found ${generatedStories.length} saved stories! You can continue generating more or download what you have.`);
                     }
                 }
                 
@@ -377,6 +387,7 @@
                 document.getElementById('stories-list').innerHTML = '';
                 document.getElementById('stories-preview').style.display = 'none';
                 document.getElementById('download-section').style.display = 'none';
+                document.getElementById('saved-indicator').style.display = 'none';
                 alert('✅ Progress cleared!');
             }
         }
