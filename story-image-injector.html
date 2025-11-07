@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🖼️ Story Image Injector - Chickenopolis</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #FED766 0%, #FE4A49 100%);
+        }
+        h1, h2, h3 {
+            font-family: 'Quicksand', sans-serif;
+        }
+        .story-preview {
+            max-height: 200px;
+            overflow-y: auto;
+            font-size: 0.85rem;
+            line-height: 1.4;
+        }
+        .progress-spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #d97428;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-left: 10px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .image-preview {
+            max-width: 300px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+<body class="min-h-screen p-6">
+    <div class="max-w-6xl mx-auto">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-5xl font-bold text-white mb-2">🖼️ Story Image Injector</h1>
+            <p class="text-xl text-white opacity-90">Add AI-generated Chickenopolis illustrations to your stories!</p>
+        </div>
+
+        <!-- Main Container -->
+        <div class="bg-white rounded-2xl shadow-2xl p-8 mb-8">
+            
+            <!-- Step 1: Upload HTML -->
+            <div class="mb-8">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">📁 Step 1: Upload Your Story HTML</h2>
+                <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                    <input type="file" id="html-upload" accept=".html" class="hidden">
+                    <label for="html-upload" class="cursor-pointer">
+                        <div class="text-6xl mb-3">📄</div>
+                        <div class="text-lg font-semibold text-gray-700 mb-2">Click to upload HTML file</div>
+                        <div class="text-sm text-gray-500">Or drag and drop your story HTML here</div>
+                    </label>
+                </div>
+                <div id="upload-status" class="mt-4 hidden">
+                    <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                        <p class="text-green-800 font-semibold">✅ File loaded: <span id="filename"></span></p>
+                        <p class="text-green-600 text-sm mt-1">Found <span id="story-count" class="font-bold">0</span> stories</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 2: Configure Image Generation -->
+            <div class="mb-8" id="config-section" style="display: none;">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">⚙️ Step 2: Configure Images</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- API Selection -->
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Image AI Model</label>
+                        <select id="image-model" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500" onchange="updateCostEstimate()">
+                            <option value="stability-sdxl">✨ Stability AI SDXL - $0.002/img (RECOMMENDED!)</option>
+                            <option value="huggingface-free">🆓 Hugging Face SDXL - FREE! (needs API key)</option>
+                            <option value="dall-e-2">DALL-E 2 - $0.02/img (Moderate)</option>
+                            <option value="dall-e-3">DALL-E 3 Standard - $0.04/img</option>
+                            <option value="dall-e-3-hd">DALL-E 3 HD - $0.08/img (Premium)</option>
+                        </select>
+                        <p class="text-xs text-gray-500 mt-1" id="model-description">
+                            💰 Only $0.002 per image! Excellent quality with Stable Diffusion XL
+                        </p>
+                    </div>
+
+                    <!-- Image Size -->
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Image Size</label>
+                        <select id="image-size" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500">
+                            <option value="1024x1024">1024x1024 (Square)</option>
+                            <option value="1024x1792">1024x1792 (Portrait)</option>
+                            <option value="1792x1024">1792x1024 (Landscape)</option>
+                        </select>
+                        <p class="text-xs text-gray-500 mt-1">Note: Hugging Face and Stability support 1024x1024 only</p>
+                    </div>
+
+                    <!-- Image Style -->
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Art Style</label>
+                        <select id="art-style" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500">
+                            <option value="children-book">Children's Book Illustration</option>
+                            <option value="cartoon">Cartoon Style</option>
+                            <option value="watercolor">Watercolor Painting</option>
+                            <option value="digital-art">Digital Art</option>
+                            <option value="3d-render">3D Rendered</option>
+                        </select>
+                    </div>
+
+                    <!-- Quality -->
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Image Quality</label>
+                        <select id="image-quality" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500">
+                            <option value="standard">Standard</option>
+                            <option value="hd">HD (DALL-E 3 only)</option>
+                        </select>
+                        <p class="text-xs text-gray-500 mt-1">HD quality doubles the cost for DALL-E 3</p>
+                    </div>
+                </div>
+
+                <!-- Cost Estimate -->
+                <div class="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <p class="text-blue-800 font-semibold">💰 Estimated Cost:</p>
+                    <p class="text-blue-600 text-sm mt-1">
+                        <span id="cost-estimate">$0.00</span> for <span id="image-count-estimate">0</span> images
+                    </p>
+                    <p class="text-xs text-gray-600 mt-2" id="cost-breakdown">
+                        FREE with Hugging Face! 🎉
+                    </p>
+                </div>
+
+                <!-- Generate Button -->
+                <button id="generate-btn" onclick="startImageGeneration()" class="w-full mt-6 bg-gradient-to-r from-orange-500 to-red-500 text-white text-xl font-bold py-4 rounded-xl hover:from-orange-600 hover:to-red-600 transition-all transform hover:scale-105 shadow-lg">
+                    🎨 Generate Images for All Stories
+                </button>
+            </div>
+
+            <!-- Step 3: Progress & Preview -->
+            <div id="progress-section" style="display: none;">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">🎨 Generating Images...</h2>
+                
+                <div class="mb-4">
+                    <div class="bg-gray-200 rounded-full h-6 overflow-hidden">
+                        <div id="progress-bar" class="bg-gradient-to-r from-orange-500 to-red-500 h-full transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                    <p class="text-center text-gray-600 mt-2">
+                        <span id="progress-text">0 of 0 images generated</span>
+                        <span id="progress-spinner" class="progress-spinner hidden"></span>
+                    </p>
+                </div>
+
+                <!-- Story Processing List -->
+                <div id="stories-processing" class="space-y-4 max-h-96 overflow-y-auto">
+                    <!-- Dynamic story items will be added here -->
+                </div>
+
+                <!-- Download Section -->
+                <div id="download-section" class="mt-8" style="display: none;">
+                    <div class="bg-green-50 border-2 border-green-400 rounded-xl p-6 text-center">
+                        <h3 class="text-2xl font-bold text-green-800 mb-3">✅ All Images Generated!</h3>
+                        <p class="text-green-700 mb-4">Your illustrated story book is ready to download</p>
+                        <button onclick="downloadIllustratedHTML()" class="bg-green-600 text-white text-lg font-bold px-8 py-3 rounded-lg hover:bg-green-700 transition-all transform hover:scale-105 shadow-lg">
+                            📥 Download Illustrated HTML
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Info Panel -->
+        <div class="bg-white bg-opacity-90 rounded-xl p-6 shadow-lg">
+            <h3 class="text-xl font-bold text-gray-800 mb-3">ℹ️ How It Works</h3>
+            <ol class="list-decimal list-inside space-y-2 text-gray-700">
+                <li><strong>Upload</strong> your story HTML file (from story-book-generator or any HTML with stories)</li>
+                <li><strong>Configure</strong> your preferred image model, style, size, and quality</li>
+                <li><strong>Generate</strong> - AI will create a unique illustration for each story based on its content</li>
+                <li><strong>Download</strong> the new HTML file with all images embedded</li>
+            </ol>
+            
+            <div class="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+                <p class="text-sm font-bold text-green-800 mb-2">💰 Pricing Comparison (100 images):</p>
+                <ul class="text-sm text-gray-700 space-y-1">
+                    <li>🆓 <strong>Hugging Face SDXL</strong>: FREE! ($0) - Recommended for budget</li>
+                    <li>💎 <strong>Stability AI SDXL</strong>: $0.20 (99% cheaper!) - Best value</li>
+                    <li>⚡ <strong>DALL-E 2</strong>: $2.00 - Moderate cost</li>
+                    <li>🎨 <strong>DALL-E 3 Standard</strong>: $4.00 - Good quality</li>
+                    <li>👑 <strong>DALL-E 3 HD</strong>: $8.00 - Premium quality</li>
+                </ul>
+            </div>
+
+            <div class="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <p class="text-sm text-yellow-800">
+                    <strong>⚠️ API Keys Needed:</strong>
+                </p>
+                <ul class="text-xs text-gray-700 mt-2 space-y-1">
+                    <li>• <strong>FREE option</strong>: Hugging Face API key (free at huggingface.co)</li>
+                    <li>• <strong>Cheap option</strong>: Stability AI API key (stability.ai)</li>
+                    <li>• <strong>Premium option</strong>: OpenAI API key (platform.openai.com)</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let uploadedHTML = '';
+        let stories = [];
+        let processedHTML = '';
+        let currentStoryIndex = 0;
+        let workingDoc = null; // Keep a persistent DOM document
+
+        // File upload handling
+        document.getElementById('html-upload').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file && file.name.endsWith('.html')) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    uploadedHTML = event.target.result;
+                    parseStories(uploadedHTML);
+                    displayUploadSuccess(file.name);
+                };
+                reader.readAsText(file);
+            } else {
+                alert('Please upload an HTML file');
+            }
+        });
+
+        // Parse stories from HTML
+        function parseStories(html) {
+            stories = [];
+            const parser = new DOMParser();
+            workingDoc = parser.parseFromString(html, 'text/html'); // Store the working document
+            const doc = workingDoc;
+            
+            // Strategy 1: Look for story divs with specific classes or IDs
+            let storyElements = doc.querySelectorAll('.story, [class*="story-"]');
+            
+            // Strategy 2: If no specific story elements, look for h2/h3 headers that might indicate stories
+            if (storyElements.length === 0) {
+                const headers = doc.querySelectorAll('h2, h3');
+                headers.forEach((header, index) => {
+                    let content = '';
+                    let nextElement = header.nextElementSibling;
+                    
+                    // Collect content until next header or end
+                    while (nextElement && !nextElement.matches('h2, h3')) {
+                        content += nextElement.outerHTML;
+                        nextElement = nextElement.nextElementSibling;
+                    }
+                    
+                    if (content.length > 100) { // Only if substantial content
+                        stories.push({
+                            title: header.textContent.trim(),
+                            content: content,
+                            element: header,
+                            headerHTML: header.outerHTML
+                        });
+                    }
+                });
+            } else {
+                // Process found story elements
+                storyElements.forEach((element, index) => {
+                    const title = element.querySelector('h2, h3, h4')?.textContent || `Story ${index + 1}`;
+                    stories.push({
+                        title: title.trim(),
+                        content: element.innerHTML,
+                        element: element,
+                        headerHTML: element.querySelector('h2, h3, h4')?.outerHTML || ''
+                    });
+                });
+            }
+
+            console.log('Found', stories.length, 'stories');
+        }
+
+        function displayUploadSuccess(filename) {
+            document.getElementById('filename').textContent = filename;
+            document.getElementById('story-count').textContent = stories.length;
+            document.getElementById('upload-status').classList.remove('hidden');
+            document.getElementById('config-section').style.display = 'block';
+            
+            // Update cost estimate
+            updateCostEstimate();
+        }
+
+        function updateCostEstimate() {
+            const storyCount = stories.length;
+            const model = document.getElementById('image-model').value;
+            const quality = document.getElementById('image-quality').value;
+            
+            let costPerImage = 0;
+            let breakdown = '';
+            let modelDesc = '';
+            
+            switch(model) {
+                case 'stability-sdxl':
+                    costPerImage = 0.002;
+                    breakdown = `Stability AI SDXL: $0.002/image (99% cheaper than DALL-E 3!)`;
+                    modelDesc = '💰 Only $0.002 per image! Excellent quality with Stable Diffusion XL';
+                    break;
+                case 'huggingface-free':
+                    costPerImage = 0;
+                    breakdown = 'FREE with Hugging Face! 🎉 (Requires HF API key - get free at huggingface.co)';
+                    modelDesc = '🆓 Free tier! Requires Hugging Face API key';
+                    break;
+                case 'dall-e-2':
+                    costPerImage = 0.02;
+                    breakdown = `DALL-E 2: $0.02/image (50% cheaper than DALL-E 3)`;
+                    modelDesc = '⚡ Good quality, moderate price from OpenAI';
+                    break;
+                case 'dall-e-3':
+                    costPerImage = quality === 'hd' ? 0.08 : 0.04;
+                    breakdown = quality === 'hd' ? 
+                        'DALL-E 3 HD: $0.08/image (premium quality)' : 
+                        'DALL-E 3 Standard: $0.04/image';
+                    modelDesc = '🏆 Best quality from OpenAI, higher cost';
+                    break;
+                case 'dall-e-3-hd':
+                    costPerImage = 0.08;
+                    breakdown = 'DALL-E 3 HD: $0.08/image (premium quality)';
+                    modelDesc = '👑 Highest quality, highest cost';
+                    break;
+            }
+            
+            const totalCost = (storyCount * costPerImage).toFixed(2);
+            
+            document.getElementById('image-count-estimate').textContent = storyCount;
+            document.getElementById('cost-estimate').textContent = '$' + totalCost;
+            document.getElementById('cost-breakdown').textContent = breakdown;
+            document.getElementById('model-description').textContent = modelDesc;
+            
+            // Show savings comparison
+            const dalleHDCost = (storyCount * 0.08).toFixed(2);
+            if (costPerImage < 0.08 && storyCount > 0) {
+                const savings = (dalleHDCost - totalCost).toFixed(2);
+                const savingsPercent = ((1 - costPerImage / 0.08) * 100).toFixed(0);
+                document.getElementById('cost-breakdown').textContent += 
+                    ` | Save $${savings} (${savingsPercent}% off vs DALL-E 3 HD)`;
+            }
+        }
+
+        // Update cost when quality changes
+        document.getElementById('image-quality').addEventListener('change', updateCostEstimate);
+        document.getElementById('image-model').addEventListener('change', updateCostEstimate);
+
+        async function startImageGeneration() {
+            if (stories.length === 0) {
+                alert('Please upload an HTML file first!');
+                return;
+            }
+
+            // Show progress section
+            document.getElementById('config-section').style.display = 'none';
+            document.getElementById('progress-section').style.display = 'block';
+            document.getElementById('progress-spinner').classList.remove('hidden');
+
+            // Reset progress
+            currentStoryIndex = 0;
+            processedHTML = uploadedHTML;
+
+            // Create processing UI for each story
+            const container = document.getElementById('stories-processing');
+            container.innerHTML = '';
+            stories.forEach((story, index) => {
+                const storyDiv = document.createElement('div');
+                storyDiv.id = `story-${index}`;
+                storyDiv.className = 'border border-gray-200 rounded-lg p-4 bg-gray-50';
+                storyDiv.innerHTML = `
+                    <div class="flex items-start justify-between">
+                        <div class="flex-1">
+                            <h4 class="font-semibold text-gray-800">${story.title}</h4>
+                            <p class="text-sm text-gray-600 mt-1">
+                                <span id="status-${index}" class="font-medium">⏳ Waiting...</span>
+                            </p>
+                        </div>
+                        <div id="image-preview-${index}" class="ml-4"></div>
+                    </div>
+                `;
+                container.appendChild(storyDiv);
+            });
+
+            // Process stories one by one
+            for (let i = 0; i < stories.length; i++) {
+                await generateImageForStory(i);
+                updateProgress();
+            }
+
+            // Finished!
+            document.getElementById('progress-spinner').classList.add('hidden');
+            document.getElementById('download-section').style.display = 'block';
+        }
+
+        async function generateImageForStory(index) {
+            const story = stories[index];
+            const statusEl = document.getElementById(`status-${index}`);
+            
+            try {
+                statusEl.textContent = '🎨 Generating prompt...';
+                
+                // Create image prompt based on story content
+                const imagePrompt = createImagePrompt(story);
+                
+                statusEl.textContent = '🖼️ Generating image...';
+                
+                // Generate image using OpenAI DALL-E
+                const imageUrl = await generateImage(imagePrompt);
+                
+                statusEl.innerHTML = `✅ <span class="text-green-600">Complete!</span>`;
+                
+                // Show preview
+                const previewEl = document.getElementById(`image-preview-${index}`);
+                previewEl.innerHTML = `<img src="${imageUrl}" class="image-preview" alt="Story illustration">`;
+                
+                // Inject image into HTML
+                injectImageIntoHTML(index, imageUrl);
+                
+                story.imageUrl = imageUrl;
+                
+            } catch (error) {
+                console.error('Error generating image for story', index, error);
+                statusEl.innerHTML = `❌ <span class="text-red-600">Failed: ${error.message}</span>`;
+            }
+        }
+
+        function createImagePrompt(story) {
+            // Extract key scene from story for context
+            const storyText = story.content.replace(/<[^>]*>/g, ' ').substring(0, 200);
+            
+            return `N.C. Wyeth medieval fantasy painting style. Scene: ${storyText}
+
+ALL CHARACTERS MUST BE CHICKENS - NO HUMANS. Anthropomorphic chickens with beaks, feathers, combs. White Leghorn roosters as armored knights, Rhode Island Red hens as soldiers. Standing upright in medieval armor/clothing.
+
+Setting: Camelot-style marble halls, stone courtyards, Roman architecture, chicken heraldry banners.
+
+Style: Wyeth's dramatic side-lighting, rich earth tones, jewel accents, heroic poses, romantic medieval atmosphere. Bold composition with 2-4 chicken characters as focus. Low horizon, epic scale.
+
+Content: Peaceful medieval scene, ceremonial weapons, noble character. Age-appropriate for ages 10-14. ONLY CHICKENS.`;
+        }
+
+        async function generateImage(prompt) {
+            const model = document.getElementById('image-model').value;
+            const size = document.getElementById('image-size').value;
+            const quality = document.getElementById('image-quality').value;
+            
+            // Route to appropriate API based on model
+            if (model === 'huggingface-free') {
+                return await generateImageHuggingFace(prompt);
+            } else if (model === 'stability-sdxl') {
+                return await generateImageStability(prompt);
+            } else {
+                return await generateImageOpenAI(prompt, model, size, quality);
+            }
+        }
+
+        async function generateImageHuggingFace(prompt) {
+            // Use Hugging Face Inference API (FREE!)
+            const response = await fetch('http://localhost:3000/api/generate-image-huggingface', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-API-Key': 'bs_11afe5bbc0142701392a9a5b71c559072923c68fbf2f3000'
+                },
+                body: JSON.stringify({
+                    prompt: prompt
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`Hugging Face API failed: ${response.statusText}`);
+            }
+
+            const data = await response.json();
+            return data.imageUrl;
+        }
+
+        async function generateImageStability(prompt) {
+            // Use Stability AI SDXL (very cheap!)
+            const response = await fetch('http://localhost:3000/api/generate-image-stability', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-API-Key': 'bs_11afe5bbc0142701392a9a5b71c559072923c68fbf2f3000'
+                },
+                body: JSON.stringify({
+                    prompt: prompt
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`Stability AI failed: ${response.statusText}`);
+            }
+
+            const data = await response.json();
+            return data.imageUrl;
+        }
+
+        async function generateImageOpenAI(prompt, model, size, quality) {
+            // Use OpenAI DALL-E (paid)
+            const actualModel = model === 'dall-e-3-hd' ? 'dall-e-3' : model;
+            const actualQuality = model === 'dall-e-3-hd' ? 'hd' : quality;
+            
+            const response = await fetch('http://localhost:3000/api/generate-image', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-API-Key': 'bs_11afe5bbc0142701392a9a5b71c559072923c68fbf2f3000'
+                },
+                body: JSON.stringify({
+                    prompt: prompt,
+                    model: actualModel,
+                    size: size,
+                    quality: actualQuality
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`OpenAI API failed: ${response.statusText}`);
+            }
+
+            const data = await response.json();
+            return data.imageUrl;
+        }
+
+        function injectImageIntoHTML(index, imageUrl) {
+            const story = stories[index];
+            
+            // Use the persistent working document
+            const doc = workingDoc;
+            
+            // Create image element
+            const imageDiv = doc.createElement('div');
+            imageDiv.className = 'story-illustration';
+            imageDiv.style.cssText = 'text-align: center; margin: 20px 0;';
+            imageDiv.setAttribute('data-story-index', index); // Mark which story this belongs to
+            
+            const img = doc.createElement('img');
+            img.src = imageUrl;
+            img.alt = `${story.title} illustration`;
+            img.className = 'story-image';
+            img.style.cssText = 'max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);';
+            
+            imageDiv.appendChild(img);
+            
+            // Find the story element and insert image RIGHT AFTER IT
+            const storyElements = doc.querySelectorAll('.story');
+            
+            if (storyElements.length > index && storyElements[index]) {
+                // Insert RIGHT AFTER this specific story div
+                const targetStory = storyElements[index];
+                
+                // Insert after the closing </div> of the story
+                if (targetStory.nextSibling) {
+                    targetStory.parentNode.insertBefore(imageDiv, targetStory.nextSibling);
+                } else {
+                    targetStory.parentNode.appendChild(imageDiv);
+                }
+                
+                console.log(`✅ Image ${index} inserted after story ${index}: "${story.title}"`);
+            } else {
+                console.error(`❌ Could not find story element at index ${index}`);
+            }
+            
+            story.imageHTML = imageDiv.outerHTML;
+        }
+
+        function updateProgress() {
+            currentStoryIndex++;
+            const percentage = (currentStoryIndex / stories.length) * 100;
+            document.getElementById('progress-bar').style.width = percentage + '%';
+            document.getElementById('progress-text').textContent = 
+                `${currentStoryIndex} of ${stories.length} images generated`;
+        }
+
+        function downloadIllustratedHTML() {
+            // Use the working document that has all images injected
+            const finalHTML = '<!DOCTYPE html>\n' + workingDoc.documentElement.outerHTML;
+            
+            // Download
+            const blob = new Blob([finalHTML], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'illustrated-stories.html';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html>
