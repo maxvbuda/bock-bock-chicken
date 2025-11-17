@@ -337,6 +337,53 @@ app.post('/api/generate-image-stability', validateApiKey, async (req, res) => {
   }
 });
 
+// Generate image with Pollinations.ai (FREE - no API key needed!)
+app.post('/api/generate-image-pollinations', validateApiKey, async (req, res) => {
+  try {
+    const { prompt } = req.body;
+    
+    if (!prompt) {
+      return res.status(400).json({ 
+        error: 'Prompt is required',
+        message: 'Please provide a prompt for image generation'
+      });
+    }
+    
+    // Pollinations.ai is completely free and doesn't require an API key
+    // Just encode the prompt and make a GET request to get the image
+    const encodedPrompt = encodeURIComponent(prompt);
+    // Add nologo=true parameter to remove watermark
+    const pollinationsUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?nologo=true`;
+    
+    // Fetch the image
+    const response = await fetch(pollinationsUrl);
+    
+    if (!response.ok) {
+      throw new Error(`Pollinations API error: ${response.statusText}`);
+    }
+    
+    // Get image as buffer
+    const imageBuffer = await response.arrayBuffer();
+    const base64Image = Buffer.from(imageBuffer).toString('base64');
+    const imageUrl = `data:image/png;base64,${base64Image}`;
+    
+    res.json({
+      success: true,
+      imageUrl: imageUrl,
+      model: 'pollinations-ai',
+      provider: 'pollinations',
+      cost: 0 // FREE!
+    });
+    
+  } catch (error) {
+    console.error('Error generating image with Pollinations.ai:', error);
+    res.status(500).json({ 
+      error: 'Failed to generate image',
+      message: error.message
+    });
+  }
+});
+
 // Generate new API key endpoint (protected by master key)
 app.post('/api/generate-key', (req, res) => {
   const masterKey = req.headers['x-master-key'];
@@ -391,6 +438,7 @@ app.listen(PORT, () => {
   console.log(`  POST /api/generate-image - Generate image with DALL-E (requires API key)`);
   console.log(`  POST /api/generate-image-huggingface - Generate image FREE with HF (requires API key)`);
   console.log(`  POST /api/generate-image-stability - Generate image cheap with Stability AI (requires API key)`);
+  console.log(`  POST /api/generate-image-pollinations - Generate image FREE with Pollinations.ai (requires API key)`);
   console.log(`  POST /api/generate-key - Generate new API key (requires master key)`);
   console.log(`  GET  /api/stats - View usage statistics (requires master key)`);
 });
