@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tales from Chickenopolis</title>
+</head>
+<body>
+    <div id="loading">Loading stories...</div>
+    <div id="content"></div>
+    
+    <script>
+        async function loadStories() {
+            const contentDiv = document.getElementById('content');
+            const loadingDiv = document.getElementById('loading');
+            
+            for (let i = 1; i <= 10; i++) {
+                const response = await fetch(`illustrated-stories-part-${i}.html`);
+                const html = await response.text();
+                
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const stories = doc.querySelectorAll('.story, .story-illustration');
+                
+                stories.forEach(story => contentDiv.appendChild(story.cloneNode(true)));
+                
+                loadingDiv.textContent = `Loaded ${i * 10}% of stories...`;
+            }
+            
+            loadingDiv.remove();
+        }
+        
+        loadStories();
+    </script>
+</body>
+</html>
