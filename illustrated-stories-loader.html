@@ -3,10 +3,100 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tales from Chickenopolis</title>
+    <title>Tales from Chickenopolis - Illustrated Stories</title>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Poppins', 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            background-attachment: fixed;
+            color: #fff;
+        }
+        
+        .top-menu {
+            width: 100%;
+            background: linear-gradient(to right, rgba(255, 253, 247, 0.95), rgba(255, 245, 225, 0.95));
+            border-bottom: 3px solid #e6d1a3;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+        }
+        
+        .top-menu ul {
+            list-style: none;
+            margin: 0;
+            padding: 8px 0;
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .top-menu li {
+            display: inline;
+        }
+        
+        .top-menu a {
+            display: inline-block;
+            padding: 12px 24px;
+            font-size: 1em;
+            color: #fff;
+            background: linear-gradient(135deg, #d97428 0%, #c96620 100%);
+            border: none;
+            border-radius: 12px;
+            font-family: 'Quicksand', 'Georgia', serif;
+            font-weight: 600;
+            text-decoration: none;
+            box-shadow: 0 4px 15px rgba(217, 116, 40, 0.3);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+        }
+        
+        .top-menu a:hover {
+            background: linear-gradient(135deg, #a85c1a 0%, #8a4a15 100%);
+            color: #ffe4b3;
+            box-shadow: 0 6px 25px rgba(217, 116, 40, 0.4);
+            transform: translateY(-2px);
+        }
+        
+        #loading {
+            text-align: center;
+            padding: 60px 20px;
+            font-size: 1.5em;
+            color: #ffd700;
+            font-family: 'Quicksand', sans-serif;
+        }
+        
+        #content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+    </style>
 </head>
 <body>
-    <div id="loading">Loading stories...</div>
+    <nav class="top-menu">
+        <ul>
+            <li><a href="index.html">The Cluckington Family</a></li>
+            <li><a href="family-members.html">Family Members</a></li>
+            <li><a href="golden-knight.html">The Golden Knight of Chickenopolis</a></li>
+            <li><a href="homework.html">Homework Kanban</a></li>
+            <li><a href="games.html">Games</a></li>
+            <li><a href="sailing-data-tool.html">Wind Forecaster</a></li>
+            <li><a href="teach-me-anything.html">Teach Me Anything</a></li>
+            <li><a href="chat-with-peep.html">Chat with Sir Peepius</a></li>
+            <li><a href="bedtime-stories.html">Bedtime Stories</a></li>
+        </ul>
+    </nav>
+    
+    <div id="loading">✨ Loading illustrated stories... 🐔</div>
     <div id="content"></div>
     
     <script>
@@ -24,7 +114,7 @@
                 
                 stories.forEach(story => contentDiv.appendChild(story.cloneNode(true)));
                 
-                loadingDiv.textContent = `Loaded ${i * 10}% of stories...`;
+                loadingDiv.textContent = `✨ Loading illustrated stories... ${i * 10}% 🐔`;
             }
             
             loadingDiv.remove();
