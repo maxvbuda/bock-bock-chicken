@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Illustrated Stories - The Cluckington Family</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Georgia', serif; margin: 0; padding: 0; background: #fffef9; }
+    .loading { text-align: center; padding: 50px; font-size: 1.5em; color: #d97428; }
+    .top-menu {
+      width: 100%;
+      background: linear-gradient(to right, #fffdf7, #fff5e1);
+      border-bottom: 3px solid #e6d1a3;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 0;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    }
+    .top-menu ul {
+      list-style: none;
+      margin: 0;
+      padding: 8px 0;
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .top-menu li { display: inline; }
+    .top-menu a {
+      display: inline-block;
+      padding: 12px 24px;
+      font-size: 1em;
+      color: #fff;
+      background: linear-gradient(135deg, #d97428 0%, #c96620 100%);
+      border: none;
+      border-radius: 12px;
+      font-family: 'Quicksand', 'Georgia', serif;
+      font-weight: 600;
+      text-decoration: none;
+      box-shadow: 0 4px 15px rgba(217, 116, 40, 0.3);
+      transition: all 0.3s;
+    }
+    .top-menu a:hover {
+      background: linear-gradient(135deg, #a85c1a 0%, #8a4a15 100%);
+      transform: translateY(-2px);
+    }
+    .top-menu a.active {
+      background: linear-gradient(135deg, #fffbe7 0%, #fff5d6 100%);
+      color: #d97428;
+      border: 2px solid #d97428;
+    }
+  </style>
+</head>
+<body>
+  <nav class="top-menu">
+    <ul>
+      <li><a href="index.html">The Cluckington Family</a></li>
+      <li><a href="family-members.html">Family Members</a></li>
+      <li><a href="golden-knight.html">The Golden Knight</a></li>
+      <li><a href="homework.html">Homework Kanban</a></li>
+      <li><a href="games.html">Games</a></li>
+      <li><a href="sailing-data-tool.html">Wind Forecaster</a></li>
+      <li><a href="teach-me-anything.html">Teach Me Anything</a></li>
+      <li><a href="chat-with-peep.html">Chat with Sir Peepius</a></li>
+      <li><a href="bedtime-stories.html">Bedtime Stories</a></li>
+      <li><a href="illustrated-stories-5.html" class="active">Illustrated Stories</a></li>
+    </ul>
+  </nav>
+  
+  <div class="loading">Loading 1000 illustrated stories...</div>
+  <div id="content"></div>
+  
+  <script>
+    // Load all parts and combine them
+    async function loadAllParts() {
+      const contentDiv = document.getElementById('content');
+      const loadingDiv = document.querySelector('.loading');
+      
+      for (let i = 1; i <= 10; i++) {
+        try {
+          const response = await fetch(`illustrated-stories-part${i}.html`);
+          const html = await response.text();
+          
+          // Extract just the story divs (remove duplicate headers/footers)
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(html, 'text/html');
+          const stories = doc.querySelectorAll('.story');
+          
+          stories.forEach(story => {
+            contentDiv.appendChild(story.parentElement.cloneNode(true));
+          });
+          
+          loadingDiv.textContent = `Loading stories... ${i * 100} / 1000`;
+        } catch (error) {
+          console.error(`Failed to load part ${i}:`, error);
+        }
+      }
+      
+      loadingDiv.style.display = 'none';
+    }
+    
+    loadAllParts();
+  </script>
+</body>
+</html>
