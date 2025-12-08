@@ -1,0 +1,341 @@
+/* Reset and base styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body, html {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    font-family: Arial, sans-serif;
+}
+
+#game-container {
+    width: 100vw;
+    height: 100vh;
+    position: relative;
+    overflow: hidden;
+}
+
+#game-canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    cursor: grab;
+}
+
+#game-canvas:active {
+    cursor: grabbing;
+}
+
+#controls-info {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 15px;
+    border-radius: 8px;
+    font-size: 14px;
+    z-index: 100;
+}
+
+#controls-info h3 {
+    margin-bottom: 8px;
+    color: #4CAF50;
+}
+
+#controls-info p {
+    margin: 4px 0;
+}
+
+/* Health Bar */
+#health-bar {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 250px;
+    background: rgba(0, 0, 0, 0.7);
+    border: 2px solid #333;
+    border-radius: 8px;
+    padding: 10px;
+    z-index: 100;
+}
+
+#health-bar-label {
+    color: white;
+    font-size: 14px;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+#health-bar-fill {
+    width: 100%;
+    height: 20px;
+    background: linear-gradient(to right, #4CAF50, #8BC34A);
+    border-radius: 4px;
+    transition: width 0.3s, background 0.3s;
+}
+
+#health-text {
+    color: white;
+    font-size: 12px;
+    text-align: center;
+    margin-top: 5px;
+}
+
+/* Stats Panel */
+#stats-panel {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 15px;
+    border-radius: 8px;
+    font-size: 14px;
+    z-index: 100;
+}
+
+#stats-panel div {
+    margin: 5px 0;
+}
+
+#kills-counter {
+    color: #4CAF50;
+    font-weight: bold;
+}
+
+#monsters-alive {
+    color: #ff9800;
+    font-weight: bold;
+}
+
+/* Monster Health Bars */
+.monster-health-bar {
+    position: absolute;
+    width: 60px;
+    height: 8px;
+    background: rgba(0, 0, 0, 0.7);
+    border: 1px solid white;
+    border-radius: 2px;
+    overflow: hidden;
+    z-index: 99;
+    pointer-events: none;
+}
+
+.monster-health-fill {
+    height: 100%;
+    background: linear-gradient(to right, #ff0000, #ff6600);
+    transition: width 0.2s;
+}
+
+/* Attack Effect */
+#attack-effect {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 200px;
+    height: 200px;
+    border: 5px solid rgba(255, 255, 0, 0.8);
+    border-radius: 50%;
+    pointer-events: none;
+    display: none;
+    animation: attackPulse 0.2s ease-out;
+}
+
+@keyframes attackPulse {
+    0% {
+        transform: translate(-50%, -50%) scale(0.5);
+        opacity: 1;
+    }
+    100% {
+        transform: translate(-50%, -50%) scale(1.5);
+        opacity: 0;
+    }
+}
+
+/* Game Over Screen */
+#game-over {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.9);
+    color: white;
+    padding: 40px;
+    border-radius: 16px;
+    text-align: center;
+    z-index: 1000;
+    border: 3px solid #ff0000;
+}
+
+#game-over h2 {
+    color: #ff0000;
+    font-size: 48px;
+    margin-bottom: 20px;
+}
+
+#game-over p {
+    font-size: 24px;
+    margin: 15px 0;
+}
+
+#game-over button {
+    margin-top: 20px;
+    padding: 15px 30px;
+    font-size: 18px;
+    background: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background 0.3s;
+}
+
+#game-over button:hover {
+    background: #45a049;
+}
+
+/* Shop */
+#shop {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.95);
+    color: white;
+    padding: 30px;
+    border-radius: 16px;
+    text-align: center;
+    z-index: 1000;
+    border: 3px solid #ffd700;
+    max-width: 500px;
+    width: 90%;
+}
+
+#shop h2 {
+    color: #ffd700;
+    font-size: 36px;
+    margin-bottom: 10px;
+}
+
+#shop > p {
+    color: #aaa;
+    font-size: 14px;
+    margin-bottom: 20px;
+}
+
+.shop-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 15px;
+    margin: 10px 0;
+    border-radius: 8px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.shop-item-info {
+    text-align: left;
+    flex: 1;
+}
+
+.shop-item-info h3 {
+    color: #4CAF50;
+    font-size: 20px;
+    margin-bottom: 5px;
+}
+
+.shop-item-info p {
+    color: #ccc;
+    font-size: 14px;
+    margin: 3px 0;
+}
+
+.shop-description {
+    color: #888 !important;
+    font-style: italic;
+}
+
+.shop-button {
+    padding: 10px 20px;
+    font-size: 16px;
+    background: linear-gradient(to bottom, #4CAF50, #45a049);
+    color: white;
+    border: 2px solid #fff;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.3s;
+    min-width: 100px;
+}
+
+.shop-button:hover:not(:disabled) {
+    background: linear-gradient(to bottom, #45a049, #4CAF50);
+    transform: scale(1.05);
+}
+
+.shop-button:disabled {
+    background: #666;
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.shop-button .cost {
+    font-size: 18px;
+}
+
+/* Castle Builder */
+#castle-builder {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.95);
+    color: white;
+    padding: 30px;
+    border-radius: 16px;
+    text-align: center;
+    z-index: 1000;
+    border: 3px solid #8B4513;
+    max-width: 500px;
+    width: 90%;
+}
+
+#castle-builder h2 {
+    color: #ffd700;
+    font-size: 36px;
+    margin-bottom: 10px;
+}
+
+#castle-builder > p {
+    color: #aaa;
+    font-size: 14px;
+    margin-bottom: 20px;
+}
+
+#castle-builder input[type="number"] {
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    border-radius: 4px;
+    font-size: 16px;
+    text-align: center;
+}
+
+#castle-builder input[type="number"]:focus {
+    outline: none;
+    border-color: #ffd700;
+    background: rgba(255, 255, 255, 0.2);
+}
+
+#castle-builder label {
+    color: #ccc;
+    font-size: 14px;
+}

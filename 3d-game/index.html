@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Block Game</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- 
+    ========================================
+    HOW TO RUN THIS GAME:
+    ========================================
+    
+    Option 1 (Recommended):
+    - Open a terminal in this folder
+    - Run: python3 -m http.server 8000
+    - Open browser and go to: http://localhost:8000/index.html
+    
+    Option 2:
+    - If you have Node.js: npx http-server -p 8000
+    - Then open: http://localhost:8000/index.html
+    
+    Option 3 (Simple):
+    - Just double-click index.html (may have CORS issues)
+    - If it doesn't work, use Option 1 or 2
+    
+    ========================================
+    CONTROLS:
+    ========================================
+    - Arrow Keys: Move (Up/Down = forward/backward, Left/Right = strafe)
+    - Shift + Arrow Keys: Directional jump
+    - Mouse: Look around (drag to rotate camera)
+    
+    ========================================
+    -->
+    
+    <div id="game-container">
+        <canvas id="game-canvas"></canvas>
+        <div id="controls-info">
+            <h3>Controls</h3>
+            <p>Arrow Keys: Move</p>
+            <p>Shift + Arrow: Jump</p>
+            <p>Space: Attack/Mine/Cut Trees</p>
+            <p>E: Build Block (uses wood)</p>
+            <p>C: Castle Builder</p>
+            <p>B: Open/Close Shop</p>
+            <p>Mouse: Look around</p>
+        </div>
+        <div id="health-bar">
+            <div id="health-bar-label">Health</div>
+            <div id="health-bar-fill"></div>
+            <div id="health-text">100 / 100</div>
+        </div>
+        <div id="stats-panel">
+            <div id="kills-counter">Kills: 0</div>
+            <div id="monsters-alive">Monsters: 0</div>
+            <div id="coins-counter">💰 Coins: 0</div>
+            <div id="wood-counter">🪵 Wood: 0</div>
+        </div>
+        <div id="attack-effect"></div>
+        <div id="void-trap-status" style="display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0, 0, 0, 0.9); color: #ff0000; padding: 20px; border-radius: 10px; font-size: 24px; font-weight: bold; z-index: 500; text-align: center; border: 3px solid #ff0000;"></div>
+        <div id="game-over" style="display: none;">
+            <h2>Game Over!</h2>
+            <p>Monsters Killed: <span id="final-kills">0</span></p>
+            <button onclick="location.reload()">Restart</button>
+        </div>
+        <div id="castle-builder" style="display: none;">
+            <h2>🏰 Castle Builder</h2>
+            <p>Press C to close</p>
+            <div style="margin: 20px 0;">
+                <p>Build a castle at your current location</p>
+                <p style="color: #888; font-size: 12px;">Castle cost: 50 wood</p>
+                <p style="color: #888; font-size: 12px;">You have: <span id="current-wood-display">0</span> wood</p>
+            </div>
+            <div style="margin: 20px 0;">
+                <label style="display: block; margin: 10px 0;">
+                    <strong>Or specify coordinates:</strong>
+                </label>
+                <div style="display: flex; gap: 10px; margin: 10px 0;">
+                    <input type="number" id="castle-x" placeholder="X" style="width: 80px; padding: 5px;">
+                    <input type="number" id="castle-z" placeholder="Z" style="width: 80px; padding: 5px;">
+                </div>
+            </div>
+            <div style="display: flex; gap: 10px; justify-content: center; margin-top: 20px;">
+                <button onclick="buildCastleAtCurrentLocation()" class="shop-button" style="flex: 1;">
+                    Build at My Location
+                </button>
+                <button onclick="buildCastleAtCoords()" class="shop-button" style="flex: 1;">
+                    Build at Coordinates
+                </button>
+            </div>
+            <div id="castle-builder-message" style="margin-top: 15px; text-align: center; color: #ffaa00; font-weight: bold;"></div>
+        </div>
+        <div id="shop" style="display: none;">
+            <h2>🛒 Shop</h2>
+            <p>Press B to close</p>
+            <div class="shop-item">
+                <div class="shop-item-info">
+                    <h3>❤️ Heal to Full</h3>
+                    <p>Restore all health</p>
+                </div>
+                <button onclick="buyHeal()" class="shop-button">
+                    <span class="cost">💰 5</span>
+                </button>
+            </div>
+            <div class="shop-item">
+                <div class="shop-item-info">
+                    <h3>💚 Increase Max Health</h3>
+                    <p>Current: +<span id="health-upgrade-level">0</span> (Max: <span id="max-health-display">100</span>)</p>
+                    <p class="shop-description">Add 25 to max health</p>
+                </div>
+                <button onclick="buyHealthUpgrade()" class="shop-button">
+                    <span class="cost">💰 <span id="health-upgrade-cost">10</span></span>
+                </button>
+            </div>
+            <div class="shop-item">
+                <div class="shop-item-info">
+                    <h3>⚔️ Upgrade Attack Damage</h3>
+                    <p>Current: +<span id="attack-upgrade-level">0</span> (Damage: <span id="attack-damage-display">25</span>)</p>
+                    <p class="shop-description">Add 10 to attack damage</p>
+                </div>
+                <button onclick="buyAttackUpgrade()" class="shop-button">
+                    <span class="cost">💰 <span id="attack-upgrade-cost">15</span></span>
+                </button>
+            </div>
+            <div class="shop-item">
+                <div class="shop-item-info">
+                    <h3>✨ Void Escape Powerup</h3>
+                    <p id="void-escape-status">Status: <span id="void-escape-status-text">Not owned</span></p>
+                    <p class="shop-description">One-time escape from void trap</p>
+                </div>
+                <button onclick="buyVoidEscapePowerup()" class="shop-button" id="void-escape-button">
+                    <span class="cost">💰 20</span>
+                </button>
+            </div>
+        </div>
+        <div id="debug-panel" style="position: absolute; bottom: 20px; right: 20px; background: rgba(0,0,0,0.8); color: #0f0; padding: 10px; border-radius: 5px; font-family: monospace; font-size: 12px; z-index: 200;">
+            <div>Keys: <span id="debug-keys">None</span></div>
+            <div>Pos: <span id="debug-pos">0, 0, 0</span></div>
+            <div>Vel: <span id="debug-vel">0, 0, 0</span></div>
+        </div>
+    </div>
+    
+    <!-- Three.js from CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <!-- Main game logic -->
+    <script src="main.js"></script>
+</body>
+</html>

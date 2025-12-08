@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Control Test</title>
+</head>
+<body>
+    <h1>Control Test</h1>
+    <p>Press keys and check console</p>
+    <script>
+        const keys = {};
+        document.addEventListener('keydown', (e) => {
+            keys[e.key] = true;
+            keys[e.code] = true;
+            console.log('DOWN:', e.key, e.code, keys);
+        });
+        document.addEventListener('keyup', (e) => {
+            keys[e.key] = false;
+            keys[e.code] = false;
+            console.log('UP:', e.key, e.code);
+        });
+    </script>
+</body>
+</html>
